@@ -1,0 +1,9 @@
+{
+    "banner-title": "Vieillissement du saumon à partir de l’image de l’écaille",
+    "banner-content": "Un modèle d’apprentissage automatique de vision par ordinateur formé sur des photos annotées à l’échelle du saumon. Le modèle peut classer l’âge du saumon avec une grande précision. Télécharger une image pour commencer - Ces échantillons sont à des fins de démonstration seulement.",
+    "upload-title": "Télécharger une image",
+    "select-title": "Sélectionnez l’image que vous souhaitez télécharger.",
+    "responce-age": "Âge prévu :",
+    "responce-years": "ans,",
+    "responce-species-GR": "Espèce : Chum, Gilbert-Rich Âge :"
+}

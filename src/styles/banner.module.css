@@ -1,0 +1,108 @@
+.mainBanner {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    background: black;
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%);
+}
+.mainBanner::before {  
+    content: '';  
+    position: absolute;  
+    top: 0;  
+    bottom: 0;  
+    left: 0;  
+    right: 0;  
+    background:
+        linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 20%),  
+        linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 20%),  
+        linear-gradient(to left, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 0) 30%),  
+        linear-gradient(to right, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0) 70%);
+        /* url('/imgs/salmon.png') right center / 50% auto no-repeat;  */
+    background-size: auto, auto, auto, auto, contain; /* Adjust the image size here */
+    background-position: left center;  
+    background-repeat: no-repeat;  
+}
+
+.mainBannerContent, .bannerContent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 75%;
+    height: 100%;
+    margin: 0 auto;
+}
+
+.mainBannerImage {
+    width: 70%; 
+    height: 100%;
+    object-fit: cover;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    background-blend-mode: lighten;
+    margin-right: -150px;
+}
+
+.banner {
+    position: relative;
+    width: 100%;
+    height: 250px;
+}
+.banner::before {  
+    content: '';  
+    position: absolute;  
+    top: 0;  
+    bottom: 0;  
+    left: 0;  
+    right: 0;  
+    background:
+        linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 20%),  
+        linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 20%),  
+        linear-gradient(to left, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 0) 30%),  
+        linear-gradient(to right, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0) 70%);
+}
+
+.info {
+    position: relative;
+    width: 50%; 
+    text-align: left;
+}
+
+.info h1, .info p {
+    color: var(--theme-text-fixed);
+}
+
+.bannerImage {
+    width: 70%; 
+    height: 100%;
+    object-fit: cover;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    background-blend-mode: lighten;
+    margin-right: -150px;
+}
+
+.breadcrumbContainer {
+    background-color: var(--theme-background-subheader);
+    margin: 0;
+    padding: 12px var(--whitespace-content);
+    border-top: 1px solid var(--theme-divider)
+}
+
+.breadcrumbContainer a {
+    color: var(--theme-text);
+    text-decoration: none;
+}
+
+.breadcrumbContainer a:hover {
+    text-decoration: underline;
+}
+
+.coloredDivider {
+    background: linear-gradient(90deg,#ffad31,#52c765,#27c9bc,#ff5958); /*var(--theme-color-secondary);*/
+    height: 24px;
+    margin-bottom: 18px;
+}
+
+.primaryFont {
+    color: var(--theme-text);
+}

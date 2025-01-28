@@ -2,7 +2,8 @@
 import nextTranslate from 'next-translate-plugin';  
   
 /** @type {import('next').NextConfig} */  
-const nextConfig = {  
+const nextConfig = {   
+  experimental: { appDir: true },
   // Any other Next.js configurations  
 };  
   

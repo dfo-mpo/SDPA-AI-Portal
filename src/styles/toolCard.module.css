@@ -1,0 +1,18 @@
+.card {
+    width: 50%;
+    text-align: center;
+  
+    background-color: var(--theme-forground) !important;
+    border-radius: 10px !important;
+    box-shadow: 1px 1px rgba(0, 0, 0, 0.1), 0 2px 2px rgba(0, 0, 0, 0.1), 0 4px 4px rgba(0, 0, 0, 0.1), 0 8px 8px rgba(0, 0, 0, 0.1), 0 16px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card div {
+  color: var(--theme-color-secondary);
+  width: fit-content;
+}
+
+.card p {
+  color: var(--theme-text-secondary);
+  text-align: start;
+}

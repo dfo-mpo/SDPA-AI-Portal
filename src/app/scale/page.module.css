@@ -1,0 +1,30 @@
+.page {
+  min-height: calc(100svh - var(--whitespace-header-height));
+  padding: 10px var(--whitespace-content) 25px;
+}
+
+.main {
+  
+}
+
+.container {
+  background-color: var(--theme-forground);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: var(--theme-boxshadow-large);
+  margin-top: 30px; /* Adjusted margin for spacing */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center form contents */
+}
+
+.container img {
+  width: 100%;
+}
+
+
+
+
+
+
+

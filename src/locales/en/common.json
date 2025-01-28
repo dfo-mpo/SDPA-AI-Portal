@@ -1,0 +1,17 @@
+{  
+  "menu-title1": "DFO PSSI OpenAI Portal",  
+  "menu-title2": "Computer Vision",
+  "menu-main": "Main Portal",
+  "menu-home": "Home Page",
+  "menu-fence": "Fence Counting",
+  "menu-ageing": "Scale Ageing",
+  "menu-help": "Help",
+  "link-home": "/",
+  "link-fence": "/fence",
+  "link-scale": "/scale",
+  "link-help": "/help",
+  "upload-choose": "Choose File",
+  "upload-docName": "No document chosen",
+  "upload-sample": "Sample",
+  "upload-document": "Upload Document"
+}

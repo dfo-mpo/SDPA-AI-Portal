@@ -1,0 +1,8 @@
+{
+    "banner-title": "Bienvenue sur le portail OpenAI de l’ISPS du MPO - Vision par ordinateur",
+    "banner-content": "Permettre aux ordinateurs d’identifier et de comprendre les objets et les personnes dans les images et les vidéos.",
+    "scale-title": "Vieillissement à L’échelle",
+    "scale-content": "Automatiser le processus de vieillissement à partir d’images à l’échelle du saumon",
+    "fence-title": "Comptage des Clôtures",
+    "fence-content": "Comptage automatisé des espèces de saumon à partir de vidéos de clôture"
+}

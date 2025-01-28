@@ -1,59 +1,26 @@
-import Image from "next/image";
 import styles from "./page.module.css";
-import Header from "./components/header";
+import Header from "@/components/header";
+import ToolCard from "@/components/toolCard";
+import Banner from "@/components/banner";
+import useTranslation from 'next-translate/useTranslation'; 
 
 export default function Home() {
+  const { t } = useTranslation('home');
+
   return (
     <div>
       <Header/>
+      <Banner title={t('banner-title')} content={t('banner-content')} isMainBanner={true}/>
       <div className={styles.page}>
         <main className={styles.main}>
-          
+          <div className={styles.row}>
+            <ToolCard title={t('scale-title')} content={t('scale-content')} link={t('common:link-scale')}/>
+            <ToolCard title={t('fence-title')} content={t('fence-content')} link={t('common:link-fence')}/>
+          </div>
         </main>
-        <footer className={styles.footer}>
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              aria-hidden
-              src="/file.svg"
-              alt="File icon"
-              width={16}
-              height={16}
-            />
-            Learn
-          </a>
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              aria-hidden
-              src="/window.svg"
-              alt="Window icon"
-              width={16}
-              height={16}
-            />
-            Examples
-          </a>
-          <a
-            href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              aria-hidden
-              src="/globe.svg"
-              alt="Globe icon"
-              width={16}
-              height={16}
-            />
-            Go to nextjs.org →
-          </a>
-        </footer>
+        {/* <footer className={styles.footer}>
+          
+        </footer> */}
       </div>
     </div>
     

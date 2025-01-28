@@ -1,0 +1,9 @@
+{
+    "banner-title": "Ageing salmon from scale image",
+    "banner-content": "A computer vision machine learning model trained on annotated salmon scale photos. The model can classify the age of the salmon with high accuracy. Upload an image to get started - These samples are for demonstration purposes only.",
+    "upload-title": "Upload an image",
+    "select-title": "Select the image you want to upload.",
+    "responce-age": "Predicted Age:",
+    "responce-years": "years old,",
+    "responce-species-GR": "Species: Chum, Gilbert-Rich Age:"
+}

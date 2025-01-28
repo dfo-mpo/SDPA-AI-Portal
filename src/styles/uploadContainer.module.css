@@ -1,0 +1,114 @@
+.form {
+    background-color: var(--theme-forground);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: var(--theme-boxshadow-large);
+    margin-top: 30px; /* Adjusted margin for spacing */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center form contents */
+}
+
+.hidden {
+    display: none;
+}
+
+.uploadTitle {
+    margin: -5px auto 10px 13px;
+    font-size: 18px;
+}
+
+.inputBox {
+    border: 1px solid var(--theme-divider);
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    width: calc(100% - 20px);
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.inputBox p {
+    height: fit-content;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.chooseBtn {
+    margin-right: 10px;
+    padding: 3px 5px;
+}
+
+.exampleDocuments {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 95%;
+    margin-bottom: 20px;
+}
+
+.selected {
+    border: 1px solid var(--theme-color-secondary);
+    cursor: not-allowed;
+}
+
+.thumbnailBtn {
+    width: 250px;
+    margin: 10px;
+    border: 1px solid var(--theme-divider) !important;
+    background-color: var(--theme-background-body) !important;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 4px;
+}
+
+.thumbnailBtnWrapper:hover {
+    box-shadow: var(--theme-boxshadow-large);
+}
+
+.thumbnailBtn div {
+    position: absolute;
+    border: 1px solid var(--theme-color-secondary);
+    text-align: center;
+    border-radius: 4px;
+
+    background-color: #f5f5f5;
+    top: 110px;
+    left: 90px;
+}
+
+.thumbnailBtn div p {
+    margin: 2px 8px;
+    text-align: center;
+}
+
+.thumbnailBtn img {
+    height: 229px;
+    width: -webkit-fill-available;
+}
+
+.thumbnailBtn p {
+    line-height: 16px;
+    margin-top: 5px;
+}
+
+.thumbnailBtnSelected {
+    border: 1px solid var(--theme-color-secondary) !important;
+}
+
+.leftShift {
+    left: 85px;
+}
+
+#uploadBtn {
+    background-color: var(--theme-color-secondary);
+    color: var(--theme-text-fixed);
+    line-height: 19px;
+}
+
+#uploadBtn:disabled {
+    background-color: var(--theme-color-secondary-disabled);
+    color: var(--theme-text-fixed-disabled);
+    cursor: not-allowed;
+}

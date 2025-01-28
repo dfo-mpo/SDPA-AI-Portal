@@ -5,10 +5,10 @@ module.exports = {
     pages: {  
       '*': ['common'], // Load common translations for all pages  
       '/': ['home'], 
-      '/fence': ['fence'], 
+      // '/fence': ['fence'], 
       '/scale': ['scale'],
-      '/help': ['help'],
-    },  
+      // '/help': ['help'],
+    },
     loadLocaleFrom: (lang, ns) =>  
-      import(`./src/app/locales/${lang}/${ns}.json`).then((m) => m.default),  
-  };  
+      import(`./src/locales/${lang}/${ns}.json`).then((m) => m.default),  
+  }; 
