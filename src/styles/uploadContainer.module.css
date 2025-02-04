@@ -47,6 +47,10 @@
     margin-bottom: 20px;
 }
 
+.lessExamples {
+    justify-content: space-evenly;
+}
+
 .selected {
     border: 1px solid var(--theme-color-secondary);
     cursor: not-allowed;
@@ -63,6 +67,10 @@
     border-radius: 4px;
 }
 
+.wideThumnailBtn {
+    width: 350px;
+}
+
 .thumbnailBtnWrapper:hover {
     box-shadow: var(--theme-boxshadow-large);
 }
@@ -76,6 +84,11 @@
     background-color: #f5f5f5;
     top: 110px;
     left: 90px;
+}
+
+.wideThumnailBtn div {
+    top: 110px;
+    left: 140px;
 }
 
 .thumbnailBtn div p {
@@ -98,7 +111,11 @@
 }
 
 .leftShift {
-    left: 85px;
+    left: 85px !important;
+}
+
+.leftShiftWide {
+    left: 135px !important;
 }
 
 #uploadBtn {

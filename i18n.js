@@ -5,7 +5,7 @@ module.exports = {
     pages: {  
       '*': ['common'], // Load common translations for all pages  
       '/': ['home'], 
-      // '/fence': ['fence'], 
+      '/fence': ['fence'], 
       '/scale': ['scale'],
       // '/help': ['help'],
     },

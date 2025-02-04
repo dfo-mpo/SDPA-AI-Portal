@@ -21,12 +21,13 @@
   --theme-boxshadow-large: 0 .55rem 1rem -.2rem #0003;
   --theme-divider-fixed: darkgray;
   --theme-divider: #9e9d9d;
+  --theme-partical-colour: #1E1E23;
 
   --whitespace-content: 15%;
   --whitespace-header: 12.5%;
   --whitespace-header-height-home: 386px; /* Height of header and banner in pixels on home page */
   --whitespace-header-height: 427px; /* Height of header and banner in pixels on none home page */
-  --whitespace-card-gap: 24px;
+  --whitespace-card-gap: 5%;
 
   --language: 'english';
   --color-scheme: dark;
@@ -46,6 +47,7 @@ body.dark {
   --theme-shadow: #00000080;
   --theme-boxshadow-large: 0 .55rem 1rem -.2rem #00000080;
   --theme-divider: darkgray;
+  --theme-partical-colour: #ffffff;
 }
 
 html,

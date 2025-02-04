@@ -2,6 +2,7 @@ import path from 'path';
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms)); 
 
+// Return the predicted age as a string
 export async function POST(request) { 
     if (request.method === 'POST') {  
         const filePath = await request.json();

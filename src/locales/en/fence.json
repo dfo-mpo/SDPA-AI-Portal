@@ -1,0 +1,8 @@
+{
+    "banner-title": "Counting salmon from video",
+    "banner-content": "A computer vision model used to analyze each frame (image) of river video footage. The model predicts classification of salmon species and object detection. Upload a video to get started - These samples are for demonstration purposes only.",
+    "upload-title": "Upload a video",
+    "select-title": "Select the video you want to upload.",
+    "uploaded-title": "Uploaded Video",
+    "processed-title": "Processed Video"
+}

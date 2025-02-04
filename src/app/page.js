@@ -2,6 +2,7 @@ import styles from "./page.module.css";
 import Header from "@/components/header";
 import ToolCard from "@/components/toolCard";
 import Banner from "@/components/banner";
+import ParticleBackground from "@/components/particalBackground";
 import useTranslation from 'next-translate/useTranslation'; 
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
       <Banner title={t('banner-title')} content={t('banner-content')} isMainBanner={true}/>
       <div className={styles.page}>
         <main className={styles.main}>
+          <ParticleBackground />
           <div className={styles.row}>
             <ToolCard title={t('scale-title')} content={t('scale-content')} link={t('common:link-scale')}/>
             <ToolCard title={t('fence-title')} content={t('fence-content')} link={t('common:link-fence')}/>

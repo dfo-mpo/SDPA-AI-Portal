@@ -16,7 +16,8 @@ import { IconButton, Drawer, Box } from '@mui/material';
 
 // Logic for the header in the website, including toggling of language and theme settings
 function Header() {
-    const [theme, setTheme] = useState(getCookie('theme')? getCookie('theme') : (window && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)? 'dark' : 'light'); // Will always be 'light' or 'dark'
+    // const [theme, setTheme] = useState(getCookie('theme')? getCookie('theme') : (window && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)? 'dark' : 'light'); // Will always be 'light' or 'dark'
+    const [theme, setTheme] = useState('light');
     const [language, setLanguage] = useState('english'); // Will always be 'english' or 'french'
     const [isMenuOpen, setMenuOpen] = useState(false); 
     const router = useRouter();  
@@ -130,6 +131,7 @@ function Header() {
         const currentPath = window.location.pathname;  
         let newPath = newLocale === 'en'? `${currentPath.replace('/fr', '')}` : `/${newLocale}${currentPath}`;  
         newPath = newPath === ''? '/' : newPath;
+        console.log(newLocale)
         router.push(newPath, newPath, { locale: newLocale });  
     };  
 
@@ -147,20 +149,22 @@ function Header() {
       document.documentElement.style.setProperty('--color-scheme', theme);
     }, [theme])
 
-    // Read cookies
     useEffect(() => {
-      setLanguage(lang === 'fr'? 'french' : 'english');
-      
-      // // If theme cookie is not set, then set theme based on browser preferences and adjust theme
-      // if (!getCookie('theme')) {
-      //   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      //     setTheme('dark');
-      //   } else {
-      //     setTheme('light');
-      //   }
-      // }
-      
+      setLanguage(lang === 'fr'? 'french' : 'english');    
     }, [lang])
+
+    useEffect(() => {
+      // If theme cookie is not set, then set theme based on browser preferences and adjust theme
+      if (!getCookie('theme') && window) {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          setTheme('dark');
+        } else {
+          setTheme('light');
+        }
+      } else if (getCookie('theme')) {
+        setTheme(getCookie('theme'));
+      }
+    }, [])
 
     return (
         <>

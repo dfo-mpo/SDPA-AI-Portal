@@ -1,0 +1,8 @@
+{
+    "banner-title": "Comptage des saumons à partir de la vidéo",
+    "banner-content": "Modèle de vision par ordinateur utilisé pour analyser chaque image (image) d’une séquence vidéo de rivière. Le modèle prédit la classification des espèces de saumon et la détection d’objets. Téléchargez une vidéo pour commencer : ces exemples sont fournis à titre de démonstration uniquement.",
+    "upload-title": "Télécharger une vidéo",
+    "select-title": "Sélectionnez la vidéo que vous souhaitez télécharger.",
+    "uploaded-title": "Vidéo téléchargée",
+    "processed-title": "Vidéo traitée"
+}

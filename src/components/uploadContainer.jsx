@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@mui/material';
 import styles from '../styles/uploadContainer.module.css';
 import useTranslation from 'next-translate/useTranslation'; 
@@ -30,13 +30,13 @@ function UploadContainer({uploadTitle, selectTitle, samples, onUpload}) {
             </div>
             <div className={`${styles.form} ${isSelectOpen? '' : styles.hidden}`}>
                 <h3 className={styles.uploadTitle}>{selectTitle}</h3>
-                <div className={styles.exampleDocuments}>
+                <div className={`${styles.exampleDocuments} ${samples.length < 3? styles.lessExamples: ''}`}>
                     {samples && samples.map((sample, index) => (
                         <div key={index} className={selectedExample.split(/[/]+/).pop() === sample? '' : styles.thumbnailBtnWrapper} style={{cursor: selectedExample.split(/[/]+/).pop() === sample? 'not-allowed' : ''}}>
-                            <Button className={`${styles.thumbnailBtn} ${selectedExample.split(/[/]+/).pop() === sample? styles.thumbnailBtnSelected : ''}`} 
+                            <Button className={`${styles.thumbnailBtn} ${samples.length < 3? styles.wideThumnailBtn: ''} ${selectedExample.split(/[/]+/).pop() === sample? styles.thumbnailBtnSelected : ''}`} 
                                 disabled={selectedExample.split(/[/]+/).pop() === sample} onClick={() => {setSelectedExample(`/imgs/${sample}`);}}>
                                 <img src={`/imgs/${sample.split('.')[0]}.png`} draggable="false" alt="Example Image"/>
-                                <div style={{left: lang === 'fr'? '85px' : ''}}><p>{t('upload-sample')}</p></div>
+                                <div className={lang === 'fr'? samples.length < 3? styles.leftShiftWide : styles.leftShift : ''}><p>{t('upload-sample')}</p></div>
                                 <p>{sample}</p>
                             </Button>
                         </div>

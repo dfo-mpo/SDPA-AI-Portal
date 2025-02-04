@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardActionArea, CardContent, Typography, CardMedia } from '@mui/material';
+import { Card, CardActionArea, CardContent, Typography } from '@mui/material';
 import styles from '../styles/toolCard.module.css';
 import Link from 'next/link'
 

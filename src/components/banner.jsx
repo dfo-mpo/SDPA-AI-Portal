@@ -8,7 +8,7 @@ function Banner({ title, content, page, isMainBanner = false }) {
     const { t } = useTranslation('common');
 
     const breadcrumbs = [
-        <Link key="1" href="/">
+        <Link key="1" href={t('link-home')}>
             {t('menu-home')}
         </Link>,
         <p className={styles.primaryFont} key="1">
