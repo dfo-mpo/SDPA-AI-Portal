@@ -28,6 +28,8 @@ function Banner({ title, content, page, isMainBanner = false }) {
                     <img src="/imgs/salmon.png" alt="Salmon" className={styles.mainBannerImage} />
                 </div>
             </div>
+            <div className={`${styles.colourDivider} ${styles.grayDivider}`}/> 
+            <div className={`${styles.colourDivider} ${styles.blueDivider}`}/> 
         </>
         :
         <>
