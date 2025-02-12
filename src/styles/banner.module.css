@@ -91,6 +91,15 @@
     text-align: left;
 }
 
+.info a {
+    color: var(--theme-color-secondary);
+    text-decoration: underline;
+}
+
+.info p {
+    margin-top: 5px;
+}
+
 .info h1, .info p {
     color: var(--theme-text-fixed);
 }

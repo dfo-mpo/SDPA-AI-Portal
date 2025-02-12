@@ -23,7 +23,7 @@ function Banner({ title, content, page, isMainBanner = false, images = ['salmon.
                 <div className={styles.mainBannerContent}>
                     <div className={styles.info}>
                         <h1>{title}</h1>
-                        <p>{content}</p>
+                        <p>{content}<Link href={t('link-help')}>{t('link-help-content')}</Link></p>
                     </div>
                     {images.length >= 1 && <img src={`/imgs/${images[Math.floor(Math.random() * images.length)]}`} alt="Salmon" className={styles.mainBannerImage} />}
                 </div>
