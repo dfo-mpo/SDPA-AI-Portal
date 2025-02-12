@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';  
   
 const PAGE_SHIFT = 270;  
+const PARTICAL_SPEED = 0.25;
   
 const ParticleBackground = () => {  
   const canvasRef = useRef(null);  
@@ -55,8 +56,8 @@ const ParticleBackground = () => {
         if (this.y + this.size > canvas.height || this.y - this.size < 0) {  
           this.directionY = -this.directionY;  
         }  
-        this.x += this.directionX;  
-        this.y += this.directionY;  
+        this.x += this.directionX * PARTICAL_SPEED;  
+        this.y += this.directionY * PARTICAL_SPEED;  
         this.draw();  
       }  
   
