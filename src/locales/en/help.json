@@ -1,0 +1,14 @@
+{
+    "banner-title": "About the DFO OpenAI Suite",
+    "banner-content": "DFO has created Computer Vision powered tools that allow comprehensive analysis of images in real time to combat the following challenges:",
+    "banner-bullet1": "Reading, reviewing and extracting necessary content is time consuming",
+    "banner-bullet2": "Lack of standardized data extraction hinders transparency and consistency",
+    "banner-bullet3": "Manual data entry and manual citation can be redundant and inefficient",
+    "banner-bullet4": "Human biases and human error that result in inconsistent and unreproducible results",
+    "home-title": "Tools",
+    "home-ageing-header": "Scale Ageing",
+    "home-ageing-content": "Allows users to analyze and extract the age and species of a Salmon from a scale image. In a scale image, the ring patterns provide valuable information about the age and growth history of the salmon.",
+    "home-fence-header": "Fence Counting",
+    "home-fence-content": "Allows users to obtain a count by Salmon species from a video. Suited for short video clips to test the models capabilities.",
+    "home-started-btn": "Get Started"
+}

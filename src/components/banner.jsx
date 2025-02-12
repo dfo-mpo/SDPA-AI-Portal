@@ -4,7 +4,7 @@ import styles from '../styles/banner.module.css';
 import Link from 'next/link'
 import useTranslation from 'next-translate/useTranslation'; 
 
-function Banner({ title, content, page, isMainBanner = false }) {
+function Banner({ title, content, page, isMainBanner = false, images = ['salmon.png'], bulletPoints = [] }) {
     const { t } = useTranslation('common');
 
     const breadcrumbs = [
@@ -25,7 +25,7 @@ function Banner({ title, content, page, isMainBanner = false }) {
                         <h1>{title}</h1>
                         <p>{content}</p>
                     </div>
-                    <img src="/imgs/salmon.png" alt="Salmon" className={styles.mainBannerImage} />
+                    {images.length >= 1 && <img src={`/imgs/${images[Math.floor(Math.random() * images.length)]}`} alt="Salmon" className={styles.mainBannerImage} />}
                 </div>
             </div>
             <div className={`${styles.colourDivider} ${styles.grayDivider}`}/> 
@@ -33,13 +33,23 @@ function Banner({ title, content, page, isMainBanner = false }) {
         </>
         :
         <>
-            <div className={styles.banner}>
+            <div className={`${styles.banner} ${images.length >= 1? styles.bannerWithImg : styles.bannerWithoutImg}`}>
                 <div className={styles.bannerContent}>
-                    <div className={styles.info}>
+                    <div className={styles.info} style={{width: images.length >= 1? '' : '100%'}}>
                         <h1>{title}</h1>
                         <p>{content}</p>
+                        {bulletPoints.length >= 1 &&
+                        <ul className={styles.bulletPoints}>
+                            {bulletPoints.map((bullet, index) => (
+                                <li key={index}>
+                                    {bullet}
+                                </li>
+                            ))}
+                        </ul>
+                        }
+
                     </div>
-                    <img src="/imgs/salmon.png" alt="Salmon" className={styles.bannerImage} />
+                    {images.length >= 1 && <img src={`/imgs/${images[Math.floor(Math.random() * images.length)]}`} alt="Salmon" className={styles.bannerImage} />}
                 </div>
             </div>
             <div className={styles.breadcrumbContainer}>

@@ -38,7 +38,6 @@
         linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 20%),  
         linear-gradient(to left, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 0) 30%),  
         linear-gradient(to right, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0) 70%);
-        /* url('/imgs/salmon.png') right center / 50% auto no-repeat;  */
     background-size: auto, auto, auto, auto, contain; /* Adjust the image size here */
     background-position: left center;  
     background-repeat: no-repeat;  
@@ -68,7 +67,11 @@
     width: 100%;
     height: 250px;
 }
-.banner::before {  
+.bannerWithoutImg {
+    background-color: rgba(0, 0, 0, 1);
+}
+
+.bannerWithImg::before {  
     content: '';  
     position: absolute;  
     top: 0;  
@@ -126,4 +129,14 @@
 
 .primaryFont {
     color: var(--theme-text);
+}
+
+.bulletPoints {
+    margin-left: 2%;
+    margin-top: 8px;
+}
+
+.bulletPoints li {
+    line-height: 22px;
+    color: var(--theme-text-fixed);
 }

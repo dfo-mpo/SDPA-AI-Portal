@@ -1,0 +1,14 @@
+{
+    "banner-title": "À propos de la suite OpenAI du MPO",
+    "banner-content": "Le MPO a créé des outils alimentés par vision par ordinateur qui permettent une analyse complète des images en temps réel pour relever les défis suivants :",
+    "banner-bullet1": "La lecture, la révision et l’extraction du contenu nécessaire prennent du temps",
+    "banner-bullet2": "Le manque d’extraction de données normalisée nuit à la transparence et à l’uniformité",
+    "banner-bullet3": "La saisie manuelle des données et la citation manuelle peuvent être redondantes et inefficaces",
+    "banner-bullet4": "Les préjugés humains et les erreurs humaines qui entraînent des résultats incohérents et non reproductibles",
+    "home-title": "Outils",
+    "home-ageing-header": "Vieillissement de l’échelle",
+    "home-ageing-content": "Permet aux utilisateurs d’analyser et d’extraire l’âge et l’espèce d’un saumon à partir d’une image à l’échelle. Dans une image à l’échelle, les motifs de l’anneau fournissent des informations précieuses sur l’âge et l’historique de croissance du saumon.",
+    "home-fence-header": "Comptage des clôtures",
+    "home-fence-content": "Permet aux utilisateurs d’obtenir un dénombrement par espèce de saumon à partir d’une vidéo. Adapté pour les courts clips vidéo pour tester les capacités des modèles.",
+    "home-started-btn": "Commencez"
+}
