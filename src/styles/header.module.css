@@ -88,4 +88,6 @@
     text-align: center;
     /* border-bottom: 1px solid #ddd; */
     border-bottom: 1px solid var(--theme-divider-fixed);
+    z-index: 100;
+    position: relative;
 }
