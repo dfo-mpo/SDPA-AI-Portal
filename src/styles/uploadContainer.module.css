@@ -44,7 +44,8 @@
     flex-direction: row;
     justify-content: space-between;
     width: 95%;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    margin-top: 10px;
 }
 
 .lessExamples {
@@ -58,7 +59,6 @@
 
 .thumbnailBtn {
     width: 250px;
-    margin: 10px;
     border: 1px solid var(--theme-divider) !important;
     background-color: var(--theme-background-body) !important;
     display: flex;
