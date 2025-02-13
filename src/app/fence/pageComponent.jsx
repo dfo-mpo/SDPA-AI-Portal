@@ -55,7 +55,7 @@ function FenceComp() {
   return (
     <div>
       <Header/>
-      <Banner title={t('banner-title')} content={t('banner-content')} page={t('common:menu-fence')}/>
+      <Banner title={t('banner-title')} content={t('banner-content')} page={t('common:menu-fence')} images={['salmon.png', 'sockeye.png']}/>
       <div className={styles.page}>
         <main className={styles.main}>
           <UploadContainer uploadTitle={t('upload-title')} selectTitle={t('select-title')} onUpload={onUpload}

@@ -1,10 +1,13 @@
-import React from 'react';
+'use client'
+
+import React, { useState, useEffect } from 'react';
 import { Breadcrumbs } from '@mui/material';
 import styles from '../styles/banner.module.css';
 import Link from 'next/link'
 import useTranslation from 'next-translate/useTranslation'; 
 
 function Banner({ title, content, page, isMainBanner = false, images = ['salmon.png'], bulletPoints = [] }) {
+    const [bannerImg, setBannerImg] = useState(images[Math.floor(Math.random() * images.length)]);
     const { t } = useTranslation('common');
 
     const breadcrumbs = [
@@ -25,7 +28,7 @@ function Banner({ title, content, page, isMainBanner = false, images = ['salmon.
                         <h1>{title}</h1>
                         <p>{content}<Link href={t('link-help')}>{t('link-help-content')}</Link></p>
                     </div>
-                    {images.length >= 1 && <img src={`/imgs/${images[Math.floor(Math.random() * images.length)]}`} alt="Salmon" className={styles.mainBannerImage} />}
+                    {images.length >= 1 && <img src={`/imgs/${bannerImg}`} alt="Salmon" className={styles.mainBannerImage} />}
                 </div>
             </div>
             <div className={`${styles.colourDivider} ${styles.grayDivider}`}/> 
@@ -49,7 +52,7 @@ function Banner({ title, content, page, isMainBanner = false, images = ['salmon.
                         }
 
                     </div>
-                    {images.length >= 1 && <img src={`/imgs/${images[Math.floor(Math.random() * images.length)]}`} alt="Salmon" className={styles.bannerImage} />}
+                    {images.length >= 1 && <img src={`/imgs/${bannerImg}`} alt="Salmon" className={styles.bannerImage} />}
                 </div>
             </div>
             <div className={styles.breadcrumbContainer}>
