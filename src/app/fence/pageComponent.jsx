@@ -43,11 +43,13 @@ function FenceComp() {
   };
 
   useEffect(() => {
-    window.scrollBy({
-      top: videoContainerRef.current.getBoundingClientRect().top - window.pageYOffset,
-      left: 0,
-      behavior: 'smooth',
-    });
+    if(videoContainerRef.current && outputPath) {
+      window.scrollBy({
+        top: videoContainerRef.current.getBoundingClientRect().top - window.pageYOffset,
+        left: 0,
+        behavior: 'smooth',
+      });
+    }
   }, [outputPath])
 
   return (

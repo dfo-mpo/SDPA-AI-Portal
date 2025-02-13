@@ -41,11 +41,13 @@ function ScaleComp() {
   };
 
   useEffect(() => {
-    window.scrollBy({
-      top: ageContainerRef.current.getBoundingClientRect().top - window.pageYOffset,
-      left: 0,
-      behavior: 'smooth',
-    });
+    if(ageContainerRef.current && scaleAge) {
+      window.scrollBy({
+        top: ageContainerRef.current.getBoundingClientRect().top - window.pageYOffset,
+        left: 0,
+        behavior: 'smooth',
+      });
+    }
   }, [scaleAge])
 
   return (
