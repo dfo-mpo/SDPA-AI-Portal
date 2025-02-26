@@ -1,4 +1,10 @@
 # DFO OpenAI Tool Suite
+TODO: UPDATE THIS!!!!!!!!!!!!!!! this is for old framework and outdated tools <br>
+using python 3.10.6 for backend <br>
+.sh scripts are broken, to run backend use the following command: python -m uvicorn ai_ml_tools.main:app --reload
+<br>
+using Node.js v22.12.0 for frontend<br>
+to run frontend use the following command: npm start
 
 ## Description
 The DFO OpenAI Tool Suite is a web application equipped with a suite of AI tools designed for document interaction and analysis. This application enables users to leverage powerful AI capabilities directly through their web browser. Built using Django, Python, CSS, HTML, and JavaScript.
