@@ -3,6 +3,8 @@ TODO: UPDATE THIS!!!!!!!!!!!!!!! this is for old framework and outdated tools <b
 using python 3.10.6 for backend <br>
 .sh scripts are broken, to run backend use the following command: python -m uvicorn ai_ml_tools.main:app --reload
 <br>
+Backend structure has main.py to communicate with frontend, core folder for configurations, models folder for python classes, routers folder for handeling api requests, and utils folder for any helper functions.
+<br>
 using Node.js v22.12.0 for frontend<br>
 to run frontend use the following command: npm start
 
