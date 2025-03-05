@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import StreamingResponse
 from io import BytesIO  
-from ai_ml_tools.utils.pii import pii_analyze, file_to_path
+from ai_ml_tools.utils.pii import file_to_path
 from presidio_analyzer import AnalyzerEngine
 import fitz
   
@@ -23,8 +23,9 @@ async def pii_redact(file: UploadFile = File(...)):
     ]
 
     # Open the PDF
-    doc = fitz.open(file_to_path(file))
-    
+    file_bytes = await file_to_path(file)
+    doc = fitz.open(stream=file_bytes, filetype="pdf")
+
     for page in doc:
         text = page.get_text("text")
         analyzer_results = analyzer.analyze(text=text, language='en')

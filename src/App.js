@@ -9,6 +9,7 @@ function App() {
   const [file, setFile] = useState(null);  
   const [score, setScore] = useState(null);
   const [filePii, setFilePii] = useState(null);
+  const [downloadURL, setDownloadURL] = useState(null);
 
   const handleFileChange = (event) => {  
     setFile(event.target.files[0]);  
@@ -35,7 +36,7 @@ function App() {
   const handleSubmitPII = async (event) => {  
     event.preventDefault();  
     const formData = new FormData();  
-    formData.append('file', file);  
+    formData.append('file', filePii);  
   
     try {  
       const response = await axios.post('http://localhost:8000/pii_redact/', formData, {  
@@ -44,12 +45,13 @@ function App() {
   
       if (response.status === 200) {  
         const url = window.URL.createObjectURL(new Blob([response.data]));  
-        const link = document.createElement('a');  
-        link.href = url;  
-        link.setAttribute('download', `redacted_${filePii.name}`); // Set download attribute  
-        document.body.appendChild(link);  
-        link.click();  
-        link.remove();  
+        // const link = document.createElement('a');
+        setDownloadURL(url);
+        // link.href = url;  
+        // link.setAttribute('download', `redacted_${filePii.name}`); // Set download attribute  
+        // document.body.appendChild(link);  
+        // link.click();  
+        // link.remove();  
       } else {  
         console.error('Failed to download the redacted PDF');  
         alert('Failed to download the redacted PDF');  
@@ -58,7 +60,7 @@ function App() {
       console.error('Error:', error);  
       alert('An error occurred while processing the file.');  
     }  
-  }; 
+  };
 
   useEffect(() => {  
     const fetchData = async () => {  
@@ -99,11 +101,11 @@ function App() {
             <input type="file" onChange={handleFileChangePII} />  
             <button type="submit">Submit</button>  
           </form>  
-          {/* {downloadfile !== null && (  
-            <div>  
+          {downloadURL !== null && (  
+            <a href={downloadURL} download={`redacted_${filePii? filePii.name : 'None'}`}>  
               <button>Download File</button>
-            </div>  
-          )} */}
+            </a>  
+          )}
       </div>  
   );  
 }
