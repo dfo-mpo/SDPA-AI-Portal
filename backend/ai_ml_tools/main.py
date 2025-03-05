@@ -1,5 +1,7 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware 
+from fastapi.middleware.cors import CORSMiddleware
+from .routers import api_router
+from .routers import sensitivity_score
 
 app = FastAPI()  
 
@@ -15,7 +17,10 @@ app.add_middleware(
     allow_credentials=True,  
     allow_methods=["*"],  
     allow_headers=["*"],  
-) 
+)
+
+# app.include_router(sensitivity_score.router)
+app.include_router(api_router)
 
 @app.get("/")  
 async def read_root():  

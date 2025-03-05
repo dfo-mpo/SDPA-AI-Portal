@@ -2,7 +2,6 @@
 Class defining a document that is used by OpenAI. It contains the following properties: file_path, file_name, content, col_prompts, and openai_answers.
 There are also serveral functions defined in this class which are listed below.
 '''
-
 class Document:
     def __init__(self, file_path: str, col_prompts: list):
         self._file_path = file_path
