@@ -14,6 +14,8 @@ function App() {
   const [scaleOutput, setScaleOutput] = useState([null, null]);
   const [fileFence, setFileFence] = useState([null, null]);
   const [fenceOutput, setFenceOutput] = useState(null);
+  const [fileTranslate, setFileTranslate] = useState(null);
+  const [translateOutput, setTranslateOutput] = useState(null);
 
   const handleFileChange = (event) => {  
     setFile(event.target.files[0]);  
@@ -124,6 +126,34 @@ function App() {
     }   
   };
 
+  const handleFileChangeTranslate = (event) => {
+    setFileTranslate(event.target.files[0]);  
+  }; 
+
+  const handleSubmitTranslate = async (event) => {  
+    event.preventDefault();  
+    const formData = new FormData();  
+    formData.append('file', fileTranslate);  
+  
+    try {
+      const response = await fetch('http://localhost:8000/pdf_to_french/', {  
+        method: 'POST',  
+        body: formData  
+      });
+
+      if (response.status === 200) {
+        const data = await response.json();  
+        setTranslateOutput(data.translation);
+      } else {  
+        console.error('Failed to retrieve translated text');  
+        alert('Failed to retrieve translated text');  
+      }
+    } catch (error) {  
+      console.error('Error:', error);  
+      alert('An error occurred while processing the pdf.');  
+    }   
+  };
+
   useEffect(() => {  
     const fetchData = async () => {  
       try {  
@@ -193,16 +223,14 @@ function App() {
             </div>  
           )}
           <h1>French Transalations</h1>  
-          <form onSubmit={handleSubmitFence}>  
-            <input type="file" onChange={handleFileChangeFence} />  
+          <form onSubmit={handleSubmitTranslate}>  
+            <input type="file" onChange={handleFileChangeTranslate} />  
             <button type="submit">Submit</button>  
           </form>  
-          {fenceOutput !== null && (
-            <div>  
-              <h2>Uploaded Video</h2>
-              <video src={fileFence[1]} width="300px" controls/>
-              <h2>Processed Video</h2>
-              <video src={fenceOutput} width="300px" controls/>
+          {translateOutput !== null && (
+            <div>
+              <h2>Text in French</h2>
+              <p>{translateOutput}</p>
             </div>  
           )}
       </div>  

@@ -30,7 +30,7 @@ async def file_to_png(file, png_name, type='tiff'):
 def pdf_to_text(file):
     try:  
         # Open the PDF file  
-        document = fitz.open(file)  
+        document = fitz.open(stream=file, filetype="pdf")  
           
         # Initialize a variable to store the extracted text  
         text = ""  
