@@ -1,5 +1,6 @@
 from fastapi import APIRouter, File, UploadFile  
-from ai_ml_tools.utils.pii import pii_analyze, file_to_path
+from ai_ml_tools.utils.pii import pii_analyze
+from ai_ml_tools.utils.file import file_to_path
   
 router = APIRouter()  
   

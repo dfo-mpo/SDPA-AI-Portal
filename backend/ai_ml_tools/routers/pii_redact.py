@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import StreamingResponse
 from io import BytesIO  
-from ai_ml_tools.utils.pii import file_to_path
+from ai_ml_tools.utils.file import file_to_path
 from presidio_analyzer import AnalyzerEngine
 import fitz
   
