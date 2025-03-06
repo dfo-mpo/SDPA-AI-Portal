@@ -1,4 +1,4 @@
-import logo from './logo.svg';
+// import logo from './logo.svg';
 import './App.css';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -10,6 +10,10 @@ function App() {
   const [score, setScore] = useState(null);
   const [filePii, setFilePii] = useState(null);
   const [downloadURL, setDownloadURL] = useState(null);
+  const [fileScale, setFileScale] = useState(null);
+  const [scaleOutput, setScaleOutput] = useState([null, null]);
+  const [fileFence, setFileFence] = useState([null, null]);
+  const [fenceOutput, setFenceOutput] = useState(null);
 
   const handleFileChange = (event) => {  
     setFile(event.target.files[0]);  
@@ -23,11 +27,11 @@ function App() {
     const response = await fetch('http://localhost:8000/sensitivity_score/', {  
       method: 'POST',  
       body: formData  
-    });  
+    });
   
     const data = await response.json();  
     setScore(data.sensitivity_score);  
-  }; 
+  };
 
   const handleFileChangePII = (event) => {  
     setFilePii(event.target.files[0]);  
@@ -45,13 +49,7 @@ function App() {
   
       if (response.status === 200) {  
         const url = window.URL.createObjectURL(new Blob([response.data]));  
-        // const link = document.createElement('a');
-        setDownloadURL(url);
-        // link.href = url;  
-        // link.setAttribute('download', `redacted_${filePii.name}`); // Set download attribute  
-        // document.body.appendChild(link);  
-        // link.click();  
-        // link.remove();  
+        setDownloadURL(url); 
       } else {  
         console.error('Failed to download the redacted PDF');  
         alert('Failed to download the redacted PDF');  
@@ -60,6 +58,70 @@ function App() {
       console.error('Error:', error);  
       alert('An error occurred while processing the file.');  
     }  
+  };
+
+  const handleFileChangeScale = (event) => {  
+    setFileScale(event.target.files[0]);  
+  }; 
+
+  const handleSubmitScale = async (event) => {  
+    event.preventDefault();  
+    const formData = new FormData();  
+    formData.append('file', fileScale);  
+  
+    try {
+      let response = await fetch('http://localhost:8000/age_scale/', {  
+        method: 'POST',  
+        body: formData  
+      });  
+    
+      const data = await response.json();
+      let pngUrl = null
+      
+      response = await axios.post('http://localhost:8000/to_png/', formData, {    
+        responseType: 'blob',  
+      });
+      
+      if (response.status === 200) {
+        pngUrl = window.URL.createObjectURL(new Blob([response.data]));  
+      } else {  
+        console.error('Failed to retrieve png');  
+        alert('Failed to retrieve png');  
+      } 
+
+      setScaleOutput([data.age, pngUrl])
+    } catch (error) {  
+      console.error('Error:', error);  
+      alert('An error occurred while processing the image.');  
+    }   
+  };
+
+  const handleFileChangeFence = (event) => {
+    const video = event.target.files[0];
+    setFileFence([video,  window.URL.createObjectURL(video)]);  
+  }; 
+
+  const handleSubmitFence = async (event) => {  
+    event.preventDefault();  
+    const formData = new FormData();  
+    formData.append('file', fileFence[0]);  
+  
+    try {
+      const response = await axios.post('http://localhost:8000/fence_counting/', formData, {    
+        responseType: 'blob',  
+      }); 
+      
+      if (response.status === 200) {
+        const videoUrl = window.URL.createObjectURL(new Blob([response.data]));
+        setFenceOutput(videoUrl)
+      } else {  
+        console.error('Failed to retrieve processed video');  
+        alert('Failed to retrieve processed video');  
+      }
+    } catch (error) {  
+      console.error('Error:', error);  
+      alert('An error occurred while processing the image.');  
+    }   
   };
 
   useEffect(() => {  
@@ -105,6 +167,43 @@ function App() {
             <a href={downloadURL} download={`redacted_${filePii? filePii.name : 'None'}`}>  
               <button>Download File</button>
             </a>  
+          )}
+          <h1>Age Scale</h1>  
+          <form onSubmit={handleSubmitScale}>  
+            <input type="file" onChange={handleFileChangeScale} />  
+            <button type="submit">Submit</button>  
+          </form>  
+          {scaleOutput[0] !== null && (
+            <div>  
+              <h2>Scale Age: {scaleOutput[0]}</h2>
+              <img src={scaleOutput[1]} alt='Image failed to render' style={{width: '300px'}}/>
+            </div>  
+          )}
+          <h1>Fence Count</h1>  
+          <form onSubmit={handleSubmitFence}>  
+            <input type="file" onChange={handleFileChangeFence} />  
+            <button type="submit">Submit</button>  
+          </form>  
+          {fenceOutput !== null && (
+            <div>  
+              <h2>Uploaded Video</h2>
+              <video src={fileFence[1]} width="300px" controls/>
+              <h2>Processed Video</h2>
+              <video src={fenceOutput} width="300px" controls/>
+            </div>  
+          )}
+          <h1>French Transalations</h1>  
+          <form onSubmit={handleSubmitFence}>  
+            <input type="file" onChange={handleFileChangeFence} />  
+            <button type="submit">Submit</button>  
+          </form>  
+          {fenceOutput !== null && (
+            <div>  
+              <h2>Uploaded Video</h2>
+              <video src={fileFence[1]} width="300px" controls/>
+              <h2>Processed Video</h2>
+              <video src={fenceOutput} width="300px" controls/>
+            </div>  
           )}
       </div>  
   );  
