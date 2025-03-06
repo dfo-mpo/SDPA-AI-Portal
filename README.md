@@ -1,7 +1,12 @@
 # DFO OpenAI Tool Suite
 TODO: UPDATE THIS!!!!!!!!!!!!!!! this is for old framework and outdated tools <br>
-using python 3.10.6 for backend <br>
-.sh scripts are broken, to run backend use the following command: python -m uvicorn ai_ml_tools.main:app --reload
+using python 3.10.6 for backend <br><br>
+You can run scripts using manualy commands or the bash scripts. Using scripts:
+<br>First time running run the command: ./setup_and_run.sh
+<br>Future uses, run the command: ./dev.sh
+<br>Manual way:
+<br>To active a virtual envrioroment (if using) use command: ./venv/Scripts/activate
+<br>To run backend use the following command: python -m uvicorn ai_ml_tools.main:app --reload
 <br>
 Backend structure has main.py to communicate with frontend, core folder for configurations, models folder for python classes, routers folder for handeling api requests, and utils folder for any helper functions.
 <br>
