@@ -12,6 +12,9 @@ async def pii_redact(file: UploadFile = File(...)):
     analyzer = AnalyzerEngine()
 
     # Define PII entities to redact
+    # add more entities to redact as needed
+    
+    
     entities_to_redact = [
         'PHONE_NUMBER', 'EMAIL_ADDRESS', 'CREDIT_CARD', 'US_DRIVER_LICENSE'
         # 'CREDIT_CARD', 'IBAN', 
