@@ -1,0 +1,151 @@
+import React, { useRef } from 'react';
+import PropTypes from 'prop-types';
+import { Typography, Button, Stack, Paper, CircularProgress, Box } from '@mui/material';
+import ToolContentWrapper from './ToolContentWrapper';
+import Banner from '../common/Banner';
+import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+
+/**
+ * Tool page component that provides consistent layout for all tools
+ * 
+ * @param {Object} props - Component props
+ * @param {string} props.title - Tool title
+ * @param {string} props.shortDescription - Brief description for banner
+ * @param {string} props.longDescription - Detailed description
+ * @param {string} [props.backgroundImage='/assets/default-banner.jpg'] - URL for banner background image
+ * @param {string} [props.actionButtonText='Upload File'] - Text for the action button
+ * @param {Function} props.onFileSelected - Callback when a file is selected
+ * @param {boolean} [props.isProcessing=false] - Whether the tool is currently processing
+ * @param {boolean} [props.isFormValid=true] - Whether the form is valid for submission (e.g., weights add up to 100%)
+ * @param {string} [props.validationMessage=''] - Message to show when form is invalid
+ * @param {React.ReactNode} [props.children] - Additional content to render
+ * @returns {JSX.Element} The rendered component
+ */
+export default function ToolPage({
+  title,
+  shortDescription,
+  longDescription,
+  backgroundImage = '/assets/default-banner.jpg',
+  actionButtonText = 'Upload File',
+  onFileSelected,
+  isProcessing = false,
+  isFormValid = true,
+  validationMessage = '',
+  children,
+}) {
+  // Get styles from our styling system
+  const toolStyles = useComponentStyles('tool');
+  const layoutStyles = useComponentStyles('layout');
+  
+  // Local styles
+  const styles = {
+    actionContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 2
+    },
+    validationWarning: {
+      color: 'error.main',
+      fontSize: '0.75rem',
+      ml: 1,
+      fontWeight: 500
+    }
+  };
+  
+  const fileInputRef = useRef();
+
+  /**
+   * Handle file input change
+   * @param {Event} event - The change event
+   */
+  const onFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      onFileSelected(file);
+    }
+  };
+
+  return (
+    <>
+      <Banner
+        title={title}
+        description={shortDescription}
+        backgroundImage={backgroundImage}
+        variant="hero"
+      />
+
+      <ToolContentWrapper>
+        <Stack spacing={2} alignItems="flex-start">
+          <Typography sx={toolStyles.description}>
+            {longDescription}
+          </Typography>
+
+          {/* Hidden file input element */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={onFileChange}
+          />
+
+          {/* Upload button with loading indicator */}
+          <Box sx={styles.actionContainer}>
+            <Button 
+              variant="contained"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessing || !isFormValid}
+              sx={toolStyles.actionButton}
+            >
+              {actionButtonText}
+            </Button>
+            
+            {isProcessing && (
+              <CircularProgress size={24} sx={{ ml: 2 }} />
+            )}
+            
+            {!isFormValid && validationMessage && (
+              <Typography sx={styles.validationWarning}>
+                {validationMessage}
+              </Typography>
+            )}
+          </Box>
+          
+          {/* Tool-specific content (results, additional UI) */}
+          {children}
+        </Stack>
+      </ToolContentWrapper>
+    </>
+  );
+}
+
+ToolPage.propTypes = {
+  /** Tool title displayed in the banner */
+  title: PropTypes.string.isRequired,
+  
+  /** Brief description shown in the banner */
+  shortDescription: PropTypes.string,
+  
+  /** Detailed description shown on the tool page */
+  longDescription: PropTypes.string,
+  
+  /** Background image URL for the banner */
+  backgroundImage: PropTypes.string,
+  
+  /** Text for the file upload button */
+  actionButtonText: PropTypes.string,
+  
+  /** Callback function when a file is selected */
+  onFileSelected: PropTypes.func.isRequired,
+  
+  /** Whether the tool is currently processing data */
+  isProcessing: PropTypes.bool,
+  
+  /** Whether the form is valid and ready for submission */
+  isFormValid: PropTypes.bool,
+  
+  /** Message to show when form is invalid */
+  validationMessage: PropTypes.string,
+  
+  /** Additional content to render below the description */
+  children: PropTypes.node,
+};
