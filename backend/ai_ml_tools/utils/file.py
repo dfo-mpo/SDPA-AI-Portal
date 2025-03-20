@@ -1,7 +1,9 @@
+from ai_ml_tools.models.header import Header
 from io import BytesIO
 from PIL import Image
 import fitz
 import re
+import csv
 
 # Converts file passed from front end into a file loaded in memory
 async def file_to_path(file):
@@ -48,3 +50,26 @@ def pdf_to_text(file):
     except Exception as e:  
         print(f"Error processing document: {e}")  
         return None  
+    
+"""
+    Extract and create Header objects from a CSV file.
+
+   Opens the specified CSV file, reads its content, and extracts pairs of column headers and prompts.
+   Each pair is used to create a Header object, and a list of Header objects is returned.
+
+   Return Value:
+       - header_list (list of Header): A list of Header objects containing extracted column headers and prompts.
+"""
+def extract_col_prompts(file):    
+    # Using CSV, extract prompts
+    with open(file, encoding='cp1252') as file:
+        reader = csv.reader(file)  
+        headers = next(reader, None)  # Read the first row, which contains the headers  
+        prompts = next(reader, None)  # Read the second row, which contains the prompts  
+  
+    if not headers or not prompts:  
+        return None  
+  
+    # Pair each header with its corresponding prompt  
+    header_list = [Header(header, prompt) for header, prompt in zip(headers, prompts)]  
+    return header_list 

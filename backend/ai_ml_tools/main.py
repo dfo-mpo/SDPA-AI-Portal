@@ -7,6 +7,11 @@ import os
 # Load environment variables from .env file  
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))  
 
+# To resolve dependancy issues with sqlite3 with Chroma
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 app = FastAPI()  
 
 # Configure CORS  

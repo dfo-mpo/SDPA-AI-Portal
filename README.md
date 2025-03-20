@@ -13,6 +13,8 @@ Backend structure has main.py to communicate with frontend, core folder for conf
 using Node.js v22.12.0 for frontend<br>
 to run frontend use the following command: npm start
 
+# TODO, add backend framework (include how to add new url), how to run the backend (wiht or without venv), each API call (inputs and outputs), measure for sqlite for azure web apps 
+
 ## Description
 The DFO OpenAI Tool Suite is a web application equipped with a suite of AI tools designed for document interaction and analysis. This application enables users to leverage powerful AI capabilities directly through their web browser. Built using Django, Python, CSS, HTML, and JavaScript.
 
