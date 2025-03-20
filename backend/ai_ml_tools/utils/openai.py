@@ -134,52 +134,34 @@ def get_relevent_chunks(chat_history: list[dict], document_chunks: list[str], do
     
     return document_content
 
-# Uses OpenAI API to answer user prompts.
-def chat_with_openai_api(conversation_input, ):
-    try:
-        if model == "gpt-4o":
-            stream = openAIClient_4o.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=tempurature,
-                frequency_penalty=0,
-                presence_penalty=0,
-                stop=None,
-                stream=True
-            )
-        elif model == "gpt-4o-mini":
-            stream = openAIClient_4o_mini.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=tempurature,
-                frequency_penalty=0,
-                presence_penalty=0,
-                stop=None,
-                stream=True
-            )
-        elif model == "o3-mini":
-            stream = openAIClient_o3_mini.chat.completions.create(
-                model=model,
-                messages=messages,
-                reasoning_effort=reasoning_effort,
-                stop=None,
-                stream=True
-            )
-        else:
-            raise ValueError(f"{model} is not a supported model name.")
-    except Exception as e:
-        print(e)
-    response = openAIClient.chat.completions.create(
-        #   engine=model_id, 
-          model=model_id,  
-          messages= conversation_input,  
-          temperature=0.2,  
-          frequency_penalty=0,  
-          presence_penalty=0,  
-          stop=None,  
-          stream=False  
+'''
+Using OpenAI API, generate a response on the given document-based conversation.
+Parameters:
+    - question (str): The user's question or input.
+    - conversation_input (list): List of dictionaries representing the conversation history, each containing 'role' 
+    (user or model) and 'content' (message) keys.
+Return Value:
+    - List containing two elements:
+        - conversation_input (list): Updated conversation history including the user's question and the model's response
+        - total_tokens (int): Total tokens consumed during the conversation.
+''' #TODO: add model name as input and have calls to 2 differnt functions, one does combined prompts while the other does segrigated
+def request_openai_response(question, conversation_input, model="gpt-4o-mini", tempurature=0.3):
+    conversation_input.append({"role": "user", "content": question})
+    response = openAIClient_4o_mini.chat.completions.create(
+        model=model,
+        messages=conversation_input,
+        temperature=tempurature,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None)
+    conversation_input.append(
+        {
+            "role": response.choices[0].message.role,
+            "content": response.choices[0].message.content,
+        }
     )
-
-    print(response)
-    print("Token usage:", response["usage"]["total_tokens"])
-    return response.choices[0].message.content
+    
+    # print(f'Responce: {response.choices[0].message.content.strip()}')
+    api_usage = response['usage']
+    # print('(Tokens consumed: {0})\n'.format(api_usage['total_tokens']))
+    return [conversation_input, response.choices[0].message.content, api_usage["total_tokens"]]
