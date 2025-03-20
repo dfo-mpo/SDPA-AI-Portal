@@ -20,7 +20,8 @@ import {
   Card,
   CardContent,
   IconButton,
-  useTheme
+  useTheme,
+  alpha
 } from '@mui/material';
 import { Settings, Home } from 'lucide-react'; 
 import { AIToolsDropdown, StaticToolList } from '../components/dashboard';
@@ -83,11 +84,10 @@ export default function NewLeftPanel({
       maxWidth: 400,
       borderRadius: '8px',
       p: 2,
-      overflow: 'auto',
+      overflow: 'visible', 
       display: 'flex',
       flexDirection: 'column',
-      minHeight: `calc(100vh - ${headerHeight}px)`,
-      maxHeight: `calc(100vh - ${headerHeight}px)`,
+      height: 'fit-content', 
       justifyContent: 'space-between',
       bgcolor: 'background.paper',
       border: '1px solid',
@@ -98,7 +98,7 @@ export default function NewLeftPanel({
       flexGrow: 1,
       display: 'flex', 
       flexDirection: 'column', 
-      height: '100%'
+      overflow: 'visible',
     },
     toolSelectionContainer: {
       display: 'flex',
@@ -107,23 +107,34 @@ export default function NewLeftPanel({
       gap: 1,
       width: '100%',
     },
-    homeButton: {
+    homeButton: (theme) => ({
       width: '45px',
       height: '45px',
       padding: 0,
       borderRadius: '50%', 
-      color: theme.palette.text.primary,
-      border: '2px solid',
-      borderColor: theme.palette.divider,
-      backgroundColor: theme.palette.background.paper,
+      color: theme.palette.mode === 'dark' 
+        ? theme.palette.primary.light 
+        : theme.palette.primary.main,
+      border: '1px solid',
+      borderColor: theme.palette.mode === 'dark' 
+        ? alpha(theme.palette.primary.dark, 0.6) 
+        : alpha(theme.palette.primary.light, 0.5),
+      backgroundColor: theme.palette.mode === 'dark'
+        ? alpha(theme.palette.primary.dark, 0.25)
+        : alpha(theme.palette.primary.light, 0.15),
       '&:hover': {
-        backgroundColor: theme.palette.action.hover,
+        backgroundColor: theme.palette.mode === 'dark'
+          ? alpha(theme.palette.primary.dark, 0.4)
+          : alpha(theme.palette.primary.light, 0.25),
+        borderColor: theme.palette.mode === 'dark'
+          ? theme.palette.primary.dark
+          : theme.palette.primary.light,
       },
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      transition: 'background-color 0.2s ease-in-out',
-    },
+      transition: 'all 0.2s ease-in-out',
+    }),
     dropdownWrapper: {
       flexGrow: 1,
     },

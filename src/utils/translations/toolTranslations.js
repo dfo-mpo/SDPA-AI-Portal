@@ -323,7 +323,7 @@ export const toolTranslations = {
             "PDF Chatbot": "PDF Chatbot",
             "PII Redactor": "PII Redactor",
             "Sensitivity Score Calculator": "Sensitivity Score Calculator",
-            "French Translation Bot": "French Translation Bot"
+            "French Translation": "French Translation"
           }
         },
         fr: {

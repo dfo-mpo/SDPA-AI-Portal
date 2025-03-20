@@ -52,34 +52,36 @@ const styles = useComponentStyles('govHeader');
   const logoSrc = theme.palette.mode === 'dark' ? '/assets/dark.png' : '/assets/light.png';
 
   return (
-    <Box ref={headerRef} sx={styles.container}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={styles.content}>
-        <Box sx={styles.logoContainer}>
-          <img 
-            src={logoSrc} 
-            alt="Government of Canada / Gouvernement du Canada" 
-            style={styles.logo} 
-          />
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', height: '100%' }}>
-            <Divider orientation="vertical" sx={{ height: 28, mx: 2 }} />
-            <Typography sx={styles.departmentTitle}>
-              {language === 'en' ? 'Fisheries and Oceans Canada' : 'Pêches et Océans Canada'}
-            </Typography>
+    <Box sx={styles.outerContainer}>
+      <Box ref={headerRef} sx={styles.container}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={styles.content}>
+          <Box sx={styles.logoContainer}>
+            <img 
+              src={logoSrc} 
+              alt="Government of Canada / Gouvernement du Canada" 
+              style={styles.logo} 
+            />
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', height: '100%' }}>
+              <Divider orientation="vertical" sx={{ height: 28, mx: 2 }} />
+              <Typography sx={styles.departmentTitle}>
+                {language === 'en' ? 'Fisheries and Oceans Canada' : 'Pêches et Océans Canada'}
+              </Typography>
+            </Box>
           </Box>
-        </Box>
 
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Button 
-            size="small" 
-            onClick={toggleLanguage} 
-            startIcon={<TranslateIcon />} 
-            sx={styles.languageButton}
-          >
-            {language === 'en' ? 'Français' : 'English'}
-          </Button>
-          <ColorModeIconDropdown />
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Button 
+              size="small" 
+              onClick={toggleLanguage} 
+              startIcon={<TranslateIcon />} 
+              sx={styles.languageButton}
+            >
+              {language === 'en' ? 'Français' : 'English'}
+            </Button>
+            <ColorModeIconDropdown />
+          </Stack>
         </Stack>
-      </Stack>
+      </Box>
     </Box>
   );
 }

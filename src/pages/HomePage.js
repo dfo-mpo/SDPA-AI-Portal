@@ -9,7 +9,7 @@ import { Typography, Paper, Box, Alert, useTheme } from '@mui/material';
 import { Banner } from '../components/common';
 import { useLanguage } from '../contexts';
 import { homePageStyles } from '../styles/componentStyles';
-import ThemeDebugger from '../components/common/ThemeDebugger';
+// import ThemeDebugger from '../components/common/ThemeDebugger'; uncomment to use for theme debugging
 
 export default function Home() {
   const { language } = useLanguage();
@@ -57,8 +57,8 @@ export default function Home() {
         <Alert severity="warning" sx={styles.alert}>
           {translations[language].alert}
         </Alert>
-        {/* Add the ThemeDebugger component here */}
-        <ThemeDebugger />
+        {/* ThemeDebugger component for debugging theme */}
+        {/* <ThemeDebugger /> */}
       </Box>
     </>
   );

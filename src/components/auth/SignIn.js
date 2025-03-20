@@ -4,7 +4,7 @@
  * Provides the user login form with email/password and social login options.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {
     Box,
@@ -19,9 +19,10 @@ import {
     Typography,
     Stack,
     Card,
-    useTheme
+    useTheme,
+    Alert
 } from '@mui/material';
-import { useLanguage } from '../../contexts';
+import { useLanguage, useTerms } from '../../contexts';
 import { ForgotPassword } from '.';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../common/CustomIcons';
 import { signInStyles } from '../../styles/componentStyles';
@@ -35,6 +36,8 @@ export default function SignIn({ onLogin }) {
     const [passwordError, setPasswordError] = useState(false);
     const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
     const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+    const { termsAccepted, startLoginFlow, loginPending } = useTerms();
+    const [showTermsRejectedWarning, setShowTermsRejectedWarning] = useState(false);
 
     // Translations
     const translations = {
@@ -51,7 +54,8 @@ export default function SignIn({ onLogin }) {
             signInWithGoogle: "Sign in with Google",
             signInWithFacebook: "Sign in with Facebook",
             noAccount: "Don't have an account?",
-            signUp: "Sign up"
+            signUp: "Sign up",
+            termsRejectedWarning: "You must accept the Terms and Conditions to sign in. Please try again."
         },
         fr: {
             title: "Connectez-vous au portail d'IA du MPO",
@@ -66,11 +70,21 @@ export default function SignIn({ onLogin }) {
             signInWithGoogle: "Se connecter avec Google",
             signInWithFacebook: "Se connecter avec Facebook",
             noAccount: "Vous n'avez pas de compte?",
-            signUp: "S'inscrire"
+            signUp: "S'inscrire",
+            termsRejectedWarning: "Vous devez accepter les conditions générales pour vous connecter. Veuillez réessayer."
         }
     };
 
     const t = translations[language] || translations.en;
+    
+    // Effect to check for login completion after terms acceptance
+    useEffect(() => {
+        if (termsAccepted && loginPending) {
+            // If terms are accepted and we're in the middle of login flow
+            // complete the login
+            onLogin();
+        }
+    }, [termsAccepted, loginPending, onLogin]);
 
     const handleForgotPasswordOpen = () => {
         setForgotPasswordOpen(true);
@@ -118,13 +132,57 @@ export default function SignIn({ onLogin }) {
             return;
         }
 
-        onLogin();
+        // Start login flow - this will check if terms are accepted
+        // and show the modal if needed
+        const canProceed = startLoginFlow();
+        
+        // If terms already accepted, proceed with login
+        if (canProceed) {
+            onLogin();
+        } else {
+            // Otherwise, terms modal will be shown
+            // Login will be completed when terms are accepted (via useEffect)
+            // If they were previously rejected, show the warning
+            if (showTermsRejectedWarning) {
+                setShowTermsRejectedWarning(true);
+            }
+        }
     };
 
     const handleSocialLogin = (provider) => {
         console.log(`Logging in with ${provider}`);
-        onLogin();
+        
+        // Same flow as above but for social login
+        const canProceed = startLoginFlow();
+        if (canProceed) {
+            onLogin();
+        } else {
+            if (showTermsRejectedWarning) {
+                setShowTermsRejectedWarning(true);
+            }
+        }
     };
+
+    // When terms are rejected, show warning
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const termsStatus = localStorage.getItem('dfo-terms-rejected');
+            if (termsStatus === 'true') {
+                setShowTermsRejectedWarning(true);
+                // Clear the flag
+                localStorage.removeItem('dfo-terms-rejected');
+            }
+        };
+        
+        // Initial check
+        handleStorageChange();
+        
+        // Listen for changes
+        window.addEventListener('storage', handleStorageChange);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, []);
 
     return (
         <Stack direction="column" justifyContent="center" sx={styles.signInContainer}>
@@ -137,6 +195,17 @@ export default function SignIn({ onLogin }) {
                 >
                     {t.title}
                 </Typography>
+                
+                {showTermsRejectedWarning && (
+                    <Alert 
+                        severity="warning" 
+                        sx={{ mb: 2 }}
+                        onClose={() => setShowTermsRejectedWarning(false)}
+                    >
+                        {t.termsRejectedWarning}
+                    </Alert>
+                )}
+                
                 <Box
                     component="form"
                     onSubmit={handleSubmit}
