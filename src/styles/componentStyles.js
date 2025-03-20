@@ -159,7 +159,8 @@ export const bannerStyles = {
     mb: 2,
     fontWeight: 700,
     fontSize: '2rem',
-    color: theme.palette.mode === 'dark' ? theme.palette.common.white : dfoColors.darkBlue,
+    // Updated to always use dfoColors.darkBlue, regardless of theme mode
+    color: dfoColors.darkBlue,
     textShadow: '1px 1px 0 rgba(255,255,255,0.5)',
   }),
   
@@ -170,7 +171,8 @@ export const bannerStyles = {
     mb: 2,
     fontWeight: 700,
     fontSize: '2.2rem',
-    color: theme.palette.mode === 'dark' ? theme.palette.common.white : dfoColors.darkBlue,
+    // Updated to always use dfoColors.darkBlue, regardless of theme mode
+    color: dfoColors.darkBlue,
     textShadow: '1px 1px 0 rgba(255,255,255,0.5)',
   }),
   
@@ -182,7 +184,8 @@ export const bannerStyles = {
     maxWidth: '500px',
     fontSize: '1.1rem',
     fontWeight: 500,
-    color: theme.palette.mode === 'dark' ? theme.palette.grey[200] : dfoColors.darkBlue,
+    // Updated to always use dfoColors.darkBlue, regardless of theme mode
+    color: dfoColors.darkBlue,
     textShadow: '1px 1px 0 rgba(255,255,255,0.5)',
   }),
   
@@ -677,15 +680,34 @@ export const sensitivityScoreStyles = {
 
 
 export const govHeaderStyles = {
-  container: (theme) => ({
-    width: '100%',
-    bgcolor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#FFFFFF',
-    color: theme.palette.mode === 'dark' ? theme.palette.text.primary : '#333333',
+  outerContainer: {
+    width: '100vw',
+    position: 'relative',
+    left: '50%',
+    right: '50%',
+    marginLeft: '-50vw',
+    marginRight: '-50vw',
+    background: theme => theme.palette.mode === 'light'
+      ? `linear-gradient(to left, ${alpha(theme.palette.primary.light, 0.15)} 0%, 
+         ${alpha(theme.palette.primary.light, 0.1)} 30%, 
+         rgba(255,255,255,1) 80%)`
+      // Dark mode gradient
+      : `linear-gradient(to left, hsl(210, 100%, 12%) 0%, 
+         hsl(210, 100%, 8%) 70%, 
+         rgba(0,0,0,1) 85%)`,
+    // color: theme.palette.mode === 'dark' ? theme.palette.text.primary : '#333333',
     borderBottom: '1px solid',
     borderColor: '#DC4D01',
     py: 2,
-    boxShadow: 'none',
-  }),
+    boxShadow: theme => theme.palette.mode === 'light'
+      ? '0 2px 4px rgba(0,0,0,0.03)'
+      : '0 2px 6px rgba(0,0,0,0.2)',
+  },
+  container: {
+    width: '100%',
+    color: theme => theme.palette.mode === 'dark' ? theme.palette.text.primary : '#333333',
+    // py: 2,
+  },
   content: {
     maxWidth: 1800,
     width: '100%',
@@ -693,6 +715,7 @@ export const govHeaderStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    px: 3.5,
   },
   logoContainer: {
     flexGrow: 1,
@@ -712,11 +735,10 @@ export const govHeaderStyles = {
   departmentTitle: (theme) => ({
     display: { xs: 'none', md: 'block' },
     ml: 2,
-    color: theme.palette.mode === 'dark' ? theme.palette.text.primary : '#333333',
-    fontWeight: 400,
+    color: theme.palette.mode === 'dark' ? theme.palette.text.primary : dfoColors.darkBlue,
+    fontWeight: 500,
     fontSize: '1rem',
     letterSpacing: '0.01em',
-    opacity: 0.9,
   }),
   languageButton: (theme) => ({
     fontWeight: 500,
@@ -725,12 +747,16 @@ export const govHeaderStyles = {
     padding: '4px 12px',
     minWidth: '100px',
     border: '1px solid',
-    borderColor: 'divider',
-    backgroundColor: theme.palette.background.paper,
+    borderColor: theme.palette.divider,
+    backgroundColor: theme.palette.mode === 'light'
+      ? 'rgba(255, 255, 255, 0.8)'
+      : 'rgba(0, 0, 0, 0.3)',
     transition: 'all 0.2s ease',
     textTransform: 'none',
     '&:hover': { 
-      backgroundColor: theme.palette.action.hover,
+      backgroundColor: theme.palette.mode === 'light'
+        ? 'rgba(255, 255, 255, 0.9)'
+        : 'rgba(0, 0, 0, 0.5)',
       borderColor: theme.palette.text.primary,
       transform: 'translateY(-1px)',
       boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
@@ -842,15 +868,22 @@ export const optionsMenuStyles = {
 export const colorModeIconDropdownStyles = {
   iconButton: (theme) => ({
     border: '1px solid',
-    borderColor: 'divider',
+    borderColor: theme.palette.divider,
     borderRadius: '8px',
     padding: '8px',
-    color: 'text.primary',
-    backgroundColor: 'background.paper',
+    color: theme.palette.text.primary,
+    backgroundColor: theme.palette.mode === 'light'
+      ? 'rgba(255, 255, 255, 0.8)'
+      : 'rgba(0, 0, 0, 0.3)',
     '&:hover': {
-      backgroundColor: 'action.hover',
-      borderColor: 'text.primary',
+      backgroundColor: theme.palette.mode === 'light'
+        ? 'rgba(255, 255, 255, 0.9)'
+        : 'rgba(0, 0, 0, 0.5)',
+      borderColor: theme.palette.text.primary,
+      transform: 'translateY(-1px)',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
     },
+    transition: 'all 0.2s ease',
   }),
   // Wrap the menu styles in a function so the hook processes them:
   menu: (theme) => ({
@@ -858,10 +891,11 @@ export const colorModeIconDropdownStyles = {
       elevation: 0,
       sx: {
         border: '1px solid',
-        borderColor: 'divider',
+        borderColor: theme.palette.divider,
         borderRadius: '8px',
         mt: 1,
         minWidth: '120px',
+        backgroundColor: theme.palette.background.paper,
       },
     },
   }),
@@ -892,6 +926,10 @@ export const aiToolsDropdownStyles = {
       py: 2,        // Match StaticToolList py value
       px: 2,        // Match StaticToolList px value
       minHeight: '48px', // Match StaticToolList minHeight
+      display: 'flex',
+      alignItems: 'center',  // Ensures items are vertically centered
+      justifyContent: 'center', // Centers text horizontally
+      textAlign: 'center', // Aligns text inside the menu
       '&:hover': {
         bgcolor: 'action.hover',
       },
@@ -907,8 +945,10 @@ export const aiToolsDropdownStyles = {
     '& .MuiSelect-select': {
       display: 'flex',
       alignItems: 'center',
-      padding: '16px',
+      padding: '20px',
       minHeight: '60px',
+      whiteSpace: 'normal', // Allow text wrapping
+      fontSize: '0.97rem',
     },
   }),
   menuItem: {
@@ -917,6 +957,10 @@ export const aiToolsDropdownStyles = {
     minHeight: '48px',
     '&:hover': {
       bgcolor: 'action.hover',
+    },
+    '& .MuiTypography-root': {
+      whiteSpace: 'normal',
+      fontSize: '1rem',
     },
   },
   listItemIcon: {
@@ -956,8 +1000,8 @@ export const staticToolListStyles = {
     borderBottom: '1px solid', 
     borderColor: 'divider',
     backgroundColor: theme.palette.mode === 'dark'
-      ? alpha(theme.palette.primary.dark, 0.1) 
-      : alpha(theme.palette.primary.light, 0.1),
+      ? alpha(theme.palette.primary.dark, 0.25) 
+      : alpha(theme.palette.primary.light, 0.15),
   }),
   headerContent: (theme) => ({
     display: 'flex',
@@ -1200,6 +1244,231 @@ export const iconStyles = {
   },
 };
 
+export const termsAndConditionsStyles = {
+  container: (theme) => ({
+    padding: theme.spacing(2),
+    width: '100%',
+    maxHeight: 'someValue', // This might be causing issues
+    overflow: 'auto',   
+  }),
+  mainTitle: {
+    mb: 4,
+    fontWeight: 700,
+    color: theme => theme.palette.primary.main,
+    textAlign: 'center',
+  },
+  section: {
+    mb: 3,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  sectionTitle: {
+    mb: 1,
+    fontWeight: 600,
+    color: theme => theme.palette.primary.dark,
+  },
+  sectionText: {
+    lineHeight: 1.6,
+    mb: 2,
+    pl: 1,
+    color: theme => theme.palette.text.primary
+  },
+  divider: {
+    my: 2,
+  }
+};
+
+export const termsModalStyles = {
+  dialogPaper: (theme) => ({
+    maxWidth: '800px',
+    maxHeight: '90vh', // Slightly increased to give more room
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: theme.palette.background.paper,
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+      : '0 8px 32px rgba(0, 0, 0, 0.1)',
+    overflow: 'hidden', // Keep this
+    border: `1px solid ${theme.palette.divider}`,
+  }),
+  dialogContent: {
+    p: 0,
+    overflow: 'hidden', // Prevent DialogContent's default scroll
+  },
+  dialogTitle: (theme) => ({
+    borderBottom: '1px solid',
+    borderColor: 'divider',
+    py: 2,
+    px: 3,
+    backgroundColor: theme.palette.mode === 'dark'
+      ? alpha(theme.palette.primary.dark, 0.25)
+      : alpha(theme.palette.primary.light, 0.15),
+    '& .MuiTypography-root': {
+      color: theme.palette.mode === 'dark'
+        ? theme.palette.text.primary
+        : dfoColors.darkBlue,
+      fontWeight: 600,
+    },
+  }),
+  dialogContent: {
+    p: 0,
+    overflow: 'hidden', // Prevent DialogContent's default scroll
+  },
+  contentContainer: (theme) => ({
+    maxHeight: '60vh',
+    overflow: 'auto',
+    p: 3,
+    bgcolor: theme.palette.background.paper
+  }),
+  dialogActions: (theme) => ({
+    px: 3,
+    py: 2,
+    borderTop: `1px solid ${theme.palette.divider}`,
+    backgroundColor: theme.palette.mode === 'dark'
+      ? alpha(theme.palette.background.paper, 0.8)
+      : theme.palette.grey[50],
+  }),
+  declineButton: {
+    mr: 'auto',
+    color: 'text.secondary',
+    '&:hover': {
+      backgroundColor: (theme) => alpha(theme.palette.error.main, 0.08),
+    },
+  },
+  acceptButton: (theme) => ({
+    minWidth: 120,
+    backgroundColor: theme.palette.mode === 'dark'
+      ? theme.palette.primary.dark
+      : theme.palette.primary.main,
+    color: 'white',
+    '&:hover': {
+      backgroundColor: theme.palette.mode === 'dark'
+        ? alpha(theme.palette.primary.dark, 0.9)
+        : alpha(theme.palette.primary.main, 0.9),
+    },
+  }),
+  closeButton: {
+    minWidth: 100,
+  }
+};
+
+export const footerStyles = {
+  container: (theme) => ({
+    width: '100%',
+    background: theme.palette.mode === 'light'
+      ? `linear-gradient(to right, ${alpha(theme.palette.primary.light, 0.15)} 0%, 
+         ${alpha(theme.palette.primary.light, 0.1)} 30%, 
+         rgba(255,255,255,1) 80%)`
+      // Dark mode gradient
+      : `linear-gradient(to right, hsl(210, 100%, 12%) 0%, 
+         hsl(210, 100%, 8%) 30%, 
+         rgba(0,0,0,1) 85%)`,
+    borderTop: `1px solid ${alpha(dfoColors.orange, theme.palette.mode === 'light' ? 0.75 : 0.75)}`,
+    py: 3,
+    px: 3,
+    mt: 1,
+    // Extend to bottom of viewport in full screen
+    position: 'relative',
+    marginBottom: '-1px',
+    paddingBottom: '20px',
+  }),
+  
+  content: {
+    maxWidth: '1645px',
+    width: '100%',
+    margin: '0 auto',
+    display: 'flex',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 2,
+  },
+  leftContent: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2.5,
+    flexWrap: 'wrap',
+  },
+  copyrightText: (theme) => ({
+    fontFamily: "'Lato', sans-serif",
+    fontWeight: 500,
+    fontSize: '0.85rem',
+    color: theme.palette.mode === 'light' 
+      ? dfoColors.darkBlue
+      : theme.palette.text.primary,
+  }),
+  updatedText: (theme) => ({
+    fontFamily: "'Lato', sans-serif",
+    fontSize: '0.8rem',
+    color: theme.palette.mode === 'light'
+      ? alpha(dfoColors.darkBlue, 0.8)
+      : alpha(theme.palette.text.primary, 0.8),
+    display: 'flex',
+    alignItems: 'center',
+    '&::before': {
+      content: '""',
+      display: 'inline-block',
+      width: '4px',
+      height: '4px',
+      borderRadius: '50%',
+      backgroundColor: theme.palette.mode === 'light'
+        ? alpha(dfoColors.darkBlue, 0.5)
+        : alpha(theme.palette.text.primary, 0.5),
+      marginRight: '8px',
+    }
+  }),
+  logoContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    // Create a subtle "background" for the logo
+    position: 'relative',
+    zIndex: 1,
+    pr: 1, // Add padding on the right
+  },
+  logo: {
+    height: '40px',
+    maxWidth: '160px',
+    objectFit: 'contain',
+    objectPosition: 'center',
+    display: 'block',
+    // Add a subtle shadow to help logo stand out
+    filter: theme => theme.palette.mode === 'light' 
+      ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.05))' 
+      : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+  },
+  termsButton: (theme) => ({
+    textTransform: 'none',
+    fontSize: '0.85rem',
+    fontWeight: 500,
+    color: theme.palette.mode === 'light'
+      ? theme.palette.primary.main
+      : theme.palette.primary.light,
+    '&:hover': {
+      backgroundColor: theme.palette.mode === 'light' 
+        ? alpha(dfoColors.darkBlue, 0.08)
+        : alpha(theme.palette.primary.main, 0.15),
+    },
+    border: 'none',
+    py: 0.5,
+    px: 1.5,
+    borderRadius: '4px',
+    minWidth: 'auto',
+    display: 'flex',
+    alignItems: 'center',
+    '&::before': {
+      content: '""',
+      display: 'inline-block',
+      width: '4px',
+      height: '4px',
+      borderRadius: '50%',
+      backgroundColor: theme.palette.mode === 'light'
+        ? alpha(dfoColors.darkBlue, 0.5)
+        : alpha(theme.palette.text.primary, 0.5),
+      marginRight: '8px',
+    }
+  }),
+};
+
 
 
 export default {
@@ -1226,4 +1495,7 @@ export default {
     piiRedactor: piiRedactorStyles,
     signIn: signInStyles,
     forgotPassword: forgotPasswordStyles,
+    termsAndConditions: termsAndConditionsStyles,
+    termsModal: termsModalStyles,
+    footer: footerStyles,
   };

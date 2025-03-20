@@ -12,6 +12,9 @@ import { Box, Paper, CircularProgress } from '@mui/material';
 import { GovHeader, LeftPanel } from '.';
 import { getToolByName } from '../utils';
 import { HomePage } from '../pages';
+import { useTerms } from '../contexts';
+import { Footer, TermsModalContainer } from '../components/common';
+
 import {
   ScaleAgeing,
   FenceCounting,
@@ -23,7 +26,7 @@ import {
 } from '../pages/tools';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
-export default function DashboardLayout({ onLogout }) {
+export default function Dashboard({ onLogout }) {
   // Store the selected tool name
   const [selectedTool, setSelectedTool] = useState('');
   const [headerHeight, setHeaderHeight] = useState(80); // Default to 80px, dynamically updated
@@ -79,28 +82,61 @@ export default function DashboardLayout({ onLogout }) {
   };
 
   return (
-    <Box>
-      {/* Wrapper to align GovHeader with LeftPanel */}
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      minHeight: '100vh',
+      bgcolor: 'background.default' 
+    }}>
+      {/* Header */}
       <Box sx={styles.container}>
-        {/* Pass setHeaderHeight so GovHeader can update it */}
         <GovHeader setHeaderHeight={setHeaderHeight} />
       </Box>
 
-      <Box sx={styles.mainWrapper}>
-        {/* Content wrapper */}
-        <Box sx={styles.contentWrapper}>
-          <LeftPanel 
-            selectedTool={selectedTool} 
-            onSelectTool={handleToolSelect} 
-            headerHeight={headerHeight}
-            isHomePage={isHomePage}
-            onLogout={onLogout}
-          />
+      {/* Main content area */}
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flexGrow: 1,
+        position: 'relative',
+        ...styles.mainWrapper
+      }}>
+        {/* Content wrapper - with no flex-direction column to ensure LeftPanel and MainContent are side-by-side */}
+        <Box sx={{
+          ...styles.contentWrapper,
+          display: 'flex',
+          flexGrow: 1,
+          gap: 3,
+        }}>
+          {/* Left Panel */}
+          <Box sx={{ 
+            position: 'relative',
+            height: 'fit-content', // Ensures the container fits its content
+            zIndex: 2 // Ensure it appears above other content
+          }}>
+            <LeftPanel 
+              selectedTool={selectedTool} 
+              onSelectTool={handleToolSelect}  
+              headerHeight={headerHeight}
+              isHomePage={isHomePage}
+              onLogout={onLogout}
+            />
+          </Box>
 
           {/* Main content area */}
-          <Box sx={styles.mainContent}>
+          <Box sx={{
+            ...styles.mainContent,
+            display: 'flex',
+            flexDirection: 'column',
+            flexGrow: 1,
+          }}>
             {/* Tool content */}
-            <Paper sx={styles.contentPaper}>
+            <Paper sx={{
+              ...styles.contentPaper,
+              display: 'flex',
+              flexDirection: 'column',
+              flexGrow: 1,
+            }}>
               <Suspense
                 fallback={
                   <Box sx={styles.loadingContainer}>
@@ -113,12 +149,29 @@ export default function DashboardLayout({ onLogout }) {
             </Paper>
           </Box>
         </Box>
+        
+        {/* Footer positioned below all content - with full-width container */}
+        <Box sx={{ 
+          width: '100vw', 
+          position: 'relative', 
+          left: '50%',
+          right: '50%',
+          marginLeft: '-50vw',
+          marginRight: '-50vw', 
+          mt: 0 
+        }}>
+          <Footer headerHeight={headerHeight} />
+
+        </Box>
       </Box>
+      
+      {/* Terms modal for authenticated users */}
+      <TermsModalContainer variant="full" isAuth={true} />
     </Box>
   );
 }
 
-DashboardLayout.propTypes = {
+Dashboard.propTypes = {
   /** Callback function for logout action */
   onLogout: PropTypes.func
 };

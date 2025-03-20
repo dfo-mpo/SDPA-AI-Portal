@@ -14,6 +14,7 @@ import {
   ListItemIcon,
   ListItemText,
   FormControl,
+  Typography
 } from '@mui/material';
 import { Home } from 'lucide-react';
 import { useLanguage } from '../../contexts';
@@ -48,22 +49,27 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
   return (
     <FormControl fullWidth>
       <Select
-        value={selectedTool || ''}
-        onChange={handleChange}
-        displayEmpty
-        renderValue={(selected) => {
-          if (!selected) {
+          value={selectedTool || ''}
+          onChange={handleChange}
+          displayEmpty
+          renderValue={(selected) => {
+            if (!selected) {
+              return (
+                <ListItemText
+                  primary={translations.home}
+                  secondary={translations.selectTool}
+                />
+              );
+            }
+            // Look up the translation for the selected tool name and allow wrapping
             return (
-              <ListItemText
-                primary={translations.home}
-                secondary={translations.selectTool}
-              />
+              <div style={{ whiteSpace: 'normal' }}>
+                {translations.tools[selected] || selected}
+              </div>
             );
-          }
-          return selected;
-        }}
-        sx={aiToolsDropdownStyles.select}
-      >
+          }}
+          sx={aiToolsDropdownStyles.select}
+        >
         {/* Reset / Back to Portal Home option */}
         <MenuItem value="" sx={aiToolsDropdownStyles.menuItem}>
           <ListItemIcon sx={aiToolsDropdownStyles.listItemIcon}>
@@ -93,6 +99,13 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
                 </ListItemIcon>
                 <ListItemText
                   primary={translations.tools[tool.name] || tool.name}
+                  primaryTypographyProps={{ 
+                    noWrap: false,
+                    sx: { 
+                      wordBreak: 'break-word',
+                      whiteSpace: 'normal'
+                    }
+                  }}
                 />
               </MenuItem>
             );

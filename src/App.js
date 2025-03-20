@@ -1,19 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import AppTheme from './styles/AppTheme';
 import { SignIn } from './components/auth';
-import { LanguageProvider, ToolSettingsProvider } from './contexts';
+import { LanguageProvider, ToolSettingsProvider, TermsProvider } from './contexts';
+import { TermsModalContainer } from './components/common';
 import { CssBaseline, Box } from '@mui/material';
 import { Dashboard } from './layouts';
+import { useTerms, useLanguage } from './contexts';
 
 /**
- * Main Application Component
- * Manages authentication state and wraps the application in the custom theme
+ * Main Application Component that handles authentication state
  */
-function App() {
+function AppContent() {
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { handleLogout: termsLogout } = useTerms();
+  const { language } = useLanguage();
   
-  // Check for existing auth on mount (e.g., from localStorage)
+  // Set HTML lang attribute
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+  
+  // Set document title
+  useEffect(() => {
+    document.title = language === 'en' ? 'DFO AI Portal' : 'Portail d\'IA du MPO';
+  }, [language]);
+  
+  // Check for existing auth on mount
   useEffect(() => {
     const authStatus = localStorage.getItem('dfo-auth-status');
     if (authStatus === 'authenticated') {
@@ -31,31 +44,51 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('dfo-auth-status');
     setIsAuthenticated(false);
+    // Also reset the terms state
+    termsLogout();
   };
 
   return (
+    <>
+      {isAuthenticated ? (
+        // Authenticated: Show Dashboard
+        <Box
+          sx={{
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            bgcolor: 'background.default',
+          }}
+        >
+          <Dashboard onLogout={handleLogout} />
+          {/* Terms Modal for authenticated users - pass isAuth=true */}
+          <TermsModalContainer variant="full" isAuth={true} />
+        </Box>
+      ) : (
+        // Not authenticated: Show Sign In
+        <>
+          <SignIn onLogin={handleLogin} />
+          {/* Terms Modal for login screen - pass isAuth=false (default) */}
+          <TermsModalContainer variant="full" />
+        </>
+      )}
+    </>
+  );
+}
+
+/**
+ * Main Application Component with all providers
+ */
+function App() {
+  return (
     <LanguageProvider>
       <ToolSettingsProvider>
-        {/* ToolSettingsProvider is used to manage tool settings */}
-      <AppTheme>
-        <CssBaseline />
-        {isAuthenticated ? (
-          // Authenticated: Show Dashboard
-          <Box
-            sx={{
-              minHeight: '100vh',
-              display: 'flex',
-              flexDirection: 'column',
-              bgcolor: 'background.default',
-            }}
-          >
-            <Dashboard onLogout={handleLogout} />
-          </Box>
-        ) : (
-          // Not authenticated: Show Sign In
-          <SignIn onLogin={handleLogin} />
-        )}
-      </AppTheme>
+        <TermsProvider>
+          <AppTheme>
+            <CssBaseline />
+            <AppContent />
+          </AppTheme>
+        </TermsProvider>
       </ToolSettingsProvider>
     </LanguageProvider>
   );
