@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Typography, Button, Stack, Paper, CircularProgress, Box } from '@mui/material';
+import { Upload } from 'lucide-react';
 import ToolContentWrapper from './ToolContentWrapper';
 import Banner from '../common/Banner';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
@@ -18,6 +19,7 @@ import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
  * @param {boolean} [props.isProcessing=false] - Whether the tool is currently processing
  * @param {boolean} [props.isFormValid=true] - Whether the form is valid for submission (e.g., weights add up to 100%)
  * @param {string} [props.validationMessage=''] - Message to show when form is invalid
+ * @param {boolean} [props.hideActionButton=false] - Whether to hide the default action button
  * @param {React.ReactNode} [props.children] - Additional content to render
  * @returns {JSX.Element} The rendered component
  */
@@ -31,6 +33,7 @@ export default function ToolPage({
   isProcessing = false,
   isFormValid = true,
   validationMessage = '',
+  hideActionButton = false,
   children,
 }) {
   // Get styles from our styling system
@@ -88,27 +91,30 @@ export default function ToolPage({
             onChange={onFileChange}
           />
 
-          {/* Upload button with loading indicator */}
-          <Box sx={styles.actionContainer}>
-            <Button 
-              variant="contained"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isProcessing || !isFormValid}
-              sx={toolStyles.actionButton}
-            >
-              {actionButtonText}
-            </Button>
-            
-            {isProcessing && (
-              <CircularProgress size={24} sx={{ ml: 2 }} />
-            )}
-            
-            {!isFormValid && validationMessage && (
-              <Typography sx={styles.validationWarning}>
-                {validationMessage}
-              </Typography>
-            )}
-          </Box>
+          {/* Upload button with loading indicator - only shown if not hidden */}
+          {!hideActionButton && (
+            <Box sx={styles.actionContainer}>
+              <Button 
+                variant="contained"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isProcessing || !isFormValid}
+                startIcon={<Upload size={16} />}
+                sx={toolStyles.actionButton}
+              >
+                {actionButtonText}
+              </Button>
+              
+              {isProcessing && (
+                <CircularProgress size={24} sx={{ ml: 2 }} />
+              )}
+              
+              {!isFormValid && validationMessage && (
+                <Typography sx={styles.validationWarning}>
+                  {validationMessage}
+                </Typography>
+              )}
+            </Box>
+          )}
           
           {/* Tool-specific content (results, additional UI) */}
           {children}
@@ -145,6 +151,9 @@ ToolPage.propTypes = {
   
   /** Message to show when form is invalid */
   validationMessage: PropTypes.string,
+  
+  /** Whether to hide the default action button */
+  hideActionButton: PropTypes.bool,
   
   /** Additional content to render below the description */
   children: PropTypes.node,

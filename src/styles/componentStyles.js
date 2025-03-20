@@ -1469,6 +1469,150 @@ export const footerStyles = {
   }),
 };
 
+// FileUploadModal styles for CSV Analyzer
+export const fileUploadModalStyles = {
+  dialogPaper: {
+    maxWidth: '900px',
+    minHeight: '600px',
+    borderRadius: '8px',
+  },
+  gifContainer: (theme) => ({
+    maxWidth: '100%',
+    height: '300px',
+    overflow: 'hidden',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.05)',
+    borderRadius: '4px',
+  }),
+  gif: {
+    maxWidth: '100%',
+    maxHeight: '100%',
+    objectFit: 'contain',
+  },
+  fileInputContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+    mt: 3,
+  },
+  fileInputBox: (theme) => ({
+    border: '1px dashed',
+    borderColor: 'divider',
+    borderRadius: '4px',
+    p: 2,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    minHeight: '120px',
+    transition: 'all 0.2s ease',
+    '&:hover': {
+      borderColor: 'primary.main',
+      backgroundColor: theme.palette.action.hover,
+    },
+  }),
+  fileIcon: {
+    color: 'primary.main',
+    mb: 1,
+  },
+  stepperContainer: {
+    mt: 2,
+    mb: 3,
+  },
+  uploadButtonContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    mt: 2,
+  },
+  fileInfoContainer: (theme) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    mt: 1,
+    p: 1.5,
+    backgroundColor: theme.palette.action.hover,
+    borderRadius: '4px',
+  }),
+  fileName: {
+    fontWeight: 500,
+    maxWidth: '200px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  fileSize: {
+    color: 'text.secondary',
+    fontSize: '0.75rem',
+  },
+};
+
+// CSV Analyzer demo styles
+export const csvAnalyzerStyles = {
+  container: {
+    mt: 2, 
+    mb: 4, 
+    width: '100%'
+  },
+  demoCard: {
+    p: 3, 
+    borderRadius: 2
+  },
+  headerContainer: {
+    mb: 2, 
+    display: 'flex', 
+    alignItems: 'center'
+  },
+  demoStepsContainer: (theme) => ({
+    display: 'flex',
+    flexDirection: { xs: 'column', md: 'row' },
+    gap: 2,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    p: 2,
+    bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)',
+    borderRadius: 1
+  }),
+  stepContainer: {
+    flex: 1, 
+    textAlign: 'center'
+  },
+  gifContainer: {
+    height: 120,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    mb: 1
+  },
+  actionContainer: {
+    mt: 3, 
+    display: 'flex', 
+    justifyContent: 'center'
+  },
+  resultCard: {
+    mt: 4, 
+    p: 3, 
+    borderRadius: 2
+  },
+  resultTitle: {
+    mb: 2, 
+    fontWeight: 600
+  },
+  alertSuccess: {
+    mb: 3
+  },
+  resultFooter: {
+    mt: 3, 
+    pt: 2, 
+    borderTop: '1px solid', 
+    borderColor: 'divider'
+  }
+};
+
 
 
 export default {
@@ -1498,4 +1642,6 @@ export default {
     termsAndConditions: termsAndConditionsStyles,
     termsModal: termsModalStyles,
     footer: footerStyles,
+    fileUploadModal: fileUploadModalStyles,
+    csvAnalyzer: csvAnalyzerStyles,
   };
