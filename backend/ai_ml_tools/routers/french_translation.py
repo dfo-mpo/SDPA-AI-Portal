@@ -6,7 +6,8 @@ import json
 router = APIRouter()  
 
 # Takes in a pdf and returns the french translation
-@router.post("/pdf_to_french/")  
+# USE THIS AS MY ENDPOING. input is FILE FROM API SERVICE.
+@router.post("/pdf_to_french/")
 async def pdf_to_french(file: UploadFile = File(...)):
     text = pdf_to_text(await file_to_path(file))
 
@@ -15,7 +16,7 @@ async def pdf_to_french(file: UploadFile = File(...)):
 # Takes in raw text and returns the french translation
 # TODO: Implement solution using API
 @router.post("/text_to_french/")  
-async def text_to_french(text: str):
+async def text_to_french(text: str): 
     try:
         http_api = "http://20.63.108.34:8000"
 

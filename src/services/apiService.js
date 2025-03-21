@@ -134,12 +134,31 @@ export const translateToFrench = async (file) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    return await response.json();
+    const result = await response.json();
+    
+    // Handle the nested JSON structure that comes from the backend
+    if (result && result.translation) {
+      try {
+        // Parse the stringified JSON in the translation field
+        const parsedTranslation = JSON.parse(result.translation);
+        // Return a clean object with just the translated text
+        return {
+          translation: parsedTranslation.output
+        };
+      } catch (parseError) {
+        console.error('Error parsing translation JSON:', parseError);
+        return result; // Return original result if parsing fails
+      }
+    }
+    
+    return result;
   } catch (error) {
     console.error('Error in translateToFrench:', error);
     throw error;
   }
 };
+    
+
 
 /**
  * Calculate sensitivity score for a document

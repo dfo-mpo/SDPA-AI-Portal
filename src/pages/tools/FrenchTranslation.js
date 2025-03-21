@@ -12,43 +12,36 @@ import { ToolPage } from '../../components/tools';
 import { useLanguage } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
-// Assume you have a dedicated style object for French Translation:
 import { frenchTranslationStyles } from '../../styles/componentStyles';
+import { translateToFrench } from '../../services/apiService';
 
-export function FrenchTranslation() {
+
+export function FrenchTranslation() { 
   const { language } = useLanguage();
-  const theme = useTheme();
   const toolData = getToolTranslations("frenchTranslator", language);
-  const styles = frenchTranslationStyles; // centralized styles for French Translation
+  // const frenchStyles = frenchTranslationStyles; // centralized styles for French Translation
+  const frenchStyles = useComponentStyles('frenchTranslation'); // centralized styles for French Translation
+
+  
   
   const [translatedText, setTranslatedText] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleFileSelected = async (inputFile) => {
     setIsProcessing(true);
-    
+    setError(null);
     try {
-      const formData = new FormData();  
-      formData.append('file', inputFile);  
-      
-      const response = await fetch('http://localhost:8080/pdf_to_french/', {  
-        method: 'POST',  
-        body: formData  
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();  
-      if (data && data.translation) {
-        setTranslatedText(data.translation);
+      const result = await translateToFrench(inputFile);  
+      if (result && result.translation) {
+        setTranslatedText(result.translation);
       } else {
         throw new Error('Invalid response format');
       }
-    } catch (error) {  
-      console.error('Error:', error);  
-      alert('An error occurred while processing the PDF.');  
+    }
+    catch (error) {
+      console.error('Error:', error);
+      setError('An error occurred while translating the document.');
     } finally {
       setIsProcessing(false);
     }
@@ -63,13 +56,19 @@ export function FrenchTranslation() {
       actionButtonText={toolData.actionButtonText}
       onFileSelected={handleFileSelected}
       isProcessing={isProcessing}
-      containerSx={styles.container} // if defined
+      containerSx={frenchStyles.container} // if defined
     >
+      {error && (
+        <Box sx={{ mt: 2, color: 'error.main' }}>
+          <Typography variant="body1">{error}</Typography>
+        </Box>
+      )}
+
       {translatedText && (
-        <Box sx={styles.resultContainer}>
+        <Box sx={frenchStyles.resultContainer}>
           <Typography variant="h6">French Translation</Typography>
-          <Paper sx={styles.translationPaper}>
-            <Typography variant="body1" sx={styles.translationText}>
+          <Paper sx={frenchStyles.translationPaper}>
+            <Typography variant="body1" sx={frenchStyles.translationText}>
               {translatedText}
             </Typography>
           </Paper>

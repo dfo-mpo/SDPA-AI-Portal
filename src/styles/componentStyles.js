@@ -1644,4 +1644,5 @@ export default {
     footer: footerStyles,
     fileUploadModal: fileUploadModalStyles,
     csvAnalyzer: csvAnalyzerStyles,
+    frenchTranslation: frenchTranslationStyles,
   };
