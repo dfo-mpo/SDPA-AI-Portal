@@ -1162,7 +1162,23 @@ export const piiRedactorStyles = (theme) => ({
   },
 });
 
+// Updated signInStyles for componentStyles.js
+
 export const signInStyles = (theme) => ({
+  signInContainer: {
+    minHeight: '100vh',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'auto',
+    background: theme.palette.mode === 'dark'
+      ? 'linear-gradient(135deg, #0a2351 0%, #1a3a6a 50%, #2c4975 100%)'
+      : 'linear-gradient(135deg, #1a3a6a 0%, #7392c0 50%, #ffffff 100%)',
+    backgroundSize: 'cover',
+    padding: theme.spacing(2),
+  },
   styledCard: {
     display: 'flex',
     flexDirection: 'column',
@@ -1176,27 +1192,6 @@ export const signInStyles = (theme) => ({
       theme.palette.mode === 'dark'
         ? 'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px'
         : 'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
-  },
-  signInContainer: {
-    height: '100vh',
-    minHeight: '100%',
-    padding: { xs: theme.spacing(2), sm: theme.spacing(4) },
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    position: 'relative',
-    '&::before': {
-      content: '""',
-      display: 'block',
-      position: 'absolute',
-      zIndex: -1,
-      inset: 0,
-      backgroundImage:
-        theme.palette.mode === 'dark'
-          ? 'radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))'
-          : 'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
-      backgroundRepeat: 'no-repeat',
-    },
   },
   form: {
     display: 'flex',
@@ -1239,8 +1234,8 @@ export const forgotPasswordStyles = (theme) => ({
 
 export const iconStyles = {
   sitemarkIcon: {
-    height: 40,
-    width: 120,
+    height: 200,
+    width: 250,
   },
 };
 
@@ -1613,7 +1608,284 @@ export const csvAnalyzerStyles = {
   }
 };
 
+// ===== PDF CHATBOT STYLES =====
 
+/**
+ * Styles for the PDF Chatbot tool
+ */
+export const pdfChatbotStyles = {
+  /**
+   * Chat container
+   */
+  chatContainer: {
+    mt: 3,
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+    minHeight: '400px',
+    maxHeight: '600px',
+    border: '1px solid',
+    borderColor: 'divider',
+    borderRadius: 1,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+    overflow: 'hidden',
+  },
+  /**
+   * Container for chat messages
+   */
+  messagesContainer: {
+    p: 2,
+    flexGrow: 1,
+    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+  },
+  /**
+   * User message bubble
+   */
+  userMessage: {
+    alignSelf: 'flex-end',
+    p: 2,
+    bgcolor: 'primary.main',
+    color: 'primary.contrastText',
+    borderRadius: 2,
+    maxWidth: '80%',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+  },
+  /**
+   * Bot message bubble
+   */
+  botMessage: {
+    alignSelf: 'flex-start',
+    p: 2,
+    bgcolor: theme => theme.palette.mode === 'dark' 
+      ? 'rgba(255,255,255,0.05)' 
+      : 'rgba(0,0,0,0.05)',
+    borderRadius: 2,
+    maxWidth: '80%',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+  },
+  /**
+   * Message input container
+   */
+  inputContainer: {
+    p: 2,
+    borderTop: '1px solid',
+    borderColor: 'divider',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+    bgcolor: theme => theme.palette.mode === 'dark' 
+      ? 'rgba(0,0,0,0.2)' 
+      : 'rgba(0,0,0,0.02)',
+  },
+  /**
+   * Message input field
+   */
+  messageInput: {
+    flexGrow: 1,
+    '& .MuiOutlinedInput-root': {
+      bgcolor: theme => theme.palette.mode === 'dark' 
+        ? 'rgba(255,255,255,0.05)' 
+        : 'rgba(255,255,255,0.9)',
+    }
+  },
+  /**
+   * Token usage progress bar
+   */
+  tokenProgressBar: {
+    height: 4,
+    width: '100%',
+    '& .MuiLinearProgress-bar': {
+      bgcolor: (theme, props) => {
+        const percentage = props?.percentage || 0;
+        return percentage > 90 
+          ? theme.palette.error.main 
+          : percentage > 70 
+            ? theme.palette.warning.main 
+            : theme.palette.success.main;
+      }
+    }
+  },
+  /**
+   * Chat header
+   */
+  chatHeader: {
+    p: 2,
+    borderBottom: '1px solid',
+    borderColor: 'divider',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    bgcolor: theme => theme.palette.mode === 'dark' 
+      ? 'rgba(0,0,0,0.2)' 
+      : 'rgba(0,0,0,0.02)',
+  },
+  /**
+   * PDF info container
+   */
+  pdfInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+  },
+  /**
+   * Token status container with info and buttons
+   */
+  tokenStatusContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1.5,
+  },
+  /**
+   * Token counter display
+   */
+  tokenCounter: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    bgcolor: theme => theme.palette.mode === 'dark' 
+      ? 'rgba(255,255,255,0.05)' 
+      : 'rgba(0,0,0,0.05)',
+    border: '1px solid',
+    borderColor: 'divider',
+  },
+  /**
+   * Token text styling
+   */
+  tokenText: {
+    fontWeight: 500,
+    color: 'text.secondary',
+    fontSize: '0.75rem',
+    letterSpacing: '0.03em',
+  },
+  /**
+   * Temperature chip styling
+   */
+  temperatureChip: {
+    height: '24px',
+    borderColor: 'divider',
+    '& .MuiChip-label': {
+      px: 1,
+      fontSize: '0.7rem',
+    },
+    '& .MuiChip-icon': {
+      ml: 0.5,
+    },
+  },
+  /**
+   * Reset button styling
+   */
+  resetButton: {
+    width: '28px',
+    height: '28px',
+    color: 'text.secondary',
+    border: '1px solid',
+    borderColor: 'divider',
+    bgcolor: theme => theme.palette.mode === 'dark' 
+      ? 'rgba(255,255,255,0.05)' 
+      : 'rgba(255,255,255,0.9)',
+    '&:hover': {
+      bgcolor: theme => theme.palette.mode === 'dark' 
+        ? 'rgba(255,255,255,0.1)' 
+        : 'rgba(0,0,0,0.05)',
+    }
+  },
+  /**
+   * Follow-up question suggestion
+   */
+  followupQuestion: {
+    p: 1,
+    borderRadius: 1,
+    mt: 1,
+    cursor: 'pointer',
+    fontSize: '0.85rem',
+    color: 'primary.main',
+    bgcolor: theme => theme.palette.mode === 'dark' 
+      ? 'rgba(255,255,255,0.05)' 
+      : 'rgba(0,0,0,0.05)',
+    '&:hover': {
+      bgcolor: theme => theme.palette.mode === 'dark'
+        ? 'rgba(255,255,255,0.1)'
+        : 'rgba(0,0,0,0.1)',
+    },
+    border: '1px solid',
+    borderColor: 'divider',
+  },
+  /**
+   * Container for remaining tokens display
+   */
+  remainingTokensContainer: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    px: 2,
+    py: 0.5,
+    borderBottom: '1px solid',
+    borderColor: 'divider',
+    bgcolor: theme => theme.palette.mode === 'dark' 
+      ? 'rgba(0,0,0,0.2)' 
+      : 'rgba(0,0,0,0.02)',
+  },
+  /**
+   * Remaining tokens text styling
+   */
+  remainingTokensText: {
+    fontSize: '0.75rem',
+    fontWeight: 500,
+    color: 'text.secondary',
+  }
+};
+
+// export const piiRedactorStyles = (theme) => ({
+//   resultContainer: {
+//     mt: 3,
+//     p: 3,
+//     borderRadius: theme.shape.borderRadius,
+//     border: `1px solid ${theme.palette.divider}`,
+//     backgroundColor: theme.palette.background.paper,
+//   },
+  
+//   successHeader: {
+//     display: 'flex',
+//     alignItems: 'center',
+//     mb: 2,
+//   },
+  
+//   resultDetails: {
+//     mt: 2,
+//   },
+  
+//   entityList: {
+//     display: 'flex',
+//     flexWrap: 'wrap',
+//     gap: 1,
+//     mb: 3,
+//   },
+  
+//   entityItem: {
+//     px: 2,
+//     py: 1,
+//     borderRadius: theme.shape.borderRadius,
+//     backgroundColor: theme.palette.action.hover,
+//     display: 'flex',
+//     alignItems: 'center',
+//   },
+  
+//   actionButtons: {
+//     display: 'flex',
+//     justifyContent: 'flex-end',
+//     mt: 3,
+//   },
+  
+//   downloadButton: {
+//     backgroundColor: theme.palette.success.main,
+//     '&:hover': {
+//       backgroundColor: theme.palette.success.dark,
+//     },
+//   },
+// });
 
 export default {
     container: containerStyles,
@@ -1645,4 +1917,7 @@ export default {
     fileUploadModal: fileUploadModalStyles,
     csvAnalyzer: csvAnalyzerStyles,
     frenchTranslation: frenchTranslationStyles,
+    pdfChatbot: pdfChatbotStyles,
+    // pdfChatbotSettings: pdfChatbotSettingsStyles,
+
   };

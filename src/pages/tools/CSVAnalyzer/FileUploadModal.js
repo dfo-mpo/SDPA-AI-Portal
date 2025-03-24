@@ -6,7 +6,7 @@
  * inputs for both CSV prompts and PDF documents.
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import {
   Dialog,
@@ -30,6 +30,7 @@ import { X, Upload, FileText, FileSpreadsheet } from 'lucide-react';
 import { useLanguage } from '../../../contexts';
 import { getToolTranslations } from '../../../utils';
 import { useComponentStyles } from '../../../styles/hooks/useComponentStyles';
+import { useFileUpload } from '../../../hooks/useFileUpload';
 
 /**
  * File upload modal for CSV Analyzer tool
@@ -55,17 +56,41 @@ function FileUploadModal({ open, onClose, onSubmit }) {
   // State for selected files
   const [csvFile, setCsvFile] = useState(null);
   const [pdfFile, setPdfFile] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Current step in the demo
-  const [currentStep, setCurrentStep] = useState(0);
+  // State for demo stepper
+  const [demoStep, setDemoStep] = useState(0);
+  
+  // Prepare files for submission
+  const prepareFiles = useCallback(async () => {
+    // Simple validation - we're not actually processing files here,
+    // just preparing them for the parent component
+    if (!csvFile || !pdfFile) {
+      throw new Error('Both CSV and PDF files are required');
+    }
+    
+    return { csvFile, pdfFile };
+  }, [csvFile, pdfFile]);
+  
+  // Use file upload hook for preparing files
+  const { 
+    isProcessing: isSubmitting, 
+    error,
+    handleFileSelected: submitFiles 
+  } = useFileUpload({
+    processFile: prepareFiles,
+    onSuccess: (files) => {
+      // Call the parent's onSubmit with the files
+      onSubmit(files);
+    },
+    resetOnSuccess: false,
+    resetOnError: false
+  });
   
   // Reset state when modal closes
   const handleClose = () => {
     setCsvFile(null);
     setPdfFile(null);
-    setIsSubmitting(false);
-    setCurrentStep(0);
+    setDemoStep(0);
     onClose();
   };
   
@@ -88,23 +113,27 @@ function FileUploadModal({ open, onClose, onSubmit }) {
   // Handle form submission
   const handleSubmit = () => {
     if (csvFile && pdfFile) {
-      setIsSubmitting(true);
+      // Start submission process
+      // Prepare files for submission
+      const files = { csvFile, pdfFile };
       
-      // Simulate API call with a timeout
+      // Set submitting state
+      // Short timeout to allow the spinner to show before modal closes
       setTimeout(() => {
-        onSubmit({ csvFile, pdfFile });
-        handleClose();
-      }, 1500);
+        // Call the parent's onSubmit with the files
+        onSubmit(files);
+        // The modal will be closed by the parent component
+      }, 300);
     }
   };
   
   // Step through the demo GIFs
   const handleNextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, 2));
+    setDemoStep((prev) => Math.min(prev + 1, 2));
   };
   
   const handlePrevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
+    setDemoStep((prev) => Math.max(prev - 1, 0));
   };
   
   // Demo GIFs for each step
@@ -153,7 +182,7 @@ function FileUploadModal({ open, onClose, onSubmit }) {
           </Typography>
           
           {/* Stepper */}
-          <Stepper activeStep={currentStep} sx={styles.stepperContainer}>
+          <Stepper activeStep={demoStep} sx={styles.stepperContainer}>
             <Step key="csv">
               <StepLabel>Create CSV Prompts</StepLabel>
             </Step>
@@ -168,8 +197,8 @@ function FileUploadModal({ open, onClose, onSubmit }) {
           {/* Demo GIF */}
           <Box sx={styles.gifContainer}>
             <img 
-              src={demoGifs[currentStep]} 
-              alt={`Demo step ${currentStep + 1}`} 
+              src={demoGifs[demoStep]} 
+              alt={`Demo step ${demoStep + 1}`} 
               style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
             />
           </Box>
@@ -177,14 +206,14 @@ function FileUploadModal({ open, onClose, onSubmit }) {
           {/* Step navigation buttons */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
             <Button 
-              disabled={currentStep === 0} 
+              disabled={demoStep === 0} 
               onClick={handlePrevStep}
               variant="text"
             >
               Previous
             </Button>
             <Button 
-              disabled={currentStep === 2} 
+              disabled={demoStep === 2} 
               onClick={handleNextStep}
               variant="text"
             >
@@ -198,6 +227,12 @@ function FileUploadModal({ open, onClose, onSubmit }) {
           <Typography variant="h6" sx={{ mb: 2 }}>
             Upload Your Files
           </Typography>
+          
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error.message || "Please select both a CSV and PDF file."}
+            </Alert>
+          )}
           
           <Alert severity="info" sx={{ mb: 3 }}>
             Upload a CSV file with your analysis prompts and a PDF document to analyze.

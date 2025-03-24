@@ -23,11 +23,9 @@ export function ScaleAgeing() {
   const { scaleAgeingSettings } = useToolSettings();
   const { fishType, enhance } = scaleAgeingSettings;
 
-
   const [scaleOutput, setScaleOutput] = useState({ age: null, imageUrl: null });
   const [isProcessing, setIsProcessing] = useState(false);
-  // const [enhance, setEnhance] = useState(false);
-  // const [fishType, setFishType] = useState("Chum");
+  const [error, setError] = useState(null);
 
   /**
    * Handle file upload and processing
@@ -36,23 +34,29 @@ export function ScaleAgeing() {
    */
   const handleFileSelected = async (inputFile) => {
     setIsProcessing(true);
+    setError(null);
     
     try {
-      // pass the user’s picks from context (enhance & species) to backend
+      // pass the user's picks from context (enhance & species) to backend
       const ageData = await processScaleAge(inputFile, enhance, fishType);
       const pngBlob = await convertToPng(inputFile);
       const pngUrl = URL.createObjectURL(new Blob([pngBlob]));
       
+      // Set the error if one was returned
+      if (ageData.error) {
+        setError(ageData.error);
+      }
+      
       setScaleOutput({ 
         age: ageData.age,
-        fishType: ageData.fishType,
-        enhanced: ageData.enhanced,
-        placeholder: ageData.placeholder, // TODO: remove this when backend is ready
+        fishType: ageData.fishType || fishType,
+        enhanced: ageData.enhanced || enhance,
+        placeholder: ageData.placeholder || false,
         imageUrl: pngUrl 
       });
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred while processing the image.');
+      setError('An error occurred while processing the image: ' + error.message);
     } finally {
       setIsProcessing(false);
     }
@@ -67,8 +71,15 @@ export function ScaleAgeing() {
       actionButtonText={toolData.actionButtonText}
       onFileSelected={handleFileSelected}
       isProcessing={isProcessing}
-      containerSx={scaleAgeingStyles.container} // This styles the main "container" Box
+      containerSx={scaleAgeingStyles.container}
     >
+      {/* Show any errors */}
+      {error && (
+        <Box sx={{ mt: 2, color: 'error.main' }}>
+          <Typography variant="body1">{error}</Typography>
+        </Box>
+      )}
+      
       {/* Only render the card if we actually have an age result */}
       {scaleOutput.age !== null && (
         <Box sx={scaleAgeingStyles.resultCard}>
@@ -84,9 +95,11 @@ export function ScaleAgeing() {
             <Typography sx={scaleAgeingStyles.infoLine}>
               Enhanced?: {scaleOutput.enhanced ? "Yes" : "No"}
             </Typography>
-            <Typography sx={scaleAgeingStyles.infoLine}>
-              Placeholder?: {scaleOutput.placeholder}
-            </Typography>
+            {scaleOutput.placeholder && (
+              <Typography sx={scaleAgeingStyles.infoLine}>
+                Placeholder?: {scaleOutput.placeholder}
+              </Typography>
+            )}
           </Box>
 
           {/* Display the processed image below the text lines */}

@@ -10,3 +10,11 @@ export * from './constants';
 // Export translations
 export { getToolTranslations } from './translations/toolTranslations';
 export { getTermsTranslations } from './translations/termsTranslations';
+export { 
+    adaptCSVAnalyzerSettings, 
+    adaptScaleAgeingSettings, 
+    adaptSensitivityScoreSettings,
+    adaptPIIRedactorSettings,
+    adaptGenericSettings, 
+    getSettingsAdapter 
+} from './settingsAdapter';

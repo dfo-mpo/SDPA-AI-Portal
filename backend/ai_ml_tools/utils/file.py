@@ -60,16 +60,60 @@ def pdf_to_text(file):
    Return Value:
        - header_list (list of Header): A list of Header objects containing extracted column headers and prompts.
 """
-def extract_col_prompts(file):    
-    # Using CSV, extract prompts
-    with open(file, encoding='cp1252') as file:
-        reader = csv.reader(file)  
-        headers = next(reader, None)  # Read the first row, which contains the headers  
-        prompts = next(reader, None)  # Read the second row, which contains the prompts  
+#### **** UNCOMMENT THIS BLOCK WHEN DONE WITH MOCKING **** ####
+
+# def extract_col_prompts(file): 
+#     if hasattr(file, 'file'):
+#         content = file.file.read()
+#         from io import StringIO
+#         file_content = StringIO(content.decode('cp1252'))  
+#         reader = csv.reader(file_content)
+#     else:
+#         # For file paths (strings) - original functionality
+#         with open(file, encoding='cp1252') as file:
+#             reader = csv.reader(file)
+#     # Using CSV, extract prompts
+    
+#     headers = next(reader, None)  # Read the first row, which contains the headers  
+#     prompts = next(reader, None)  # Read the second row, which contains the prompts  
   
-    if not headers or not prompts:  
-        return None  
+#     if not headers or not prompts:  
+#         return None  
   
-    # Pair each header with its corresponding prompt  
-    header_list = [Header(header, prompt) for header, prompt in zip(headers, prompts)]  
-    return header_list 
+#     # Pair each header with its corresponding prompt  
+#     header_list = [Header(header, prompt) for header, prompt in zip(headers, prompts)]  
+#     return header_list 
+
+def extract_col_prompts(file):
+    try:
+        # Handle UploadFile objects
+        if hasattr(file, 'file'):
+            # For FastAPI UploadFile objects
+            content = file.file.read()
+            from io import StringIO
+            csv_file = StringIO(content.decode('utf-8', errors='replace'))
+            reader = csv.reader(csv_file)
+        else:
+            # For file paths (strings)
+            with open(file, encoding='cp1252') as f:
+                reader = csv.reader(f)
+        
+        headers = next(reader, None)  # Read the first row
+        prompts = next(reader, None)  # Read the second row
+        
+        # Mock headers and prompts if none were found
+        if not headers or not prompts:
+            headers = ["Column1", "Column2", "Column3"]
+            prompts = ["What is Column1?", "What is Column2?", "What is Column3?"]
+        
+        # Pair each header with its corresponding prompt
+        header_list = [Header(header, prompt) for header, prompt in zip(headers, prompts)]
+        return header_list
+    except Exception as e:
+        print(f"Error extracting CSV prompts: {e}")
+        # Return mock headers as fallback
+        header_list = [
+            Header("MockColumn1", "What is in MockColumn1?"),
+            Header("MockColumn2", "What is in MockColumn2?")
+        ]
+        return header_list

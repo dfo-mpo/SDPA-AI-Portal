@@ -2,10 +2,10 @@
  * PDF Chatbot Settings Component
  * 
  * Settings panel for the PDF Chatbot tool. Allows users to configure the AI model,
- * context window size, and follow-up question suggestions for the PDF Chatbot.
+ * context window size, temperature, and follow-up question suggestions for the PDF Chatbot.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Select, 
   MenuItem,
@@ -15,8 +15,8 @@ import {
   Tooltip,
   IconButton
 } from '@mui/material';
-import { HelpCircle } from 'lucide-react';
-import { useLanguage } from '../../../contexts';
+import { HelpCircle, Thermometer } from 'lucide-react';
+import { useLanguage, useToolSettings } from '../../../contexts';
 import { getToolTranslations } from '../../../utils';
 import { CustomSwitch } from '../../common';
 import { 
@@ -27,25 +27,18 @@ import {
   SettingDivider,
   SettingAlignedRow
 } from '../../../layouts';
-// import { toolSettingsCommonStyles } from '../../../styles/new/componentStyles';
 import { useComponentStyles } from '../../../styles/hooks/useComponentStyles';
 
-
-export default function PDFChatbotSettings() {
+export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
   const { language } = useLanguage();
   const translations = getToolTranslations("pdfChatbot", language)?.settings || {};
 
-  // Settings state
-  const [settings, setSettings] = useState({
-    modelType: 'gpt4omini',
-    contextWindow: 3, // Number of past responses to include
-    followupQuestions: true
-  });
-
-  // Use centralized common styles
+  // Get settings from context
+  const { pdfChatbotSettings, updatePdfChatbotSettings } = useToolSettings();
+  
+  // Get styles from our styling system
   const commonStyles = useComponentStyles('toolSettingsCommon');
-//   const dropdownStyles = useComponentStyles('dropdown');
-
+  const styles = useComponentStyles('pdfChatbotSettings');
 
   /**
    * Handle settings change
@@ -55,17 +48,42 @@ export default function PDFChatbotSettings() {
    */
   const handleChange = (field) => (event) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-    setSettings({ ...settings, [field]: value });
+    
+    // Update settings in context
+    updatePdfChatbotSettings({
+      ...pdfChatbotSettings,
+      [field]: value
+    });
+    
+    // Call parent's onChange handler if provided
+    if (onSettingsChange) {
+      onSettingsChange({
+        ...pdfChatbotSettings,
+        [field]: value
+      });
+    }
   };
 
   /**
    * Handle slider value change
    * 
-   * @param {Event} event - The change event
-   * @param {number} value - The new slider value
+   * @param {string} field - The field to update
+   * @returns {Function} Event handler function
    */
-  const handleSliderChange = (_, value) => {
-    setSettings({ ...settings, contextWindow: value });
+  const handleSliderChange = (field) => (_, value) => {
+    // Update settings in context
+    updatePdfChatbotSettings({
+      ...pdfChatbotSettings,
+      [field]: value
+    });
+    
+    // Call parent's onChange handler if provided
+    if (onSettingsChange) {
+      onSettingsChange({
+        ...pdfChatbotSettings,
+        [field]: value
+      });
+    }
   };
 
   return (
@@ -73,9 +91,8 @@ export default function PDFChatbotSettings() {
       {/* Model Selection */}
       <SettingFormControl label={translations.modelType || "AI Model"}>
         <Select
-          value={settings.modelType}
+          value={pdfChatbotSettings.modelType}
           onChange={handleChange('modelType')}
-        //   sx={dropdownStyles.select}
         >
           <MenuItem value="gpt4omini">{translations.gpt4omini || "GPT-4o mini (default)"}</MenuItem>
           <MenuItem value="gpt4o">{translations.gpt4o || "GPT-4o"}</MenuItem>
@@ -106,8 +123,8 @@ export default function PDFChatbotSettings() {
         
         <Box sx={commonStyles.sliderContainer}>
           <Slider
-            value={settings.contextWindow}
-            onChange={handleSliderChange}
+            value={pdfChatbotSettings.contextWindow}
+            onChange={handleSliderChange('contextWindow')}
             aria-labelledby="context-window-slider"
             valueLabelDisplay="auto"
             step={1}
@@ -125,13 +142,56 @@ export default function PDFChatbotSettings() {
       
       <SettingDivider />
       
+      {/* Temperature Slider */}
+      <Box>
+        <SettingAlignedRow
+          left={
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Thermometer size={16} style={{ marginRight: '8px' }} />
+              <Typography variant="body2" sx={commonStyles.sectionHeader}>
+                {translations.temperature || "Temperature"}
+              </Typography>
+            </Box>
+          }
+          right={
+            <Tooltip title={translations.temperatureTooltip || "Controls randomness in responses. Lower values are more focused and deterministic, higher values are more creative and varied."}>
+              <IconButton size="small">
+                <HelpCircle size={16} />
+              </IconButton>
+            </Tooltip>
+          }
+          sx={{ mb: 0.75 }}
+        />
+        
+        <Box sx={commonStyles.sliderContainer}>
+          <Slider
+            value={pdfChatbotSettings.temperature}
+            onChange={handleSliderChange('temperature')}
+            aria-labelledby="temperature-slider"
+            valueLabelDisplay="auto"
+            step={0.1}
+            marks={[
+              { value: 0, label: 'Precise' },
+              { value: 0.5, label: '0.5' },
+              { value: 1, label: 'Creative' }
+            ]}
+            min={0}
+            max={1}
+            size="small"
+            sx={commonStyles.slider}
+          />
+        </Box>
+      </Box>
+      
+      <SettingDivider />
+      
       {/* Follow-up Questions Option */}
       <SettingRow
         label={translations.followupQuestions || "Suggest Follow-up Questions"}
         tooltipTitle={translations.followupTooltip || "AI will suggest relevant follow-up questions after each response"}
         control={
           <CustomSwitch 
-            checked={settings.followupQuestions} 
+            checked={pdfChatbotSettings.followupQuestions} 
             onChange={handleChange('followupQuestions')}
             size="small"
           />
