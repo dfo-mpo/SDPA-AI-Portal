@@ -144,7 +144,6 @@ export function PIIRedactor() {
         console.log("File selected via ToolPage button with key:", uploadKey);
         handleFileSelected(file);
       }}
-      isProcessing={isProcessing}
       settingsComponent={<PIIRedactorSettings />}
       hideActionButton={!!downloadURL} // Hide the button when we have results
       uploadKey={uploadKey} // Pass the key to ensure ToolPage resets too
