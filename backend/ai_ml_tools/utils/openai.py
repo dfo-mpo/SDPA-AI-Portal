@@ -2,6 +2,7 @@ from openai import AzureOpenAI
 from langchain_openai import AzureOpenAIEmbeddings
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
+from dotenv import load_dotenv
 from uuid import uuid4
 import tiktoken
 import chromadb
@@ -9,6 +10,7 @@ import json
 import os
 
 # Configure OpenAI settings
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 openAIClient_o3_mini = AzureOpenAI(
   azure_endpoint = os.getenv('OPENAI_API_ENDPOINT_US'), 
   api_key = os.getenv('OPENAI_API_KEY_US'),  
