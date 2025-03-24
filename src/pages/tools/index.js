@@ -4,7 +4,7 @@
  * This file exports all tool implementation components.
  */
 
-export { CSVAnalyzer } from './CSVAnalyzer';
+export { CSVAnalyzer } from './CSVAnalyzer/CSVAnalyzer';
 export { FenceCounting } from './FenceCounting';
 export { FrenchTranslation } from './FrenchTranslation';
 export { PDFChatbot } from './PDFChatbot';

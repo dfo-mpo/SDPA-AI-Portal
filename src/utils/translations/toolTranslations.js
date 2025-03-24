@@ -286,7 +286,7 @@ export const toolTranslations = {
             modelType: "Model Type",
             modelTypeTooltip: "Select the type of translation model best suited for your document.",
             modelScientific: "Scientific Model",
-            modelHR: "HR Model",
+            modelHR: "Translation Bureau Model",
             preserveFormatting: "Preserve Formatting",
             preserveFormattingTooltip: "Maintains document layout, tables, and styles during translation.",
             modelInfo: "This model is optimized for French translation in different professional domains."
@@ -301,7 +301,7 @@ export const toolTranslations = {
             modelType: "Type de modèle",
             modelTypeTooltip: "Sélectionnez le type de modèle de traduction le mieux adapté à votre document.",
             modelScientific: "Modèle scientifique",
-            modelHR: "Modèle RH",
+            modelHR: "Modèle du Bureau de la traduction",
             preserveFormatting: "Préserver la mise en forme",
             preserveFormattingTooltip: "Maintient la mise en page du document, les tableaux et les styles lors de la traduction.",
             modelInfo: "Ce modèle est optimisé pour la traduction française dans différents domaines professionnels."
