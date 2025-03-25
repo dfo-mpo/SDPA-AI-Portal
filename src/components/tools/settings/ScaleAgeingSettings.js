@@ -12,7 +12,6 @@ import {
   SettingHelperText, 
   SettingFormControl 
 } from '../../../layouts';
-// import { useComponentStyles } from '../../../styles/new/hooks/useComponentStyles';
 
 export default function ScaleAgeingSettings() {
   const { language } = useLanguage();
@@ -49,7 +48,7 @@ export default function ScaleAgeingSettings() {
           onChange={handleChange('fishType')}
         >
           <MenuItem value="chum">{translations.chum}</MenuItem>
-          <MenuItem value="coho" >{translations.coho}</MenuItem>
+          <MenuItem value="coho" disabled >{translations.coho}</MenuItem>
           <MenuItem value="chinook" disabled>{translations.chinook}</MenuItem>
           <MenuItem value="sockeye" disabled>{translations.sockeye}</MenuItem>
           <MenuItem value="pink" disabled>{translations.pink}</MenuItem>
@@ -58,12 +57,13 @@ export default function ScaleAgeingSettings() {
       
       {/* Image Enhancement Option with Tooltip */}
       <SettingRow
-        label={translations.enhanceLabel}
+        label={translations.enhanceLabel + (" **Coming soon**")}
         control={
           <CustomSwitch 
             checked={enhance} 
             onChange={handleChange('enhance')}
             size="small"
+            disabled={true}
           />
         }
         tooltipTitle={translations.enhanceTooltip}

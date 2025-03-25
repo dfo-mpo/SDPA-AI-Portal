@@ -282,8 +282,8 @@ export const dashboardStyles = {
     display: 'flex',
     flexDirection: 'column',
     flexGrow: 1,
-    minHeight: `calc(100vh - ${headerHeight}px)`,
-    maxHeight: `calc(100vh - ${headerHeight}px)`,
+    height: `calc(100vh - ${headerHeight}px)`,
+    overflow: 'hidden',
   }),
   
   /**
@@ -296,9 +296,8 @@ export const dashboardStyles = {
     px: 4,
     width: '100%',
     maxWidth: '1800px',
-    mt: 3,
-    mb: 4,
-    alignItems: 'flex-start',
+    flexGrow: 1,
+    overflow: 'auto',
     position: 'relative',
   },
   
@@ -310,7 +309,7 @@ export const dashboardStyles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 3,
-    minHeight: '80vh',
+    minHeight: 'auto',
   },
   
   /**
@@ -1358,12 +1357,10 @@ export const footerStyles = {
          hsl(210, 100%, 8%) 30%, 
          rgba(0,0,0,1) 85%)`,
     borderTop: `1px solid ${alpha(dfoColors.orange, theme.palette.mode === 'light' ? 0.75 : 0.75)}`,
-    py: 3,
+    py: 2,
     px: 3,
-    mt: 1,
-    // Extend to bottom of viewport in full screen
+    marginTop: 'auto',
     position: 'relative',
-    marginBottom: '-1px',
     paddingBottom: '20px',
   }),
   

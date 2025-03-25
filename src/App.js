@@ -54,9 +54,11 @@ function AppContent() {
         // Authenticated: Show Dashboard
         <Box
           sx={{
-            minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column',
+            minHeight: '100vh',
+            maxHeight: '100vh',
+            overflow: 'hidden',
             bgcolor: 'background.default',
           }}
         >

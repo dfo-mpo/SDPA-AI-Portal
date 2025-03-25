@@ -17,9 +17,10 @@ import {
   ListItemIcon, 
   ListItemText, 
   Paper, 
-  useTheme
+  useTheme,
+  Tooltip
 } from '@mui/material';
-import { Home } from 'lucide-react';
+import { Home, AlertCircle } from 'lucide-react';
 import { TOOL_CATEGORIES } from '../../utils';
 import { useLanguage } from '../../contexts';
 import { getToolTranslations } from '../../utils';
@@ -39,6 +40,12 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
   const translations = getToolTranslations("aiToolsDropdown", language);
   const staticToolListStyles = useComponentStyles('staticToolList');
   const dropdownStyles = useComponentStyles('dropdown');
+
+  // Translations for "Temporarily unavailable" tooltip
+  const unavailableTooltip = {
+    en: "Temporarily unavailable while we make improvements",
+    fr: "Temporairement indisponible pendant que nous l'améliorons"
+  };
 
   return (
     <Paper
@@ -78,19 +85,49 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
           <List disablePadding>
             {tools.map((tool) => {
               const IconComponent = tool.icon;
+              const isDisabled = tool.name === 'Sensitivity Score Calculator';
               return (
                 <ListItem key={tool.name} disablePadding>
+                  <Tooltip 
+                    title={isDisabled ? (unavailableTooltip[language] || unavailableTooltip.en) : ""}
+                    placement="right"
+                  >
                   <ListItemButton
-                    onClick={() => onToolSelect(tool.name)}
-                    sx={staticToolListStyles.listItem}
+                    onClick={() => !isDisabled && onToolSelect(tool.name)}
+                    sx={{
+                      ...staticToolListStyles.listItem,
+                      ...(isDisabled && {
+                        opacity: 0.5,
+                        cursor: 'not-allowed',
+                        pointerEvents: 'auto',
+                        bgcolor: 'action.disabledBackground',
+                        color: 'text.disabled',
+                        borderLeft: '3px solid',
+                        borderLeftColor: 'warning.main',
+                        '&:hover': {
+                          bgcolor: 'action.disabledBackground',
+                          borderLeftColor: 'warning.main',
+                        }
+                      })
+                    }}
                   >
                     <ListItemIcon sx={dropdownStyles.listItemIcon}>
-                      <IconComponent size={20} />
+                      {isDisabled ? 
+                        <AlertCircle size={20} color={theme.palette.warning.main} /> : 
+                        <IconComponent size={20} />
+                      }
                     </ListItemIcon>
                     <ListItemText 
                       primary={translations.tools[tool.name] || tool.name}
+                      primaryTypographyProps={{
+                        ...(isDisabled && { 
+                          color: 'text.disabled',
+                          fontStyle: 'italic'
+                        })
+                      }}
                     />
                   </ListItemButton>
+                  </Tooltip>
                 </ListItem>
               );
             })}

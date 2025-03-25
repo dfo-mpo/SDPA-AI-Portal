@@ -43,9 +43,11 @@ function Footer({ headerHeight }) { // Accept headerHeight as prop
       component="footer"
       sx={{
         ...footerStyles.container,
-        position: 'relative',  // Keep it inside the layout
+        position: 'sticky',
         bottom: 0,  // Ensure it stays at the bottom
-        mt: 'auto', // Push it down only if needed
+        left: 0,
+        right: 0,
+        zIndex: 10
       }}
     >
       <Box sx={footerStyles.content}>

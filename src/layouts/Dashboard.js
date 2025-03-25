@@ -6,13 +6,13 @@
  * that loads different tools based on user selection.
  */
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Box, Paper, CircularProgress } from '@mui/material';
+import { Box, Paper, CircularProgress, Alert } from '@mui/material';
 import { GovHeader, LeftPanel } from '.';
 import { getToolByName } from '../utils';
 import { HomePage } from '../pages';
-import { useTerms } from '../contexts';
+import { useTerms, useLanguage } from '../contexts';
 import { Footer, TermsModalContainer } from '../components/common';
 
 import {
@@ -30,24 +30,41 @@ export default function Dashboard({ onLogout }) {
   // Store the selected tool name
   const [selectedTool, setSelectedTool] = useState('');
   const [headerHeight, setHeaderHeight] = useState(80); // Default to 80px, dynamically updated
+  const { language } = useLanguage();
+  const [showDisabledAlert, setShowDisabledAlert] = useState(false);
 
-  // Use the new styling hook with the dashboard style collection
-  // Pass headerHeight so the mainWrapper style function can compute its height.
+  // Use the styling hook with the dashboard style collection
   const styles = useComponentStyles('dashboard', { headerHeight });
 
   // Determine if we're on the home page (no tool selected)
   const isHomePage = !selectedTool;
 
-  // Tool components mapped by tool name
-  const toolComponents = {
-    'Scale Ageing': <ScaleAgeing />,
-    'Fence Counting': <FenceCounting />,
-    'CSV/PDF Analyzer': <CSVAnalyzer />,
-    'PDF Chatbot': <PDFChatbot />,
-    'PII Redactor': <PIIRedactor />,
-    'Sensitivity Score Calculator': <SensitivityScore />,
-    'French Translation': <FrenchTranslation />,
+  // Translations for disabled tool alert
+  const disabledToolAlert = {
+    en: "The Sensitivity Score Calculator is temporarily unavailable while we make improvements. Please check back later.",
+    fr: "Le calculateur de score de sensibilité est temporairement indisponible pendant que nous l'améliorons. Veuillez réessayer plus tard."
   };
+
+  // Check if the tool should be disabled
+  const isToolDisabled = (toolName) => {
+    return toolName === 'Sensitivity Score Calculator';
+  };
+
+  // Handle direct URL navigation attempts
+  useEffect(() => {
+    // Check if selected tool is disabled
+    if (isToolDisabled(selectedTool)) {
+      setShowDisabledAlert(true);
+      // Optional: redirect to home after a delay
+      // const timer = setTimeout(() => {
+      //   setSelectedTool('');
+      //   setShowDisabledAlert(false);
+      // }, 5000);
+      // return () => clearTimeout(timer);
+    } else {
+      setShowDisabledAlert(false);
+    }
+  }, [selectedTool]);
 
   /**
    * Handle tool selection
@@ -63,6 +80,12 @@ export default function Dashboard({ onLogout }) {
       const tool = getToolByName(toolName);
       if (tool) {
         console.log(`Selected tool: ${tool.name} (${tool.category})`);
+        
+        // Check if tool is disabled
+        if (isToolDisabled(tool.name)) {
+          console.log(`${tool.name} is currently disabled`);
+          setShowDisabledAlert(true);
+        }
       }
     } else {
       console.log('Navigating to home page');
@@ -78,7 +101,40 @@ export default function Dashboard({ onLogout }) {
     if (isHomePage) {
       return <HomePage />;
     }
-    return toolComponents[selectedTool] || <HomePage />;
+
+    return (
+      <>
+        {showDisabledAlert && (
+          <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, px: 2 }}>
+            <Alert 
+              severity="warning" 
+              sx={{ mb: 2 }}
+              onClose={() => setShowDisabledAlert(false)}
+            >
+              {disabledToolAlert[language] || disabledToolAlert.en}
+            </Alert>
+          </Box>
+        )}
+        {/* Show the tool component, with reduced opacity if disabled */}
+        <Box sx={{ 
+          opacity: isToolDisabled(selectedTool) ? 0.5 : 1,
+          pointerEvents: isToolDisabled(selectedTool) ? 'none' : 'auto'
+        }}>
+          {toolComponents[selectedTool] || <HomePage />}
+        </Box>
+      </>
+    );
+  };
+
+  // Tool components mapped by tool name
+  const toolComponents = {
+    'Scale Ageing': <ScaleAgeing />,
+    'Fence Counting': <FenceCounting />,
+    'CSV/PDF Analyzer': <CSVAnalyzer />,
+    'PDF Chatbot': <PDFChatbot />,
+    'PII Redactor': <PIIRedactor />,
+    'Sensitivity Score Calculator': <SensitivityScore />,
+    'French Translation': <FrenchTranslation />,
   };
 
   return (
