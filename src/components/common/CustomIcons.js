@@ -5,9 +5,10 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import SvgIcon from '@mui/material/SvgIcon';
+import { useTheme } from '@mui/material/styles';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+
 
 /**
  * DFO logo icon
@@ -16,47 +17,14 @@ import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
  * @returns {JSX.Element} The rendered icon
  */
 export function SitemarkIcon() {
+    const theme = useTheme();
     const iconStyles = useComponentStyles('icons');
-  return (
-    <SvgIcon sx={iconStyles.sitemarkIcon}>
-      <svg
-        width={120}
-        height={40}
-        viewBox="0 0 120 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {/* Placeholder for the DFO logo */}
-        <path
-          d="M10 20H110"
-          stroke="#26374A"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M20 10H100"
-          stroke="#26374A"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M20 30H100"
-          stroke="#DC4D01"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <text
-          x="60"
-          y="22"
-          fontFamily="Arial"
-          fontSize="12"
-          textAnchor="middle"
-          fill="#26374A"
-        >
-          DFO / MPO
-        </text>
-      </svg>
-    </SvgIcon>
+    return (
+      <img
+      src={theme.palette.mode === 'dark' ? '/assets/dark.png' : '/assets/light.png'}
+      alt="DFO/MPO Logo"
+      style={{ ...iconStyles.sitemarkIcon, maxWidth: '100%', height: 'auto' }} // Ensure responsiveness
+    />
   );
 }
 

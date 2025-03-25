@@ -1,49 +1,67 @@
 from fastapi import APIRouter, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
+from PIL import Image
+import numpy as np
+import requests
 from ai_ml_tools.utils.file import file_to_path, file_to_png
 
 router = APIRouter()  
-  
+
 @router.post("/age_scale/")  
 async def age_scale(
     file: UploadFile = File(...),
     enhance: bool = Form(False),
     fish_type: str = Form("Chum")
     ):
-    
     """
-    Stubbed endpoint for scale ageing. It doesn't do real model inference; 
-    it just returns placeholder data that we can replace later.
+    Endpoint for scale ageing that processes the file
+    and calls the scale_model_api function.
     """
-    
     # Read inputted document
     tiff_file = await file_to_path(file)
-    tiff_name = file.filename.split('.')[0]
-
-    if enhance:
-        # TODO
-        print("Enhancing image... THIS IS A STUB. IMPLEMENT ENHANCEMENT.")
     
-    # Get age from scale
-    # TODO: add api call to server that runs model or run model here (if VM will host backend then this appoach may be chosen)
+    # Convert image to array
+    image_array = image_to_array(tiff_file)
     
+    # Call the model API function
+    result = await scale_model_api(image_array)
     
-    # Temp hardcoded outputs
-    print(tiff_name)
-    output = "Age 4"
-    if tiff_name == "Chum_SCL_2001_01":
-        output = "Age 5"
-    elif tiff_name == "Chum_SCL_2001_02":
-        output = "Age 6"
-    elif tiff_name == "Chum_SCL_2001_03":
-        output = "Age 7" 
-  
+    # Return the result with the additional parameters
     return {
-        "age": output,
+        "age": result["value"],  # Always a string
+        "error": result["error"],  # Will be None if no error
         "enhanced": enhance,
         "fishType": fish_type,
-        "placeholder": "This result is a placeholder for the actual model output."
-        }
+        "placeholder": False if result["error"] is None else "This result is a placeholder for the actual model output."
+    }
+    
+# Helper function to convert image to array
+def image_to_array(image_path):
+    img = Image.open(image_path)
+    img = Image.open(image_path)
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+    return np.array(img).tolist()
+
+# Function that calls the model API
+async def scale_model_api(image_array):
+    try:
+        http_api = "http://20.63.108.34:8000"
+        
+        r = requests.post(http_api + '/scale', json={"imagelist": image_array})
+        
+        # Get the output from the response
+        if r.status_code == 200 and "output" in r.json():
+            return {"value": r.json()["output"], "error": None}
+        else:
+            raise Exception("Invalid response from model service")
+            
+    except requests.Timeout:
+        return {"value": "Age 4", "error": "Model service timeout"}
+    except requests.ConnectionError:
+        return {"value": "Age 4", "error": "Could not connect to model service"}
+    except Exception as e:
+        return {"value": "Age 4", "error": f"Unexpected error: {str(e)}"}
 
 @router.post("/to_png")
 async def to_png(file:UploadFile = File(...)):

@@ -20,6 +20,7 @@ import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
  * @param {boolean} [props.isFormValid=true] - Whether the form is valid for submission (e.g., weights add up to 100%)
  * @param {string} [props.validationMessage=''] - Message to show when form is invalid
  * @param {boolean} [props.hideActionButton=false] - Whether to hide the default action button
+ * @param {string} [props.uploadKey] - Key to force recreation of the file input
  * @param {React.ReactNode} [props.children] - Additional content to render
  * @returns {JSX.Element} The rendered component
  */
@@ -34,6 +35,7 @@ export default function ToolPage({
   isFormValid = true,
   validationMessage = '',
   hideActionButton = false,
+  uploadKey = Date.now(), // Default key for reset support
   children,
 }) {
   // Get styles from our styling system
@@ -64,6 +66,7 @@ export default function ToolPage({
   const onFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
+      console.log("File selected in ToolPage onFileChange:", file.name);
       onFileSelected(file);
     }
   };
@@ -83,12 +86,14 @@ export default function ToolPage({
             {longDescription}
           </Typography>
 
-          {/* Hidden file input element */}
+          {/* Hidden file input element - key ensures it's recreated when reset occurs */}
           <input
             type="file"
             ref={fileInputRef}
+            key={uploadKey} // This ensures the input is recreated when uploadKey changes
             style={{ display: 'none' }}
             onChange={onFileChange}
+            accept=".pdf,.docx,.doc,.xlsx,.csv,.txt"
           />
 
           {/* Upload button with loading indicator - only shown if not hidden */}
@@ -154,6 +159,9 @@ ToolPage.propTypes = {
   
   /** Whether to hide the default action button */
   hideActionButton: PropTypes.bool,
+  
+  /** Key to force recreation of the file input */
+  uploadKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   
   /** Additional content to render below the description */
   children: PropTypes.node,

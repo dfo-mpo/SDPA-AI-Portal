@@ -5,7 +5,7 @@
  * analysis type, source display preferences, and output format options.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Select, 
   MenuItem,
@@ -13,10 +13,9 @@ import {
   Typography,
   Tooltip,
   IconButton,
-  useTheme
 } from '@mui/material';
 import { HelpCircle } from 'lucide-react';
-import { useLanguage } from '../../../contexts';
+import { useLanguage, useToolSettings } from '../../../contexts';
 import { getToolTranslations } from '../../../utils';
 import { CustomSwitch } from '../../common';
 import { useComponentStyles } from '../../../styles/hooks/useComponentStyles';
@@ -36,24 +35,11 @@ import {
  */
 export default function CSVAnalyzerSettings() {
   const { language } = useLanguage();
+  const { csvAnalyzerSettings, setCsvAnalyzerSettings } = useToolSettings();
   const translations = getToolTranslations("csvAnalyzer", language)?.settings || {};
 
-  // Settings state
-  const [settings, setSettings] = useState({
-    aiModel: 'gpt4omini',
-    analysisType: 'summary',
-    showSources: true,
-    outputFormats: {
-      text: true,
-      csv: false,
-      json: false
-    }
-  });
-
   // Get component styles
-//   const dropdownStyles = useComponentStyles('dropdown');
   const commonStyles = useComponentStyles('toolSettingsCommon');
-
 
   /**
    * Handle settings change
@@ -63,7 +49,7 @@ export default function CSVAnalyzerSettings() {
    */
   const handleChange = (field) => (event) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-    setSettings({ ...settings, [field]: value });
+    setCsvAnalyzerSettings({ ...csvAnalyzerSettings, [field]: value });
   };
 
   /**
@@ -73,39 +59,63 @@ export default function CSVAnalyzerSettings() {
    * @returns {Function} Event handler function
    */
   const handleOutputFormatChange = (format) => (event) => {
+    const isChecked = event.target.checked;
+    
+    // If turning off a format, make sure we have at least one format selected
+    if (!isChecked) {
+      // Count how many formats are currently enabled
+      const enabledFormats = Object.values(csvAnalyzerSettings.outputFormats)
+        .filter(value => value === true).length;
+        
+      if (enabledFormats <= 1) {
+        // Don't allow turning off the last format - must have at least one
+        return;
+      }
+    }
+    
+    // Create new outputFormats object with the toggled format
     const newOutputFormats = { 
-      ...settings.outputFormats,
-      [format]: event.target.checked 
+      ...csvAnalyzerSettings.outputFormats,
+      [format]: isChecked 
     };
-    setSettings({ ...settings, outputFormats: newOutputFormats });
+    
+    // Update the settings - allow multiple formats to be selected
+    setCsvAnalyzerSettings({ 
+      ...csvAnalyzerSettings, 
+      outputFormats: newOutputFormats,
+      // We'll set the first selected format as the primary
+      outputType: isChecked ? format : (
+        // Find the first enabled format if this one is being disabled
+        Object.entries(newOutputFormats)
+          .find(([_, enabled]) => enabled)?.[0] || 'json'
+      )
+    });
   };
 
   return (
     <SettingsContainer>
       {/* AI Model Selection */}
-      <SettingFormControl label={translations.aiModel}>
+      <SettingFormControl label={translations.aiModel || "AI Model"}>
         <Select
-          value={settings.aiModel}
+          value={csvAnalyzerSettings.aiModel}
           onChange={handleChange('aiModel')}
-        //   sx={dropdownStyles.select}
         >
-          <MenuItem value="gpt4omini">{translations.gpt4omini}</MenuItem>
-          <MenuItem value="gpt4o">{translations.gpt4o}</MenuItem>
-          <MenuItem value="gpt35">{translations.gpt35}</MenuItem>
+          <MenuItem value="gpt4omini">{translations.gpt4omini || "GPT-4o Mini"}</MenuItem>
+          <MenuItem value="gpt4o">{translations.gpt4o || "GPT-4o"}</MenuItem>
+          <MenuItem value="gpt35">{translations.gpt35 || "GPT-3.5"}</MenuItem>
         </Select>
       </SettingFormControl>
       
       {/* Analysis Type */}
-      <SettingFormControl label={translations.analysisType}>
+      <SettingFormControl label={translations.analysisType || "Analysis Type"}>
         <Select
-          value={settings.analysisType}
+          value={csvAnalyzerSettings.analysisType}
           onChange={handleChange('analysisType')}
-        //   sx={dropdownStyles.select}
         >
-          <MenuItem value="summary">{translations.summary}</MenuItem>
-          <MenuItem value="detailed">{translations.detailed}</MenuItem>
-          <MenuItem value="comparison">{translations.comparison}</MenuItem>
-          <MenuItem value="custom">{translations.custom}</MenuItem>
+          <MenuItem value="summary">{translations.summary || "Summary"}</MenuItem>
+          <MenuItem value="detailed">{translations.detailed || "Detailed analysis"}</MenuItem>
+          <MenuItem value="comparison">{translations.comparison || "Comparative analysis"}</MenuItem>
+          <MenuItem value="custom">{translations.custom || "Custom prompt"}</MenuItem>
         </Select>
       </SettingFormControl>
       
@@ -135,7 +145,7 @@ export default function CSVAnalyzerSettings() {
           label={translations.showSources || "Show Document Sources"}
           control={
             <CustomSwitch 
-              checked={settings.showSources} 
+              checked={csvAnalyzerSettings.showSources} 
               onChange={handleChange('showSources')}
               size="small"
             />
@@ -164,7 +174,7 @@ export default function CSVAnalyzerSettings() {
           label={translations.textOutput || "Text Output"}
           control={
             <CustomSwitch 
-              checked={settings.outputFormats.text} 
+              checked={csvAnalyzerSettings.outputFormats.text} 
               onChange={handleOutputFormatChange('text')}
               size="small"
             />
@@ -176,7 +186,7 @@ export default function CSVAnalyzerSettings() {
           label={translations.csvOutput || "CSV Output"}
           control={
             <CustomSwitch 
-              checked={settings.outputFormats.csv} 
+              checked={csvAnalyzerSettings.outputFormats.csv} 
               onChange={handleOutputFormatChange('csv')}
               size="small"
             />
@@ -188,7 +198,7 @@ export default function CSVAnalyzerSettings() {
           label={translations.jsonOutput || "JSON Output"}
           control={
             <CustomSwitch 
-              checked={settings.outputFormats.json} 
+              checked={csvAnalyzerSettings.outputFormats.json} 
               onChange={handleOutputFormatChange('json')}
               size="small"
             />
@@ -198,7 +208,7 @@ export default function CSVAnalyzerSettings() {
       </Box>
       
       <SettingHelperText>
-        {translations.fileSizeNote}
+        {translations.fileSizeNote || "Files larger than 10MB may take longer to process."}
       </SettingHelperText>
     </SettingsContainer>
   );

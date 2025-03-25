@@ -14,8 +14,8 @@ class Document:
     def __init__(self, file: UploadFile, col_prompts: list, token_threshold: int):
         # self._file_path = file_path
         self._file_name = file.filename
-        self._content = self.get_content(file)
         self.token_threshold = token_threshold
+        self._content = self.get_content(file)
         self._col_prompts = col_prompts
         self._openai_answers = {}
     
