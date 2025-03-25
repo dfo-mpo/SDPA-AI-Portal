@@ -57,12 +57,13 @@ export default function ScaleAgeingSettings() {
       
       {/* Image Enhancement Option with Tooltip */}
       <SettingRow
-        label={translations.enhanceLabel}
+        label={translations.enhanceLabel + (" **Coming soon**")}
         control={
           <CustomSwitch 
             checked={enhance} 
             onChange={handleChange('enhance')}
             size="small"
+            disabled={true}
           />
         }
         tooltipTitle={translations.enhanceTooltip}
