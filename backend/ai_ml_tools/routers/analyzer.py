@@ -8,51 +8,8 @@ import io
 
 router = APIRouter()  
 
-# # Takes in a pdf and returns the french translation
-# @router.post("/openai_csv_analyze/")
-# async def pdf_csv_analyzer(csv_file: UploadFile = File(...), pdf_file: UploadFile = File(...), outputType="json"):
-#     header_list = extract_col_prompts(csv_file)
-    
-#     # Add the token_threshold parameter
-#     token_threshold = 10000
-    
-#     doc = Document(pdf_file, header_list, token_threshold)
-
-#     # Get OpenAI responces
-#     responses, tokens = doc.get_openai_responses()
-#     structured_data = convert_responces_to_json(responses)
-#     print(tokens) # TODO: add return for tokens maybe, this would be difficult since you cant return differnt object types (eg no json and stream responce at once)
-
-#     if outputType == "json":
-#         # Output resulting json file
-#         structured_json = json.dumps(structured_data, indent=4)
-
-#         return StreamingResponse(io.BytesIO(structured_json.encode('utf-8')), media_type="application/json")
-#     elif outputType == "csv":
-#         # Reconstruct to CSV and output file 
-#         csv_output = io.StringIO()  
-#         csvwriter = csv.writer(csv_output) 
-
-#         headers = [item['header'] for item in structured_data]   
-#         csvwriter.writerow(headers)  
-
-#         responses = [item['response'] for item in structured_data]  
-#         csvwriter.writerow(responses)  
-
-#         sources = [item['source'] for item in structured_data]  
-#         csvwriter.writerow(sources)
-
-#         csv_output.seek(0)  
-#         return StreamingResponse(csv_output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=result.csv"})
-#     else:   
-#         # Return a JSON error response  
-#         return JSONResponse(  
-#             status_code=400,  
-#             content={"error": "Invalid outputType provided. Valid options are 'json' or 'csv'."}  
-#         )  
-
-#### **** UNCOMMENT THIS BLOCK WHEN DONE WITH MOCKING **** ####
-
+# Takes in a PDF and CSV, and performs OpenAI analysis on the PDF using the prompts in the CSV. 
+# Output is the results in the from of a .json, .csv, or .txt depending on what outputType is set too
 @router.post("/openai_csv_analyze/")
 async def pdf_csv_analyzer(csv_file: UploadFile = File(...), pdf_file: UploadFile = File(...), outputType="json"):
     try:
