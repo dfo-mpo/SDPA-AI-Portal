@@ -104,15 +104,21 @@ export const analyzeCsvPdf = async (csvFile, pdfFile, settings = {}) => {
     
     // Create a new FormData for each request since we can't reuse it
     const formData = new FormData();
-    formData.append('csv_file', csvFile);
+    formData.append('csv_file', csvFile); 
     formData.append('pdf_file', pdfFile);
     
     try {
       console.log(`Processing ${format} format...`);
       
+      const params = new URLSearchParams();
+      if (adaptedSettings.outputType) {
+        params.append('outputType', adaptedSettings.outputType);
+      }
+      // Add other params as they become available in adaptedSettings
+
       // Make the API call for this format
       const response = await axios.post(
-        `${API_BASE_URL}/openai_csv_analyze/?outputType=${format}`, 
+        `${API_BASE_URL}/openai_csv_analyze/?${params.toString()}`, 
         formData, 
         { responseType: 'blob' }
       );
