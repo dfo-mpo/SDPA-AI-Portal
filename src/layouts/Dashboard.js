@@ -86,7 +86,8 @@ export default function Dashboard({ onLogout }) {
       display: 'flex', 
       flexDirection: 'column', 
       minHeight: '100vh',
-      bgcolor: 'background.default' 
+      bgcolor: 'background.default',
+      overflow: 'hidden',
     }}>
       {/* Header */}
       <Box sx={styles.container}>
@@ -98,7 +99,7 @@ export default function Dashboard({ onLogout }) {
         display: 'flex',
         flexDirection: 'column',
         flexGrow: 1,
-        position: 'relative',
+        position: 'auto',
         ...styles.mainWrapper
       }}>
         {/* Content wrapper - with no flex-direction column to ensure LeftPanel and MainContent are side-by-side */}

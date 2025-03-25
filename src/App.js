@@ -54,11 +54,12 @@ function AppContent() {
         // Authenticated: Show Dashboard
         <Box
           sx={{
-            minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column',
-            bgcolor: 'background.default',
+            minHeight: '100vh',
+            maxHeight: '100vh',
             overflow: 'hidden',
+            bgcolor: 'background.default',
           }}
         >
           <Dashboard onLogout={handleLogout} />
