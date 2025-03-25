@@ -58,6 +58,7 @@ function AppContent() {
             display: 'flex',
             flexDirection: 'column',
             bgcolor: 'background.default',
+            overflow: 'hidden',
           }}
         >
           <Dashboard onLogout={handleLogout} />
