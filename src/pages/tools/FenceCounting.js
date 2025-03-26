@@ -18,7 +18,6 @@ export function FenceCounting() {
   const { language } = useLanguage();
   const theme = useTheme();
   const toolData = getToolTranslations("fenceCounting", language);
-  // Import centralized tool styles – these should include videoContainer, videoSection, and video.
   const toolStyles = useComponentStyles('tool');
   
   const [originalVideo, setOriginalVideo] = useState(null);
@@ -28,7 +27,7 @@ export function FenceCounting() {
   /**
    * Handle file upload and processing
    * 
-   * @param {File} inputFile - The file selected by the user
+   * @param {File} inputFile
    */
   const handleFileSelected = async (inputFile) => {
     setIsProcessing(true);

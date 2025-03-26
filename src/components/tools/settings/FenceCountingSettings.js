@@ -9,18 +9,24 @@ import React, { useState } from 'react';
 import { 
   Select, 
   MenuItem,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Box
 } from '@mui/material';
 import { HelpCircle } from 'lucide-react';
-import { useLanguage } from '../../../contexts';
+import { useLanguage, useToolSettings } from '../../../contexts';
 import { getToolTranslations } from '../../../utils';
 import { CustomSwitch } from '../../../components/common';
 import { 
   SettingsContainer, 
   SettingRow, 
   SettingHelperText, 
-  SettingFormControl 
+  SettingFormControl,
+  SettingHeader,
+  SettingDivider
 } from '../../../layouts';
-// import { useComponentStyles } from '../../../styles/new/hooks/useComponentStyles';
+import { useComponentStyles } from '../../../styles/hooks/useComponentStyles';
 
 /**
  * Settings component for Fence Counting tool
@@ -29,19 +35,52 @@ import {
  */
 export default function FenceCountingSettings() {
   const { language } = useLanguage();
-
   const translations = getToolTranslations("fenceCounting", language)?.settings;
-  // const dropdownStyles = useComponentStyles('dropdown');
+  
+  // Get component styles
+  const commonStyles = useComponentStyles('toolSettingsCommon');
 
-  // Settings state
+  // Updated settings with multiple species selection
   const [settings, setSettings] = useState({
-    species: 'all',
+    // Species selection (default all to true)
+    species: {
+      sockeye: true,
+      chum: true,
+      chinook: true,
+      coho: true,
+      pink: true
+    },
     direction: 'both',
     trackObjects: true
   });
 
   /**
-   * Handle settings change
+   * Handle species checkbox change
+   * 
+   * @param {string} speciesName - The species name to toggle
+   * @returns {Function} Event handler function
+   */
+  const handleSpeciesChange = (speciesName) => (event) => {
+    const isChecked = event.target.checked;
+    
+    setSettings(prev => ({
+      ...prev,
+      species: {
+        ...prev.species,
+        [speciesName]: isChecked
+      }
+    }));
+  };
+
+  /**
+   * Check if at least one species is selected
+   */
+  const isAtLeastOneSpeciesSelected = () => {
+    return Object.values(settings.species).some(selected => selected);
+  };
+  
+  /**
+   * Handle other settings change
    * 
    * @param {string} field - The field name to update
    * @returns {Function} Event handler function
@@ -50,55 +89,117 @@ export default function FenceCountingSettings() {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     setSettings({ ...settings, [field]: value });
   };
+  
+  // Warning if no species are selected
+  const noSpeciesSelected = !isAtLeastOneSpeciesSelected();
+
+  // Clean up the species names for display
+  const getCleanSpeciesName = (species) => {
+    if (!translations || !translations[species]) {
+      // If translations not available, format the species name
+      return species.charAt(0).toUpperCase() + species.slice(1);
+    }
+    
+    // Get the translation but remove " Only" if present
+    const translated = translations[species];
+    return translated.replace(/ Only$/, '');
+  };
 
   return (
     <SettingsContainer>
-      {/* Species to Count */}
-      <SettingFormControl label={translations.speciesLabel}>
-        <Select
-          value={settings.species}
-          onChange={handleChange('species')}
-          // sx={dropdownStyles.select}
-        >
-          <MenuItem value="all">{translations.all}</MenuItem>
-          <MenuItem value="sockeye">{translations.sockeye}</MenuItem>
-          <MenuItem value="chum">{translations.chum}</MenuItem>
-          <MenuItem value="chinook">{translations.chinook}</MenuItem>
-          <MenuItem value="coho">{translations.coho}</MenuItem>
-          <MenuItem value="pink">{translations.pink}</MenuItem>
-        </Select>
-      </SettingFormControl>
-      
-      {/* Direction */}
-      <SettingFormControl label={translations.directionLabel}>
+      {/* Direction Selection */}
+      <SettingFormControl label={translations?.directionLabel} disabled>
         <Select
           value={settings.direction}
           onChange={handleChange('direction')}
-          // sx={dropdownStyles.select}
         >
-          <MenuItem value="both">{translations.both}</MenuItem>
-          <MenuItem value="upstream">{translations.upstream}</MenuItem>
-          <MenuItem value="downstream">{translations.downstream}</MenuItem>
+          <MenuItem value="both">{translations?.both || "Both Directions"}</MenuItem>
+          <MenuItem value="upstream">{translations?.upstream || "Upstream"}</MenuItem>
+          <MenuItem value="downstream">{translations?.downstream || "Downstream"}</MenuItem>
         </Select>
       </SettingFormControl>
       
+      <SettingDivider />
+      
+      {/* Species Selection with Checkboxes */}
+      <Box>
+        <SettingHeader label={translations?.speciesLabel} />
+        
+        {/* Individual Species Checkboxes */}
+        <FormGroup sx={commonStyles.checkboxGroup}>
+          <FormControlLabel
+            control={
+              <Checkbox 
+                checked={settings.species.sockeye} 
+                onChange={handleSpeciesChange('sockeye')}
+                size="small"
+              />
+            }
+            label={getCleanSpeciesName('sockeye')}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox 
+                checked={settings.species.chum} 
+                onChange={handleSpeciesChange('chum')}
+                size="small"
+              />
+            }
+            label={getCleanSpeciesName('chum')}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox 
+                checked={settings.species.chinook} 
+                onChange={handleSpeciesChange('chinook')}
+                size="small"
+              />
+            }
+            label={getCleanSpeciesName('chinook')}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox 
+                checked={settings.species.coho} 
+                onChange={handleSpeciesChange('coho')}
+                size="small"
+              />
+            }
+            label={getCleanSpeciesName('coho')}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox 
+                checked={settings.species.pink} 
+                onChange={handleSpeciesChange('pink')}
+                size="small"
+              />
+            }
+            label={getCleanSpeciesName('pink')}
+          />
+        </FormGroup>
+      </Box>
+      
+      <SettingDivider />
+      
       {/* Object Tracking Option */}
       <SettingRow
-        label={translations.trackObjects}
+        label={translations?.trackObjects}
         control={
           <CustomSwitch 
             checked={settings.trackObjects} 
             onChange={handleChange('trackObjects')}
             size="small"
+            disabled
           />
         }
-        tooltipTitle={translations.trackObjectsTooltip}
+        tooltipTitle={translations?.trackObjectsTooltip}
         tooltipIcon={<HelpCircle size={16} />}
       />
 
       {/* Information about the model */}
       <SettingHelperText>
-        {translations.modelInfo}
+        {translations?.modelInfo}
       </SettingHelperText>
     </SettingsContainer>
   );
