@@ -55,6 +55,7 @@ export default function FrenchTranslationSettings() {
           value={settings.modelType}
           onChange={handleChange('modelType')}
         //   sx={dropdownStyles.select}
+        disabled
         >
           <MenuItem value="scientific">{translations.modelScientific}</MenuItem>
           <MenuItem value="hr">{translations.modelHR}</MenuItem>
@@ -70,6 +71,7 @@ export default function FrenchTranslationSettings() {
             checked={settings.preserveFormatting} 
             onChange={handleChange('preserveFormatting')}
             size="small"
+            disabled
           />
         }
       />
