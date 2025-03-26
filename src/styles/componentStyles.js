@@ -7,7 +7,7 @@
  */
 
 import { alpha } from '@mui/material/styles';
-import { dfoColors, grayPalette } from './themePrimitives';
+import { dfoColors } from './themePrimitives';
 
 // ===== CONTAINER STYLES =====
 
@@ -274,7 +274,7 @@ export const dashboardStyles = {
     width: '100%',
     maxWidth: '1800px',
     mx: 'auto',
-    px: 4,
+    px: { xs: 2, sm: 4 }, // Responsive padding
     display: 'flex',
     alignItems: 'center',
   }),
@@ -287,7 +287,9 @@ export const dashboardStyles = {
     flexDirection: 'column',
     flexGrow: 1,
     height: `calc(100vh - ${headerHeight}px)`,
-    overflow: 'hidden',
+    // Change from overflow: 'hidden' to allow content to be visible
+    overflowX: 'hidden',
+    overflowY: 'auto',
   }),
   
   /**
@@ -295,12 +297,14 @@ export const dashboardStyles = {
    */
   contentWrapper: {
     display: 'flex',
+    flexDirection: { xs: 'column', md: 'row' }, // Stack on mobile, side by side on desktop
     gap: 3,
     mx: 'auto',
-    px: 4,
+    px: { xs: 1, sm: 2, md: 4 }, // Responsive padding
     width: '100%',
     maxWidth: '1800px',
     flexGrow: 1,
+    // Allow content to scroll
     overflow: 'auto',
     position: 'relative',
   },
@@ -314,6 +318,11 @@ export const dashboardStyles = {
     flexDirection: 'column',
     gap: 3,
     minHeight: 'auto',
+    width: '100%', // Ensure it takes full width
+    // Let content flow naturally
+    overflow: 'visible',
+    // Ensure content can be seen on small screens
+    minWidth: 0,
   },
   
   /**
@@ -324,8 +333,11 @@ export const dashboardStyles = {
     borderRadius: 2,
     bgcolor: 'transparent',
     border: 'none',
-    overflow: 'hidden',
+    // Allow content to be visible
+    overflow: 'visible',
     position: 'relative',
+    width: '100%',
+    minWidth: 0, // Allow content to shrink below nominal size
   },
   
   /**
@@ -337,7 +349,7 @@ export const dashboardStyles = {
     justifyContent: 'center',
     height: '100%',
     minHeight: 400,
-  },
+  }
 };
 
 // ===== DROPDOWN STYLES =====
@@ -419,22 +431,28 @@ export const toolStyles = {
    */
   container: {
     width: '100%',
-    maxWidth: 800,
+    maxWidth: '100%', // Ensure it never exceeds parent width
+    minWidth: 0, // Allow container to shrink below content size
     overflowWrap: 'break-word', // Break words to prevent overflow
+    wordBreak: 'break-word', // Enhanced word breaking for all browsers
+    hyphens: 'auto', // Add automatic hyphenation
   },
   
   /**
    * Tool description text
    */
   description: (theme) => ({
-    color: theme.palette.mode === 'dark' ? dfoColors.lightGray : dfoColors.darkBlue, // Use defined DFO colors
-    lineHeight: 1.8, // Slightly increased line height for readability
+    color: theme.palette.mode === 'dark' ? dfoColors.lightGray : dfoColors.darkBlue,
+    lineHeight: 1.8,
     mb: 3,
     fontWeight: 400,
     fontSize: '1rem',
-    overflowWrap: 'break-word', // Break words to prevent overflow
-    hyphens: 'auto', // Add hyphenation for better text breaking
-    '& strong': { // Style for bold text (e.g., the disclaimer)
+    overflowWrap: 'break-word',
+    wordBreak: 'break-word',
+    hyphens: 'auto',
+    width: '100%', // Ensure full width
+    maxWidth: '100%', // Prevent overflow
+    '& strong': {
       fontWeight: 600,
       color: theme.palette.mode === 'dark' ? dfoColors.white : dfoColors.darkBlue,
     },
@@ -449,7 +467,9 @@ export const toolStyles = {
     gap: 2,
     flexWrap: 'wrap', // Allow buttons to wrap on smaller screens
     width: '100%', // Use full width
-    mb: 2, // Add margin bottom 
+    mb: 2, // Add margin bottom
+    // Make sure items don't disappear on small screens
+    minWidth: 0,
   },
   
   /**
@@ -457,19 +477,68 @@ export const toolStyles = {
    */
   actionButton: (theme) => ({
     textTransform: 'none',
-    px: 3,
-    py: 1.5, // Slightly taller button
-    bgcolor: dfoColors.darkBlue, // Use defined DFO blue
-    color: dfoColors.white, // Use defined DFO white
-    fontWeight: 500, // Slightly bolder
+    px: { xs: 2, sm: 3 }, // Responsive padding
+    py: 1.5,
+    bgcolor: dfoColors.darkBlue,
+    color: dfoColors.white,
+    fontWeight: 500,
     borderRadius: '4px',
     '&:hover': { 
-      bgcolor: 'rgba(38, 55, 74, 0.9)' // Slightly transparent DFO blue on hover
+      bgcolor: 'rgba(38, 55, 74, 0.9)'
     },
-    whiteSpace: 'nowrap', // Prevent button text from wrapping inside button
+    whiteSpace: 'nowrap',
     transition: 'all 0.2s ease',
     boxShadow: theme.palette.mode === 'dark' ? '0 2px 5px rgba(0,0,0,0.2)' : '0 2px 5px rgba(0,0,0,0.1)',
+    // Responsive sizing for small screens
+    fontSize: { xs: '0.875rem', sm: '1rem' },
+    // Ensure button doesn't disappear on small screens
+    minWidth: { xs: 'auto', sm: '150px' },
   }),
+  /**
+   * Video container with responsive layout
+   */
+  videoContainer: {
+    display: 'flex',
+    flexDirection: { xs: 'column', md: 'row' }, // Stack on mobile, side by side on desktop
+    gap: 2,
+    width: '100%',
+    mt: 2,
+    mb: 4,
+  },
+  
+  /**
+   * Video section container
+   */
+  videoSection: {
+    flex: 1,
+    minWidth: 0, // Allow container to shrink
+    // Ensure content fits inside its container
+    '& > *': {
+      maxWidth: '100%',
+    },
+  },
+  
+  /**
+   * Video element styling
+   */
+  video: {
+    width: '100%',
+    maxHeight: '400px',
+    objectFit: 'contain',
+    backgroundColor: '#000',
+    borderRadius: 1,
+  },
+  /**
+   * Result container with improved overflow handling
+   */
+  resultContainer: {
+    width: '100%',
+    maxWidth: '100%',
+    minWidth: 0,
+    overflowWrap: 'break-word',
+    wordBreak: 'break-word',
+    hyphens: 'auto',
+  },
 };
 
 // ===== SETTINGS STYLES =====
