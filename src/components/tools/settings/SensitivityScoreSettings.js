@@ -98,8 +98,9 @@ export default function SensitivityScoreSettings() {
               checked={sensitivityScoreSettings.checkPersonalInfo} 
               onChange={handleChange('checkPersonalInfo')} 
               size="small"
-              disabled={showAdvanced}
-            />
+              disabled
+              // disabled={showAdvanced} // TODO: UNCOMMENT when above checkbox is fixed
+              />
           }
           sx={{ 
             justifyContent: 'flex-start', 
@@ -115,7 +116,8 @@ export default function SensitivityScoreSettings() {
               checked={sensitivityScoreSettings.checkBusinessInfo} 
               onChange={handleChange('checkBusinessInfo')} 
               size="small" 
-              disabled={showAdvanced}
+              // disabled={showAdvanced} // TODO: UNCOMMENT when above checkbox is fixed
+              disabled
             />
           }
           sx={{ 
@@ -132,8 +134,9 @@ export default function SensitivityScoreSettings() {
               checked={sensitivityScoreSettings.checkScientificData} 
               onChange={handleChange('checkScientificData')} 
               size="small"
-              disabled={showAdvanced}
-            />
+              // disabled={showAdvanced} // TODO: UNCOMMENT when above checkbox is fixed
+              disabled
+              />
           }
           sx={{ 
             justifyContent: 'flex-start', 
@@ -150,8 +153,9 @@ export default function SensitivityScoreSettings() {
               checked={sensitivityScoreSettings.checkLocationData} 
               onChange={handleChange('checkLocationData')} 
               size="small"
-              disabled={showAdvanced}
-            />
+              // disabled={showAdvanced} // TODO: UNCOMMENT when above checkbox is fixed
+              disabled
+              />
           }
           sx={{ 
             justifyContent: 'flex-start', 
@@ -171,6 +175,7 @@ export default function SensitivityScoreSettings() {
             checked={sensitivityScoreSettings.autoFlag} 
             onChange={handleChange('autoFlag')}
             size="small"
+            disabled
           />
         }
       />
@@ -242,6 +247,7 @@ export default function SensitivityScoreSettings() {
                   ...sensitivityScoreStyles.weightInput,
                   ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
                 }}
+                disabled
               />
             </Grid>
             
@@ -276,6 +282,7 @@ export default function SensitivityScoreSettings() {
                   ...sensitivityScoreStyles.weightInput,
                   ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
                 }}
+                disabled
               />
             </Grid>
             
@@ -310,6 +317,7 @@ export default function SensitivityScoreSettings() {
                   ...sensitivityScoreStyles.weightInput,
                   ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
                 }}
+                disabled
               />
             </Grid>
             
@@ -344,6 +352,7 @@ export default function SensitivityScoreSettings() {
                   ...sensitivityScoreStyles.weightInput,
                   ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
                 }}
+                disabled
               />
             </Grid>
           </Grid>
