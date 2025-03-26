@@ -49,10 +49,11 @@ Streams responses from OpenAI for the chat view.
 - Sends the formatted data to OpenAI and yields responses as they are received.
 - Handles exceptions and yields error messages if necessary.
 """
-def request_openai_chat(chat_history: list, document_content: str, type="chat", model="gpt-4o", tempurature=0.3, reasoning_effort="high"):
+def request_openai_chat(chat_history: list, document_content: str, type="chat", model="gpt-4o", temperature=0.3, reasoning_effort="high"):
     if type == "chat":
+        print(chat_history)
         # Only generate system message if it does not already exist
-        if chat_history[0]['role'] != "system":
+        if chat_history[0] == '' or chat_history[0]['role'] != "system":
             messages = [{
                 "role": "system","content": "You are a helpful assistant that ALWAYS responds in consistent and pleasing HTML formatted text. Also, make sure to use borders ONLY IF you use a table in your response. Only answer the LAST QUESTION based on the document provided. Do not answer any questions not related to the document or PDF. Also, at the end of the entire total response tell me what pages you found the information on separated by commas. For example, at the end include: Source_page: <page-number1, page-number2, etc>." + document_content
             }]
@@ -62,10 +63,10 @@ def request_openai_chat(chat_history: list, document_content: str, type="chat", 
         messages = [{
             "role": "system","content": "You are a helpful assistant that ALWAYS responds in consistent and pleasing HTML formatted text. Also, make sure to use borders ONLY IF you use a table in your response. Only answer the LAST QUESTION based on the document provided. Do not answer any questions not related to the document or PDF. Also, at the end of the entire total response tell me what documents and pages you found the information on separated by commas ONLY. For example, at the end include: Source_page: <document-name1.pdf, 1, 4, etc, document-name2.pdf, 2, 5, etc,>." + document_content
         }]
-    messages.extend(chat_history)
+    if chat_history != ['']: 
+        messages.extend(chat_history)
     new_message_string = json.dumps(messages)
     tokens_used = num_tokens_from_string(new_message_string)
-    # print(messages)
     
     print(f"Input tokens: {tokens_used}")
     try:
@@ -73,7 +74,7 @@ def request_openai_chat(chat_history: list, document_content: str, type="chat", 
             stream = openAIClient_CAD_models.chat.completions.create(
                 model=model,
                 messages=messages,
-                temperature=tempurature,
+                temperature=temperature,
                 frequency_penalty=0,
                 presence_penalty=0,
                 stop=None,
@@ -89,11 +90,11 @@ def request_openai_chat(chat_history: list, document_content: str, type="chat", 
             )
         else:
             raise ValueError(f"{model} is not a supported model name.")
-        
         for response in stream:
             content = response.choices[0].delta.content if len(response.choices) > 0 else []
             finish_reason = response.choices[0].finish_reason if len(response.choices) > 0 else None
             data = json.dumps({'content': content, 'finish_reason': finish_reason,'tokens_used': tokens_used})
+            print(data)
             yield f"data: {data}\n\n"
 
     except Exception as e:
