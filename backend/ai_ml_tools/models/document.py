@@ -15,7 +15,7 @@ class Document:
         # self._file_path = file_path
         self._file_name = file.filename
         self.token_threshold = token_threshold
-        self._content = self.get_content(file)
+        self._content = self._get_content(file)
         self._col_prompts = col_prompts
         self._openai_answers = {}
     
@@ -26,9 +26,9 @@ class Document:
     Return Value:
       - doc_content (str): Content of the file as a string
     '''
-    def get_content(self, document) -> str:
+    def _get_content(self, document) -> str:
         # Use DI to get document content
-        json_data = get_content(file=document, content=True, polygon=False, di_api="3.1")
+        json_data = get_content(pdf=document, content=True, polygon=False, di_api="3.1")
         
         # If JSON data is too large, use string for raw content instead
         refined_content = json.dumps(json_data, indent=4)
@@ -52,7 +52,7 @@ class Document:
         - _openai_answers (dict): A dictionary containing OpenAI responses, where header names serve as keys and 
         corresponding conversation responses as values. Each response is stored under the 'content' key of a 
         conversation item in a list. 
-    '''
+    ''' # TODO: when models options are added, some models must be handled by combining prompts to reduce cost and time
     def get_openai_responses(self) -> dict:
         content = (
             """ You are an AI assistant that reads in a document and answers user questions related to it. The document is provided here:
@@ -90,13 +90,13 @@ class Document:
             # Get response for current prompt
             response = None
             try:
-                response = request_openai_response(header.prompt, conversation, header.name)
+                response = request_openai_response(header.prompt, conversation)
             except openai.RateLimitError as e:  
                 # Extract the 'Retry-After' header value or use a default wait time  
                 retry_after = int(e.headers.get('Retry-After', 30))  
                 print(f'Rate limit exceeded. Retrying after {retry_after} seconds.')  
                 time.sleep(retry_after+1)  # Wait an extra second incase error message rounded down to nearest second
-                response = request_openai_response(header.prompt, conversation, header.name) 
+                response = request_openai_response(header.prompt, conversation) 
             except Exception as e:  
                 print(f"An OpenAIError occurred: {e}")  
                 raise
