@@ -10,7 +10,7 @@
  */
 
 // TODO: incorporate other toolds here as needed
-
+ 
 /**
  * Adapts CSV Analyzer settings for the backend API
  * 
@@ -35,8 +35,8 @@ return {
 */
 export const adaptScaleAgeingSettings = (settings) => {
 return {
-  enhance: settings.enhance || false,
-  fish_type: settings.fishType || 'chum'
+  enhance: settings.enhance || false, // default to false
+  fish_type: settings.fishType || 'chum' //default to chum
 };
 };
 

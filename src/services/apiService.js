@@ -27,11 +27,12 @@ const API_BASE_URL = 'http://localhost:8080';
  * @param {string} fishType - The type of fish
  * @returns {Promise<Object>} The processing result with age property
  */
-export const processScaleAge = async (file, enhance = false, fishType = "Chum") => {
+export const processScaleAge = async (file, settings = {}) => {
+  const adaptedSettings = adaptScaleAgeingSettings(settings);
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('enhance', enhance.toString());
-  formData.append('fish_type', fishType);
+  formData.append('enhance', adaptedSettings.enhance.toString());
+  formData.append('fish_type', adaptedSettings.fishType);
 
   try {
     const response = await fetch(`${API_BASE_URL}/age_scale/`, {
@@ -333,7 +334,7 @@ export const translateToFrench = async (file) => {
           translation: parsedTranslation.output
         };
       } catch (parseError) {
-        console.error('Error parsing translation JSON:', parseError);
+        console.error('Error parsing translation JSON:', parseError); 
         return result; // Return original result if parsing fails
       }
     }
