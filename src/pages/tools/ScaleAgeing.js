@@ -38,7 +38,7 @@ export function ScaleAgeing() {
     
     try {
       // pass the user's picks from context (enhance & species) to backend
-      const ageData = await processScaleAge(inputFile, enhance, fishType);
+      const ageData = await processScaleAge(inputFile, scaleAgeingSettings);
       const pngBlob = await convertToPng(inputFile);
       const pngUrl = URL.createObjectURL(new Blob([pngBlob]));
       
@@ -58,7 +58,7 @@ export function ScaleAgeing() {
       console.error('Error:', error);
       setError('An error occurred while processing the image: ' + error.message);
     } finally {
-      setIsProcessing(false);
+      setIsProcessing(false); 
     }
   };
 

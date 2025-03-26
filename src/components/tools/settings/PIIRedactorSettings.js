@@ -7,10 +7,8 @@ import {
   Tooltip,
   IconButton,
   FormControlLabel,
-  FormGroup,
   Slider,
   Typography,
-  Divider,
   Paper
 } from '@mui/material';
 import { HelpCircle } from 'lucide-react';
@@ -20,7 +18,6 @@ import {
   SettingsContainer,
   SettingHeader,
   SettingHelperText,
-  SettingRow,
   SettingAlignedRow,
   SettingDivider
 } from '../../../layouts';
@@ -123,6 +120,7 @@ export default function PIIRedactorSettings() {
                       value="mask"
                       checked={piiRedactorSettings.redactionMethod === 'mask'}
                       onChange={handleMethodChange}
+                      disabled
                     />
                   }
                   label={"Mask with solid color"}
@@ -154,6 +152,7 @@ export default function PIIRedactorSettings() {
                       value="typePlaceholder"
                       checked={piiRedactorSettings.redactionMethod === 'typePlaceholder'}
                       onChange={handleMethodChange}
+                      disabled
                     />
                   }
                   label={translations?.useTypeLabel || "Use [TYPE] placeholders"}
@@ -202,6 +201,7 @@ export default function PIIRedactorSettings() {
               { value: 10, label: translations?.sensitivityHigh || 'Aggressive' },
             ]}
             sx={commonStyles.slider}
+            disabled
           />
         </Box>
         
@@ -248,6 +248,7 @@ export default function PIIRedactorSettings() {
                     checked={settings.enabled} 
                     onChange={(e) => handleCategoryChange(category, e.target.checked)} 
                     size="small"
+                    disabled
                   />
                 }
                 label={

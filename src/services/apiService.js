@@ -9,7 +9,8 @@ import axios from 'axios';
 import { 
   adaptCSVAnalyzerSettings, 
   adaptScaleAgeingSettings, 
-  adaptSensitivityScoreSettings 
+  adaptSensitivityScoreSettings ,
+  adaptPIIRedactorSettings
 } from '../utils/settingsAdapter';
 
 /**
@@ -27,11 +28,13 @@ const API_BASE_URL = 'http://localhost:8080';
  * @param {string} fishType - The type of fish
  * @returns {Promise<Object>} The processing result with age property
  */
-export const processScaleAge = async (file, enhance = false, fishType = "Chum") => {
+export const processScaleAge = async (file, settings = {}) => {
+  const adaptedSettings = adaptScaleAgeingSettings(settings);
+  
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('enhance', enhance.toString());
-  formData.append('fish_type', fishType);
+  formData.append('enhance', adaptedSettings.enhance.toString());
+  formData.append('fish_type', adaptedSettings.fish);
 
   try {
     const response = await fetch(`${API_BASE_URL}/age_scale/`, {
@@ -173,119 +176,14 @@ export const redactPII = async (file, settings = {}) => {
   const formData = new FormData();
   formData.append('file', file);
   
-  console.log('Redaction settings:', settings); // Debug log
+  // Use the adapter to transform settings for current backend
+  const adaptedSettings = adaptPIIRedactorSettings(settings); 
   
-  // Add redaction method setting
-  if (settings.redactionMethod) {
-    formData.append('redaction_method', settings.redactionMethod);
-    console.log('Using redaction method:', settings.redactionMethod);
-    
-    // If using mask method, include the color
-    if (settings.redactionMethod === 'mask' && settings.redactionColor) {
-      // Convert hex color to RGB format expected by backend
-      const hexToRgb = (hex) => {
-        // Remove # if present
-        hex = hex.replace('#', '');
-        
-        // Parse the hex values
-        const r = parseInt(hex.substring(0, 2), 16);
-        const g = parseInt(hex.substring(2, 4), 16);
-        const b = parseInt(hex.substring(4, 6), 16);
-        
-        return [r, g, b];
-      };
-      
-      const rgbColor = hexToRgb(settings.redactionColor);
-      const colorString = rgbColor.join(',');
-      formData.append('redaction_color', colorString);
-      console.log('Using redaction color:', settings.redactionColor, '->', colorString);
-    }
+  // Add all adapted settings to formData
+  for (const [key, value] of Object.entries(adaptedSettings)) {
+    formData.append(key, value);
   }
   
-  // Add detection sensitivity if provided
-  if (settings.detectionSensitivity !== undefined) {
-    formData.append('detection_sensitivity', settings.detectionSensitivity);
-    console.log('Using detection sensitivity:', settings.detectionSensitivity);
-  }
-  
-  // Add category information if present
-  if (settings.categories) {
-    // Convert the categories object to a JSON string
-    const categoriesJson = JSON.stringify(settings.categories);
-    formData.append('categories', categoriesJson);
-    console.log('Using categories:', categoriesJson);
-    
-    // Map to specific entity types the backend can understand
-    const enabledEntities = [];
-    for (const [category, info] of Object.entries(settings.categories)) {
-      if (info.enabled) {
-        // Enhanced mapping with Canadian-specific types
-        switch (category) {
-          case 'PERSONAL_IDENTIFIERS':
-            enabledEntities.push('PERSON', 'US_SSN', 'GOVERNMENT_ID', 'CA_SIN', 'CA_PRI');
-            break;
-          case 'CONTACT_INFO':
-            enabledEntities.push('PHONE_NUMBER', 'EMAIL_ADDRESS', 'ADDRESS', 'CA_POSTAL_CODE', 'CA_ADDRESS_COMPONENT');
-            break;
-          case 'FINANCIAL_INFO':
-            enabledEntities.push('CREDIT_CARD', 'FINANCIAL_ID', 'CA_SIN');
-            break;
-          case 'ORGANIZATIONAL_INFO':
-            enabledEntities.push('ORGANIZATION');
-            break;
-          case 'LOCATION_DATA':
-            enabledEntities.push('LOCATION', 'CA_POSTAL_CODE', 'CA_ADDRESS_COMPONENT');
-            break;
-        }
-      }
-    }
-    
-    if (enabledEntities.length > 0) {
-      formData.append('entities_to_redact', enabledEntities.join(','));
-      console.log('Mapped to entity types:', enabledEntities.join(','));
-    }
-  }
-  // For backward compatibility, handle old entities format
-  else if (settings.entities) {
-    // Map old entity names to new backend entity types
-    const entityMapping = {
-      'PERSON': 'PERSON',
-      'EMAIL_ADDRESS': 'EMAIL_ADDRESS',
-      'PHONE_NUMBER': 'PHONE_NUMBER',
-      'ADDRESS': ['ADDRESS', 'CA_ADDRESS_COMPONENT'],
-      'SIN': 'CA_SIN',
-      'CREDIT_CARD': 'CREDIT_CARD',
-      'CA_POSTAL_CODE': 'CA_POSTAL_CODE',
-      'CA_PRI': 'CA_PRI'
-    };
-    
-    const enabledEntities = [];
-    
-    // Go through each entity in the settings
-    Object.keys(settings.entities)
-      .filter(key => settings.entities[key])
-      .forEach(key => {
-        // Get the mapping for this entity type
-        const mapping = entityMapping[key];
-        
-        // If the mapping is an array, add all values
-        if (Array.isArray(mapping)) {
-          enabledEntities.push(...mapping);
-        } 
-        // Otherwise add the single value if it exists
-        else if (mapping) {
-          enabledEntities.push(mapping);
-        }
-      });
-    
-    // Remove duplicates
-    const uniqueEntities = [...new Set(enabledEntities)].join(',');
-    
-    if (uniqueEntities) {
-      formData.append('entities_to_redact', uniqueEntities);
-      console.log('Using entity types:', uniqueEntities);
-    }
-  }
 
   try {
     const response = await axios.post(`${API_BASE_URL}/pii_redact/`, formData, {
@@ -333,7 +231,7 @@ export const translateToFrench = async (file) => {
           translation: parsedTranslation.output
         };
       } catch (parseError) {
-        console.error('Error parsing translation JSON:', parseError);
+        console.error('Error parsing translation JSON:', parseError); 
         return result; // Return original result if parsing fails
       }
     }

@@ -78,21 +78,24 @@ export default function NewLeftPanel({
 
   // Component-specific styles
   const styles = {
+    // Improved container sizing for better responsive behavior
     container: {
-      width: 350,
-      minWidth: 325,
-      maxWidth: 400,
+      width: { xs: '100%', md: 350 },
+      minWidth: { xs: '100%', md: 325 },
+      maxWidth: { xs: '100%', md: 400 },
       borderRadius: '8px',
       p: 2,
       overflow: 'visible', 
       display: 'flex',
       flexDirection: 'column',
-      height: 'fit-content', 
+      height: { xs: 'auto', md: 'fit-content' }, 
       justifyContent: 'space-between',
       bgcolor: 'background.paper',
       border: '1px solid',
       borderColor: theme.palette.mode === 'dark' ? 'divider' : '#e0e0e0',
       boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
+      // On small screens, marginBottom gives space between panel and content
+      mb: { xs: 2, md: 0 }
     },
     content: {
       flexGrow: 1,

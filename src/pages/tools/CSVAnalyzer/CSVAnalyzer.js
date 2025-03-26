@@ -210,6 +210,56 @@ export function CSVAnalyzer() {
     );
   };
 
+  // Custom styles specifically for the CSV Analyzer gifs
+  const customStyles = {
+    // Override container to ensure proper flow on small screens
+    container: {
+      mt: 2, 
+      mb: 4, 
+      width: '100%',
+      minWidth: 0, // Allow shrinking
+      overflow: 'visible' // Don't clip content
+    },
+    // Modified demo steps container with better responsive layout
+    demoStepsContainer: {
+      display: 'flex',
+      // Stack vertically on extra small screens, horizontally on larger screens
+      flexDirection: { xs: 'column', sm: 'row' },
+      gap: 2,
+      alignItems: 'center',
+      justifyContent: { xs: 'center', sm: 'space-between' },
+      p: 2,
+      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)',
+      borderRadius: 1,
+      minWidth: 0, // Allow container to shrink
+      overflow: 'visible'
+    },
+    // Modified step container for better responsiveness
+    stepContainer: {
+      flex: 1,
+      textAlign: 'center',
+      width: '100%',
+      minWidth: 0, // Allow container to shrink
+    },
+    // Modified gif container for consistent sizing
+    gifContainer: {
+      height: { xs: 80, sm: 120 }, // Smaller on mobile
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      mb: 1,
+      width: '100%',
+      overflow: 'hidden' // Hide overflow rather than clipping the whole component
+    },
+    // Gif styling to prevent disappearing
+    gif: {
+      maxWidth: '100%',
+      maxHeight: '100%',
+      objectFit: 'contain',
+      minHeight: { xs: 60, sm: 80 } // Ensure minimum visibility
+    }
+  };
+
   return (
     <>
       <ToolPage
@@ -239,23 +289,24 @@ export function CSVAnalyzer() {
           </Alert>
         )}
         
-        {/* Visual Demonstration */}
+        {/* Visual Demonstration with improved responsiveness */}
         {!analysisResult && !isProcessing && (
-          <Box sx={styles.container}>
+          <Box sx={customStyles.container}>
             <Card variant="outlined" sx={styles.demoCard}>
               <Typography variant="h6" sx={styles.headerContainer}>
                 <HelpCircle size={20} style={{ marginRight: '8px' }} />
                 How It Works
               </Typography>
               
-              <Box sx={styles.demoStepsContainer}>
+              {/* Improved demo steps container with better responsive layout */}
+              <Box sx={customStyles.demoStepsContainer}>
                 {/* Step 1 */}
-                <Box sx={styles.stepContainer}>
-                  <Box sx={styles.gifContainer}>
+                <Box sx={customStyles.stepContainer}>
+                  <Box sx={customStyles.gifContainer}>
                     <img 
                       src="/assets/giphy.gif" 
                       alt="Create CSV prompts" 
-                      style={{ height: '55px', width: 'auto', objectFit: 'contain' }}
+                      style={customStyles.gif}
                     />
                   </Box>
                   <Typography variant="subtitle2">1. Create CSV Prompts</Typography>
@@ -265,12 +316,12 @@ export function CSVAnalyzer() {
                 </Box>
                 
                 {/* Step 2 */}
-                <Box sx={styles.stepContainer}>
-                  <Box sx={styles.gifContainer}>
+                <Box sx={customStyles.stepContainer}>
+                  <Box sx={customStyles.gifContainer}>
                     <img 
                       src="/assets/giphy2.gif" 
                       alt="Prepare PDF document" 
-                      style={{ height: '55px', width: 'auto', objectFit: 'contain' }}
+                      style={customStyles.gif}
                     />
                   </Box>
                   <Typography variant="subtitle2">2. Prepare PDF Document</Typography>
@@ -280,12 +331,12 @@ export function CSVAnalyzer() {
                 </Box>
                 
                 {/* Step 3 */}
-                <Box sx={styles.stepContainer}>
-                  <Box sx={styles.gifContainer}>
+                <Box sx={customStyles.stepContainer}>
+                  <Box sx={customStyles.gifContainer}>
                     <img 
                       src="/assets/giphy3.gif" 
                       alt="Review results" 
-                      style={{ height: '55px', width: 'auto', objectFit: 'contain' }}
+                      style={customStyles.gif}
                     />
                   </Box>
                   <Typography variant="subtitle2">3. Analyze Results</Typography>

@@ -55,12 +55,6 @@ export default function Dashboard({ onLogout }) {
     // Check if selected tool is disabled
     if (isToolDisabled(selectedTool)) {
       setShowDisabledAlert(true);
-      // Optional: redirect to home after a delay
-      // const timer = setTimeout(() => {
-      //   setSelectedTool('');
-      //   setShowDisabledAlert(false);
-      // }, 5000);
-      // return () => clearTimeout(timer);
     } else {
       setShowDisabledAlert(false);
     }
@@ -90,6 +84,17 @@ export default function Dashboard({ onLogout }) {
     } else {
       console.log('Navigating to home page');
     }
+  };
+
+  // Tool components mapped by tool name
+  const toolComponents = {
+    'Scale Ageing': <ScaleAgeing />,
+    'Fence Counting': <FenceCounting />,
+    'CSV/PDF Analyzer': <CSVAnalyzer />,
+    'PDF Chatbot': <PDFChatbot />,
+    'PII Redactor': <PIIRedactor />,
+    'Sensitivity Score Calculator': <SensitivityScore />,
+    'French Translation': <FrenchTranslation />,
   };
 
   /**
@@ -126,17 +131,6 @@ export default function Dashboard({ onLogout }) {
     );
   };
 
-  // Tool components mapped by tool name
-  const toolComponents = {
-    'Scale Ageing': <ScaleAgeing />,
-    'Fence Counting': <FenceCounting />,
-    'CSV/PDF Analyzer': <CSVAnalyzer />,
-    'PDF Chatbot': <PDFChatbot />,
-    'PII Redactor': <PIIRedactor />,
-    'Sensitivity Score Calculator': <SensitivityScore />,
-    'French Translation': <FrenchTranslation />,
-  };
-
   return (
     <Box sx={{ 
       display: 'flex', 
@@ -144,8 +138,11 @@ export default function Dashboard({ onLogout }) {
       minHeight: '100vh',
       bgcolor: 'background.default' 
     }}>
-      {/* Header */}
-      <Box sx={styles.container}>
+      {/* Header with subtle extra padding */}
+      <Box sx={{
+        ...styles.container,
+        pb: 0.25,
+      }}>
         <GovHeader setHeaderHeight={setHeaderHeight} />
       </Box>
 
@@ -155,20 +152,31 @@ export default function Dashboard({ onLogout }) {
         flexDirection: 'column',
         flexGrow: 1,
         position: 'relative',
-        ...styles.mainWrapper
+        ...styles.mainWrapper,
+        // Improved overflow handling to prevent content hiding
+        overflowX: 'hidden',
+        overflowY: 'auto',
+        pt: 0.25 // 4px padding top
       }}>
-        {/* Content wrapper - with no flex-direction column to ensure LeftPanel and MainContent are side-by-side */}
+        {/* Content wrapper with improved responsive layout and spacing */}
         <Box sx={{
           ...styles.contentWrapper,
           display: 'flex',
+          // Responsive layout: column on mobile, row on desktop
+          flexDirection: { xs: 'column', md: 'row' },
           flexGrow: 1,
-          gap: 3,
+          gap: 2,
+          pt: 0.25 
         }}>
-          {/* Left Panel */}
+          {/* Left Panel with subtle spacing */}
           <Box sx={{ 
-            position: 'relative',
-            height: 'fit-content', // Ensures the container fits its content
-            zIndex: 2 // Ensure it appears above other content
+            width: { xs: '100%', md: 'auto' },
+            position: { xs: 'static', md: 'relative' },
+            height: { xs: 'auto', md: 'fit-content' },
+            zIndex: 2, // Ensure it appears above other content
+            // Add subtle spacing
+            mt: 0.25, // 4px margin top
+            mb: { xs: 0.25, md: 0 }
           }}>
             <LeftPanel 
               selectedTool={selectedTool} 
@@ -179,19 +187,26 @@ export default function Dashboard({ onLogout }) {
             />
           </Box>
 
-          {/* Main content area */}
+          {/* Main content area with improved overflow handling */}
           <Box sx={{
             ...styles.mainContent,
             display: 'flex',
             flexDirection: 'column',
             flexGrow: 1,
+            width: '100%',
+            minWidth: 0, // Allow content to shrink
+            mt: 0.25 // 4px margin top
           }}>
-            {/* Tool content */}
+            {/* Tool content with proper overflow handling */}
             <Paper sx={{
               ...styles.contentPaper,
               display: 'flex',
               flexDirection: 'column',
               flexGrow: 1,
+              width: '100%',
+              minWidth: 0, // Allow content to shrink
+              overflowX: 'auto', // Enable horizontal scrolling when needed
+              overflowY: 'visible', // Let content flow naturally
             }}>
               <Suspense
                 fallback={
@@ -206,7 +221,7 @@ export default function Dashboard({ onLogout }) {
           </Box>
         </Box>
         
-        {/* Footer positioned below all content - with full-width container */}
+        {/* Footer with subtle spacing above */}
         <Box sx={{ 
           width: '100vw', 
           position: 'relative', 
@@ -214,10 +229,9 @@ export default function Dashboard({ onLogout }) {
           right: '50%',
           marginLeft: '-50vw',
           marginRight: '-50vw', 
-          mt: 0 
+          mt: 0.25
         }}>
           <Footer headerHeight={headerHeight} />
-
         </Box>
       </Box>
       

@@ -95,7 +95,7 @@ export default function CSVAnalyzerSettings() {
   return (
     <SettingsContainer>
       {/* AI Model Selection */}
-      <SettingFormControl label={translations.aiModel || "AI Model"}>
+      <SettingFormControl label={translations.aiModel || "AI Model"} disabled>
         <Select
           value={csvAnalyzerSettings.aiModel}
           onChange={handleChange('aiModel')}
@@ -107,7 +107,7 @@ export default function CSVAnalyzerSettings() {
       </SettingFormControl>
       
       {/* Analysis Type */}
-      <SettingFormControl label={translations.analysisType || "Analysis Type"}>
+      <SettingFormControl label={translations.analysisType || "Analysis Type"} disabled>
         <Select
           value={csvAnalyzerSettings.analysisType}
           onChange={handleChange('analysisType')}
@@ -148,6 +148,7 @@ export default function CSVAnalyzerSettings() {
               checked={csvAnalyzerSettings.showSources} 
               onChange={handleChange('showSources')}
               size="small"
+              disabled
             />
           }
           sx={commonStyles.formRow}

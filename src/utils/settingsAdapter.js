@@ -10,7 +10,7 @@
  */
 
 // TODO: incorporate other toolds here as needed
-
+ 
 /**
  * Adapts CSV Analyzer settings for the backend API
  * 
@@ -34,10 +34,10 @@ return {
 * @returns {Object} Settings object with only backend-supported properties
 */
 export const adaptScaleAgeingSettings = (settings) => {
-return {
-  enhance: settings.enhance || false,
-  fish_type: settings.fishType || 'chum'
-};
+  return {
+    enhance: settings.enhance || false, // default to false
+    fish_type: settings.fishType || 'chum' //default to chum
+  };
 };
 
 /**
@@ -59,14 +59,55 @@ return {};
 * @returns {Object} Settings object with only backend-supported properties
 */
 export const adaptPIIRedactorSettings = (settings) => {
-// The current backend implementation doesn't accept any settings parameters
-// This is prepared for future extensions when the backend supports customization
-return {
-  // Currently, these settings are not used by the backend
-  // but we structure this for future expansion
-  entities: Object.keys(settings.entities || {}).filter(key => settings.entities[key])
+  const adaptedSettings = {
+    redaction_method: settings.redactionMethod || 'mask',
+    detection_sensitivity: settings.detectionSensitivity || 7,
+  };
+
+  // Add color conversion for mask method
+  if (settings.redaction === 'mask' && settings.redactionColor) {
+    // Convert hex color to RGB
+    const hex = settings.redactionColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    adaptedSettings.redaction_color = [r, g, b].join(',');
+  }
+  // Convert categories to entities_to_redact array
+
+  if (settings.categories) {
+    const enabledEntities = [];
+    // Map frontend categories to backend entities
+    for (const [category, info] of Object.entries(settings.categories)) {
+      if (info.enabled) {
+        switch (category) {
+          case 'PERSONAL_IDENTIFIERS':
+            enabledEntities.push('PERSON', 'US_SSN', 'GOVERNMENT_ID', 'CA_SSN', 'CA_PRI');
+            break;
+          case 'CONTACT_INFO':
+            enabledEntities.push('PHONE_NUMBER', 'EMAIL_ADDRESS', 'ADDRESS', 'CA_POSTAL_CODE');
+            break;
+            case 'FINANCIAL_INFO':
+              enabledEntities.push('CREDIT_CARD', 'FINANCIAL_ID', 'CA_SIN');
+              break;
+            case 'ORGANIZATIONAL_INFO':
+              enabledEntities.push('ORGANIZATION');
+              break;
+            case 'LOCATION_DATA':
+              enabledEntities.push('LOCATION', 'CA_POSTAL_CODE', 'CA_ADDRESS_COMPONENT');
+              break;
+        }
+      }
+    }
+    if (enabledEntities.length > 0) {
+      adaptedSettings.entities_to_redact = enabledEntities.join(',');
+    }
+  }
+  
+  return adaptedSettings;
 };
-};
+
+
 
 /**
 * Adapts PDF Chatbot settings for the backend API

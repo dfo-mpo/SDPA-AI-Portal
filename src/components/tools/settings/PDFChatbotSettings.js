@@ -89,7 +89,7 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
   return (
     <SettingsContainer>
       {/* Model Selection */}
-      <SettingFormControl label={translations.modelType || "AI Model"}>
+      <SettingFormControl label={translations.modelType || "AI Model"} disabled>
         <Select
           value={pdfChatbotSettings.modelType}
           onChange={handleChange('modelType')}
@@ -136,6 +136,7 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
             max={5}
             size="small"
             sx={commonStyles.slider}
+            disabled
           />
         </Box>
       </Box>
@@ -179,6 +180,7 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
             max={1}
             size="small"
             sx={commonStyles.slider}
+            disabled
           />
         </Box>
       </Box>
@@ -194,6 +196,7 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
             checked={pdfChatbotSettings.followupQuestions} 
             onChange={handleChange('followupQuestions')}
             size="small"
+            disabled
           />
         }
         sx={commonStyles.formRow}
