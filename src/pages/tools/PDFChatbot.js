@@ -26,6 +26,7 @@ import { Send, Upload, Bot, RefreshCw, Thermometer } from 'lucide-react';
 import { ToolPage } from '../../components/tools';
 import { useLanguage, useToolSettings } from '../../contexts';
 import { getToolTranslations } from '../../utils';
+import { processPdfDocument, askOpenAI } from '../../services/apiService';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 
 export function PDFChatbot() {
@@ -43,6 +44,7 @@ export function PDFChatbot() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isFileProcessing, setIsFileProcessing] = useState(false);
   const [isFileUploaded, setIsFileUploaded] = useState(false);
+  const [fileContent, setFileContent] = useState('');
   
   // Chat state
   const [messages, setMessages] = useState([]);
@@ -75,11 +77,8 @@ export function PDFChatbot() {
     setIsFileProcessing(true);
     
     try {
-      // Simulate file processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // In a real implementation, you would call your API here
-      // const response = await processPdfDocument(file);
+      const response = await processPdfDocument(file);
+      setFileContent(response.extracted_document);
       
       // Reset messages when new file is uploaded
       setMessages([
@@ -140,10 +139,10 @@ export function PDFChatbot() {
     
     try {
       // In a real implementation, you would call your API here to get a response
-      // const response = await sendMessageToApi(currentMessage, pdfChatbotSettings);
+      const response = await askOpenAI([''], fileContent);
       
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Simulate token usage increase
       // In a real implementation, you would get this from the API response

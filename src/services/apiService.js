@@ -382,3 +382,152 @@ export const calculateSensitivityScore = async (file, settings) => {
     throw error;
   }
 };
+
+/**
+ * Process a pdf document
+ * Returns the text extraction of a document as a JSON string
+ * 
+ * @param {File} file - The PDF to extract
+ * @returns {Promise<Object>} String containing JSON exraction of document
+ */
+export const processPdfDocument = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/di_extract_document/`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    // Handle the nested JSON structure that comes from the backend
+    if (result && result.extracted_document) {
+      try {
+        return {
+          extracted_document: result.extracted_document
+        };
+      } catch (parseError) {
+        console.error('Error parsing extraction JSON:', parseError);
+        return result; // Return original result if parsing fails
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error in processPdfDocument:', error);
+    throw error;
+  }
+}
+
+/**  
+ * Ask question to OpenAI  
+ * Returns the response as a stream  
+ *  
+ * @param {Array} chatHistory - Conversation history  
+ * @param {String} document - Extracted document  
+ * @returns {Promise<String>} Response from OpenAI  
+ */  
+export const askOpenAI = async (chatHistory, document) => {  
+  const formData = new FormData();  
+  formData.append('chat_history', chatHistory);  
+  formData.append('document', document.toString());  
+    
+  let openai_response = '';  
+    
+  try {  
+    const response = await fetch(`${API_BASE_URL}/openai_question/`, {  
+      method: 'POST',  
+      body: formData  
+    });  
+      
+    if (!response.ok) {  
+      throw new Error(`HTTP error! status: ${response.status}`);  
+    } else {  
+      const eventSource = new EventSource(response.url); // Not sure what happens when multiple users try this at once  
+      let isFirstChunk = true;  
+      let response_counter = 0;  
+      let tokenCount = 0;  
+        
+      eventSource.onmessage = function(event) {  
+        // Read the returned JSON data  
+        const data = JSON.parse(event.data);  
+        console.log(data)  
+        const tokensUsed = data.tokens_used;  
+          
+        // Error checking for the returned json data  
+        if ((data.content && data.content.length > 0) || data.finish_reason !== null) {  
+          const choice = data.content;  
+          const isFinished = data.finish_reason;  
+            
+          if (isFirstChunk && choice.trim() !== '') {  
+            isFirstChunk = false;  
+            openai_response += choice;  
+          } else if (!isFirstChunk && choice) {  
+            response_counter += 1;  
+            openai_response += choice;  
+              
+            if (response_counter == 3) {  
+              openai_response = cleanApiResponse(openai_response);  
+            }  
+          }  
+            
+          if (isFinished !== null) {  
+            openai_response = cleanApiResponse(openai_response);  
+            isFirstChunk = true;  
+            tokenCount += tokensUsed;  
+              
+            if (tokenCount >= 100000) {  
+              // handle token limit part  
+            }  
+          }  
+        }  
+      };  
+        
+      eventSource.onerror = function(event) {  
+        console.error('EventSource failed.');  
+        eventSource.close();  
+      };  
+    }  
+      
+    return openai_response;  
+  } catch (error) {  
+    console.error('Error in askOpenAI:', error);  
+    throw error;  
+  }  
+};  
+
+/**
+ * Cleans the API response from unnecessary markdown or HTML formatting.
+ * 
+ * @param {string} responseText - The raw response text from the API.
+ * @return {string} The cleaned text.
+ */
+function cleanApiResponse(responseText) {
+  let cleanText = responseText.replace(/```html/g, "").replace(/```/g, "");
+  return cleanText;
+}
+
+
+
+   // const result = await response.json();
+    
+    // // Handle the nested JSON structure that comes from the backend
+    // if (result && result.translation) {
+    //   try {
+    //     // Parse the stringified JSON in the translation field
+    //     const parsedTranslation = JSON.parse(result.extracted_document);
+    //     // Return a clean object with just the translated text
+    //     return {
+    //       extracted_document: parsedTranslation.output
+    //     };
+    //   } catch (parseError) {
+    //     console.error('Error parsing response JSON:', parseError);
+    //     return result; // Return original result if parsing fails
+    //   }
+    // }
