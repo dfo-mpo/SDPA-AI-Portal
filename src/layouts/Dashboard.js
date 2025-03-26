@@ -48,6 +48,7 @@ export default function Dashboard({ onLogout }) {
   // Check if the tool should be disabled
   const isToolDisabled = (toolName) => {
     return toolName === 'Sensitivity Score Calculator';
+    // return false;
   };
 
   // Handle direct URL navigation attempts

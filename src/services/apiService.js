@@ -252,17 +252,16 @@ export const translateToFrench = async (file) => {
  * @param {Object} settings - Settings for sensitivity score calculation
  * @returns {Promise<Object>} Object with sensitivity_score property
  */
-export const calculateSensitivityScore = async (file, settings) => {
+export const calculateSensitivityScore = async (file, settings = {}) => {
   const formData = new FormData();
   formData.append('file', file);
+  
+  // Use the adapter to transform settings
+  const adaptedSettings = adaptSensitivityScoreSettings(settings);
+  
+  // Add the adapted settings as JSON
+  formData.append('settings', JSON.stringify(adaptedSettings));
 
-  // If we have settings, add them to the request
-  if (settings) {
-    // TODO: add customized weights extension
-    // backend currently doesn't support customizing entity weights via API.
-    // preparing for future extension.
-    formData.append('settings', JSON.stringify(settings));
-  }
 
   try {
     const response = await fetch(`${API_BASE_URL}/sensitivity_score/`, {

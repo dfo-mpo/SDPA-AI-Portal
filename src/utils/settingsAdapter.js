@@ -46,10 +46,42 @@ export const adaptScaleAgeingSettings = (settings) => {
 * @param {Object} settings - Full settings object from the ToolSettingsContext
 * @returns {Object} Settings object with only backend-supported properties
 */
-export const adaptSensitivityScoreSettings = (settings) => {
-// Currently, backend doesn't support customizing weights via API
-// This is a placeholder for future extension
-return {};
+export const adaptSensitivityScoreSettings = (settings = {}) => {
+  /// Create backend-compatible settings object
+  const adaptedSettings = {};
+
+  // Add enabled categories
+  const enabledCategories = [];
+  if (settings.checkPersonalInfo) enabledCategories.push('personalInfo');
+  if (settings.checkBusinessInfo) enabledCategories.push('businessInfo');
+  if (settings.checkScientificData) enabledCategories.push('scientificData');
+  if (settings.checkLocationData) enabledCategories.push('locationData');
+
+  adaptedSettings.enabledCategories = enabledCategories;
+
+  // Add category weights
+  if (settings.showAdvanced && settings.weights) {
+    adaptedSettings.categoryWeights = {
+      personalInfo: settings.weights.personalInfo || 25,
+      businessInfo: settings.weights.businessInfo || 25,
+      scientificData: settings.weights.scientificData || 25,
+      locationData: settings.weights.locationData || 25
+    };
+  } else {
+    // If not in advanced mode, distribute weight evenly among enabled categories
+    const weight = enabledCategories.length > 0 ? (100 / enabledCategories.length) : 0;
+    
+    adaptedSettings.categoryWeights = {
+      personalInfo: settings.checkPersonalInfo ? weight : 0,
+      businessInfo: settings.checkBusinessInfo ? weight : 0,
+      scientificData: settings.checkScientificData ? weight : 0,
+      locationData: settings.checkLocationData ? weight : 0
+    };
+  }
+  // Add autoFlag setting
+  adaptedSettings.autoFlag = settings.autoFlag !== undefined ? settings.autoFlag : true;
+  
+  return adaptedSettings;
 };
 
 /**

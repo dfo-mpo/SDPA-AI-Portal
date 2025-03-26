@@ -16,7 +16,6 @@ import { CustomSwitch } from '../../common';
 import { 
   SettingsContainer, 
   SettingRow, 
-  SettingHelperText, 
   SettingCheckboxGroup,
   SettingHeader,
   SettingDivider
