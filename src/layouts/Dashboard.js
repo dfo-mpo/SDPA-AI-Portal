@@ -55,12 +55,6 @@ export default function Dashboard({ onLogout }) {
     // Check if selected tool is disabled
     if (isToolDisabled(selectedTool)) {
       setShowDisabledAlert(true);
-      // Optional: redirect to home after a delay
-      // const timer = setTimeout(() => {
-      //   setSelectedTool('');
-      //   setShowDisabledAlert(false);
-      // }, 5000);
-      // return () => clearTimeout(timer);
     } else {
       setShowDisabledAlert(false);
     }
@@ -91,7 +85,7 @@ export default function Dashboard({ onLogout }) {
       console.log('Navigating to home page');
     }
   };
-  
+
   // Tool components mapped by tool name
   const toolComponents = {
     'Scale Ageing': <ScaleAgeing />,
@@ -129,11 +123,7 @@ export default function Dashboard({ onLogout }) {
         {/* Show the tool component, with reduced opacity if disabled */}
         <Box sx={{ 
           opacity: isToolDisabled(selectedTool) ? 0.5 : 1,
-          pointerEvents: isToolDisabled(selectedTool) ? 'none' : 'auto',
-          width: '100%', // Ensure full width
-          minWidth: 0, // Allow content to shrink
-          overflowWrap: 'break-word', // Break words to prevent overflow
-          wordBreak: 'break-word', // Enhanced word breaking
+          pointerEvents: isToolDisabled(selectedTool) ? 'none' : 'auto'
         }}>
           {toolComponents[selectedTool] || <HomePage />}
         </Box>
@@ -148,8 +138,11 @@ export default function Dashboard({ onLogout }) {
       minHeight: '100vh',
       bgcolor: 'background.default' 
     }}>
-      {/* Header */}
-      <Box sx={styles.container}>
+      {/* Header with subtle extra padding */}
+      <Box sx={{
+        ...styles.container,
+        pb: 0.25,
+      }}>
         <GovHeader setHeaderHeight={setHeaderHeight} />
       </Box>
 
@@ -162,25 +155,28 @@ export default function Dashboard({ onLogout }) {
         ...styles.mainWrapper,
         // Improved overflow handling to prevent content hiding
         overflowX: 'hidden',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        pt: 0.25 // 4px padding top
       }}>
-        {/* Content wrapper with improved responsive layout */}
+        {/* Content wrapper with improved responsive layout and spacing */}
         <Box sx={{
           ...styles.contentWrapper,
           display: 'flex',
           // Responsive layout: column on mobile, row on desktop
           flexDirection: { xs: 'column', md: 'row' },
           flexGrow: 1,
-          gap: 3,
+          gap: 2,
+          pt: 0.25 
         }}>
-          {/* Left Panel with responsive sizing */}
+          {/* Left Panel with subtle spacing */}
           <Box sx={{ 
             width: { xs: '100%', md: 'auto' },
             position: { xs: 'static', md: 'relative' },
             height: { xs: 'auto', md: 'fit-content' },
             zIndex: 2, // Ensure it appears above other content
-            // Add bottom margin on mobile to separate from content
-            mb: { xs: 2, md: 0 }
+            // Add subtle spacing
+            mt: 0.25, // 4px margin top
+            mb: { xs: 0.25, md: 0 }
           }}>
             <LeftPanel 
               selectedTool={selectedTool} 
@@ -197,8 +193,9 @@ export default function Dashboard({ onLogout }) {
             display: 'flex',
             flexDirection: 'column',
             flexGrow: 1,
-            width: '100%', // Use full width
+            width: '100%',
             minWidth: 0, // Allow content to shrink
+            mt: 0.25 // 4px margin top
           }}>
             {/* Tool content with proper overflow handling */}
             <Paper sx={{
@@ -224,7 +221,7 @@ export default function Dashboard({ onLogout }) {
           </Box>
         </Box>
         
-        {/* Footer positioned below all content - with full-width container */}
+        {/* Footer with subtle spacing above */}
         <Box sx={{ 
           width: '100vw', 
           position: 'relative', 
@@ -232,7 +229,7 @@ export default function Dashboard({ onLogout }) {
           right: '50%',
           marginLeft: '-50vw',
           marginRight: '-50vw', 
-          mt: 0 
+          mt: 0.25
         }}>
           <Footer headerHeight={headerHeight} />
         </Box>

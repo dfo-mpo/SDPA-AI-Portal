@@ -352,6 +352,29 @@ export const dashboardStyles = {
   }
 };
 
+export const toolContentWrapperStyles = {
+  card: (theme) => ({
+    minWidth: 0,
+    width: '100%',
+    overflowX: 'auto',
+    // Custom border radius with top-right corner square
+    borderRadius: 0,
+    borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(13, 25, 43, 0.7)' : dfoColors.white,
+    borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : dfoColors.lightGray,
+    boxShadow: theme.palette.mode === 'dark' 
+      ? '0 4px 12px rgba(0, 0, 0, 0.3)' 
+      : '0 2px 8px rgba(0, 0, 0, 0.05)',
+  }),
+  content: {
+    p: { xs: 2.5, sm: 3.5 },
+    '&:last-child': { pb: { xs: 2.5, sm: 3.5 } },
+    overflowWrap: 'break-word'
+  }
+};
+
 // ===== DROPDOWN STYLES =====
 
 /**
@@ -2004,6 +2027,7 @@ export default {
     csvAnalyzer: csvAnalyzerStyles,
     frenchTranslation: frenchTranslationStyles,
     pdfChatbot: pdfChatbotStyles,
+    toolContentWrapper: toolContentWrapperStyles
     // pdfChatbotSettings: pdfChatbotSettingsStyles,
 
   };
