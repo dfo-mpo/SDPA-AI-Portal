@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 import {
   Box,
   Typography, 
-  List, 
+  List,  
   ListItem, 
   ListSubheader, 
   ListItemButton, 
@@ -18,7 +18,7 @@ import {
   ListItemText, 
   Paper, 
   useTheme,
-  Tooltip
+  Tooltip,
 } from '@mui/material';
 import { Home, AlertCircle } from 'lucide-react';
 import { TOOL_CATEGORIES } from '../../utils';
@@ -85,7 +85,7 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
           <List disablePadding>
             {tools.map((tool) => {
               const IconComponent = tool.icon;
-              const isDisabled = tool.name === 'Sensitivity Score Calculator';
+              const isDisabled = tool.name === 'Sensitivity Score Calculator' || tool.name === 'PII Redactor';;
               return (
                 <ListItem key={tool.name} disablePadding>
                   <Tooltip 

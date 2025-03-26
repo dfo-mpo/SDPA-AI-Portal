@@ -15,7 +15,7 @@ import {
   ListItemText,
   FormControl,
 } from '@mui/material';
-import { Home } from 'lucide-react';
+import { Home, AlertCircle } from 'lucide-react';
 import { useLanguage } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { TOOL_CATEGORIES } from '../../utils';
@@ -87,14 +87,31 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
           </ListSubheader>,
           ...tools.map((tool) => {
             const IconComponent = tool.icon;
+            const isDisabled = tool.name === 'Sensitivity Score Calculator' || tool.name === 'PII Redactor';
             return (
               <MenuItem
                 key={tool.name}
                 value={tool.name}
-                sx={aiToolsDropdownStyles.menuItem}
+                // disabled={isDisabled} // disable items in dropdown
+                sx={{
+                  ...aiToolsDropdownStyles.menuItem,
+                  ...(isDisabled && {
+                    opacity: 0.7,
+                    // You can add more styles for disabled items here
+                    '& .MuiListItemIcon-root': {
+                      opacity: 0.7,
+                    },
+                    '& .MuiListItemText-root': {
+                      opacity: 0.7,
+                    }
+                  })
+                }}
               >
                 <ListItemIcon sx={aiToolsDropdownStyles.listItemIcon}>
-                  <IconComponent size={18} />
+                  {isDisabled ? 
+                    <AlertCircle size={18} color="warning" /> : 
+                    <IconComponent size={18} />
+                  }
                 </ListItemIcon>
                 <ListItemText
                   primary={translations.tools[tool.name] || tool.name}
@@ -102,10 +119,18 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
                     noWrap: false,
                     sx: { 
                       wordBreak: 'break-word',
-                      whiteSpace: 'normal'
+                      whiteSpace: 'normal',
+                      ...(isDisabled && { fontStyle: 'italic' })
                     }
                   }}
                 />
+                {isDisabled && (
+                  <AlertCircle 
+                    size={16} 
+                    color="warning" 
+                    style={{ marginLeft: 8 }}
+                  />
+                )}
               </MenuItem>
             );
           })
