@@ -41,9 +41,13 @@ export const containerStyles = {
     p: 3,
     borderRadius: theme.shape.borderRadius,
     border: `1px solid ${theme.palette.divider}`,
-    bgcolor: theme.palette.background.paper,
+    bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : dfoColors.white,
     boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
     width: '100%',
+    minWidth: 0, // Allow shrinking below content size
+    overflowX: 'auto', // Allow horizontal scrolling if needed
+    // Use responsive padding
+    p: { xs: 2, sm: 3 },
   }),
 };
 
@@ -416,16 +420,24 @@ export const toolStyles = {
   container: {
     width: '100%',
     maxWidth: 800,
+    overflowWrap: 'break-word', // Break words to prevent overflow
   },
   
   /**
    * Tool description text
    */
   description: (theme) => ({
-    color: 'text.primary',
-    lineHeight: 1.6,
-    mb: 2,
+    color: theme.palette.mode === 'dark' ? dfoColors.lightGray : dfoColors.darkBlue, // Use defined DFO colors
+    lineHeight: 1.8, // Slightly increased line height for readability
+    mb: 3,
     fontWeight: 400,
+    fontSize: '1rem',
+    overflowWrap: 'break-word', // Break words to prevent overflow
+    hyphens: 'auto', // Add hyphenation for better text breaking
+    '& strong': { // Style for bold text (e.g., the disclaimer)
+      fontWeight: 600,
+      color: theme.palette.mode === 'dark' ? dfoColors.white : dfoColors.darkBlue,
+    },
   }),
   
   /**
@@ -435,6 +447,9 @@ export const toolStyles = {
     display: 'flex',
     alignItems: 'center',
     gap: 2,
+    flexWrap: 'wrap', // Allow buttons to wrap on smaller screens
+    width: '100%', // Use full width
+    mb: 2, // Add margin bottom 
   },
   
   /**
@@ -443,12 +458,17 @@ export const toolStyles = {
   actionButton: (theme) => ({
     textTransform: 'none',
     px: 3,
-    py: 1,
-    bgcolor: 'primary.main',
-    color: 'primary.contrastText',
+    py: 1.5, // Slightly taller button
+    bgcolor: dfoColors.darkBlue, // Use defined DFO blue
+    color: dfoColors.white, // Use defined DFO white
+    fontWeight: 500, // Slightly bolder
+    borderRadius: '4px',
     '&:hover': { 
-      bgcolor: 'primary.dark'
-    }
+      bgcolor: 'rgba(38, 55, 74, 0.9)' // Slightly transparent DFO blue on hover
+    },
+    whiteSpace: 'nowrap', // Prevent button text from wrapping inside button
+    transition: 'all 0.2s ease',
+    boxShadow: theme.palette.mode === 'dark' ? '0 2px 5px rgba(0,0,0,0.2)' : '0 2px 5px rgba(0,0,0,0.1)',
   }),
 };
 

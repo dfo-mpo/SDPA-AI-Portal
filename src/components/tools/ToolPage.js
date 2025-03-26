@@ -47,13 +47,21 @@ export default function ToolPage({
     actionContainer: {
       display: 'flex',
       alignItems: 'center',
-      gap: 2
+      gap: 2,
+      flexWrap: 'wrap' // Allow items to wrap on smaller screens
     },
     validationWarning: {
       color: 'error.main',
       fontSize: '0.75rem',
       ml: 1,
       fontWeight: 500
+    },
+    // Add responsive container for content
+    contentContainer: {
+      width: '100%',
+      maxWidth: '100%',
+      overflowX: 'auto', // Allow horizontal scrolling if needed
+      wordBreak: 'break-word' // Break long words to prevent overflow
     }
   };
   
@@ -81,49 +89,58 @@ export default function ToolPage({
       />
 
       <ToolContentWrapper>
-        <Stack spacing={2} alignItems="flex-start">
-          <Typography sx={toolStyles.description}>
-            {longDescription}
-          </Typography>
+        <Box sx={styles.contentContainer}>
+          <Stack spacing={2} alignItems="flex-start">
+            <Typography sx={{
+              ...toolStyles.description,
+              overflowWrap: 'break-word',
+              hyphens: 'auto'
+            }}>
+              {longDescription}
+            </Typography>
 
-          {/* Hidden file input element - key ensures it's recreated when reset occurs */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            key={uploadKey} // This ensures the input is recreated when uploadKey changes
-            style={{ display: 'none' }}
-            onChange={onFileChange}
-            accept=".pdf,.docx,.doc,.xlsx,.csv,.txt"
-          />
+            {/* Hidden file input element - key ensures it's recreated when reset occurs */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              key={uploadKey} // This ensures the input is recreated when uploadKey changes
+              style={{ display: 'none' }}
+              onChange={onFileChange}
+              accept=".pdf,.docx,.doc,.xlsx,.csv,.txt"
+            />
 
-          {/* Upload button with loading indicator - only shown if not hidden */}
-          {!hideActionButton && (
-            <Box sx={styles.actionContainer}>
-              <Button 
-                variant="contained"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isProcessing || !isFormValid}
-                startIcon={<Upload size={16} />}
-                sx={toolStyles.actionButton}
-              >
-                {actionButtonText}
-              </Button>
-              
-              {isProcessing && (
-                <CircularProgress size={24} sx={{ ml: 2 }} />
-              )}
-              
-              {!isFormValid && validationMessage && (
-                <Typography sx={styles.validationWarning}>
-                  {validationMessage}
-                </Typography>
-              )}
-            </Box>
-          )}
-          
-          {/* Tool-specific content (results, additional UI) */}
-          {children}
-        </Stack>
+            {/* Upload button with loading indicator - only shown if not hidden */}
+            {!hideActionButton && (
+              <Box sx={styles.actionContainer}>
+                <Button 
+                  variant="contained"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessing || !isFormValid}
+                  startIcon={<Upload size={16} />}
+                  sx={{
+                    ...toolStyles.actionButton,
+                    whiteSpace: 'nowrap' // Prevent button text from wrapping
+                  }}
+                >
+                  {actionButtonText}
+                </Button>
+                
+                {isProcessing && (
+                  <CircularProgress size={24} sx={{ ml: 2 }} />
+                )}
+                
+                {!isFormValid && validationMessage && (
+                  <Typography sx={styles.validationWarning}>
+                    {validationMessage}
+                  </Typography>
+                )}
+              </Box>
+            )}
+            
+            {/* Tool-specific content (results, additional UI) */}
+            {children}
+          </Stack>
+        </Box>
       </ToolContentWrapper>
     </>
   );
