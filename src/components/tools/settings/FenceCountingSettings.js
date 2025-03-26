@@ -15,7 +15,7 @@ import {
   Box
 } from '@mui/material';
 import { HelpCircle } from 'lucide-react';
-import { useLanguage, useToolSettings } from '../../../contexts';
+import { useLanguage } from '../../../contexts';
 import { getToolTranslations } from '../../../utils';
 import { CustomSwitch } from '../../../components/common';
 import { 
@@ -39,6 +39,8 @@ export default function FenceCountingSettings() {
   
   // Get component styles
   const commonStyles = useComponentStyles('toolSettingsCommon');
+  const fenceStyles = useComponentStyles('fenceCounting');
+
 
   // Updated settings with multiple species selection
   const [settings, setSettings] = useState({
@@ -119,14 +121,14 @@ export default function FenceCountingSettings() {
         </Select>
       </SettingFormControl>
       
-      <SettingDivider />
+      <SettingDivider sx={fenceStyles.divider} />
       
       {/* Species Selection with Checkboxes */}
-      <Box>
-        <SettingHeader label={translations?.speciesLabel} />
+      <Box sx={fenceStyles.speciesSection}>
+        <SettingHeader label={translations?.speciesLabel} sx={fenceStyles.sectionHeader} />
         
         {/* Individual Species Checkboxes */}
-        <FormGroup sx={commonStyles.checkboxGroup}>
+        <FormGroup sx={fenceStyles.checkboxGroup}>
           <FormControlLabel
             control={
               <Checkbox 
@@ -180,7 +182,7 @@ export default function FenceCountingSettings() {
         </FormGroup>
       </Box>
       
-      <SettingDivider />
+      <SettingDivider sx={fenceStyles.divider} />
       
       {/* Object Tracking Option */}
       <SettingRow
@@ -196,7 +198,7 @@ export default function FenceCountingSettings() {
         tooltipTitle={translations?.trackObjectsTooltip}
         tooltipIcon={<HelpCircle size={16} />}
       />
-
+  
       {/* Information about the model */}
       <SettingHelperText>
         {translations?.modelInfo}

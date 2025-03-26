@@ -1947,54 +1947,30 @@ export const pdfChatbotStyles = {
   }
 };
 
-// export const piiRedactorStyles = (theme) => ({
-//   resultContainer: {
-//     mt: 3,
-//     p: 3,
-//     borderRadius: theme.shape.borderRadius,
-//     border: `1px solid ${theme.palette.divider}`,
-//     backgroundColor: theme.palette.background.paper,
-//   },
-  
-//   successHeader: {
-//     display: 'flex',
-//     alignItems: 'center',
-//     mb: 2,
-//   },
-  
-//   resultDetails: {
-//     mt: 2,
-//   },
-  
-//   entityList: {
-//     display: 'flex',
-//     flexWrap: 'wrap',
-//     gap: 1,
-//     mb: 3,
-//   },
-  
-//   entityItem: {
-//     px: 2,
-//     py: 1,
-//     borderRadius: theme.shape.borderRadius,
-//     backgroundColor: theme.palette.action.hover,
-//     display: 'flex',
-//     alignItems: 'center',
-//   },
-  
-//   actionButtons: {
-//     display: 'flex',
-//     justifyContent: 'flex-end',
-//     mt: 3,
-//   },
-  
-//   downloadButton: {
-//     backgroundColor: theme.palette.success.main,
-//     '&:hover': {
-//       backgroundColor: theme.palette.success.dark,
-//     },
-//   },
-// });
+export const fenceCountingStyles = {
+  container: {
+    width: '100%',
+  },
+  speciesSection: {
+    mt: 0, 
+  },
+  checkboxGroup: {
+    mt: 0.5,
+    ml: 1,
+    '& .MuiFormControlLabel-root': {
+      marginLeft: 0,
+      marginRight: 0,
+      marginBottom: 1,
+      height: 30,
+    }
+  },
+  divider: {
+    my: 0,
+  },
+  sectionHeader: {
+    mb: 0.5,
+  }
+};
 
 export default {
     container: containerStyles,
@@ -2027,7 +2003,6 @@ export default {
     csvAnalyzer: csvAnalyzerStyles,
     frenchTranslation: frenchTranslationStyles,
     pdfChatbot: pdfChatbotStyles,
-    toolContentWrapper: toolContentWrapperStyles
-    // pdfChatbotSettings: pdfChatbotSettingsStyles,
-
+    toolContentWrapper: toolContentWrapperStyles,
+    fenceCounting: fenceCountingStyles,
   };
