@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, useTheme } from '@mui/material';
+import { Card, CardContent } from '@mui/material';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 
 export default function ToolContentWrapper({ children, sx }) {

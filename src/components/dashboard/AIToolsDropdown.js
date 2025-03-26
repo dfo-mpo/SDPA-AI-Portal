@@ -14,7 +14,6 @@ import {
   ListItemIcon,
   ListItemText,
   FormControl,
-  Typography
 } from '@mui/material';
 import { Home } from 'lucide-react';
 import { useLanguage } from '../../contexts';

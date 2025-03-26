@@ -55,15 +55,11 @@ import {
 export default function NewLeftPanel({ 
   selectedTool, 
   onSelectTool, 
-  headerHeight, 
   isHomePage, 
   onLogout 
 }) {
   const theme = useTheme();
-  
-  // Use our custom hook to get styles
-  const dashboardStyles = useComponentStyles('dashboard');
-  const layoutStyles = useComponentStyles('layout');
+
   
   // Map tool names to their corresponding settings components
   const toolSettings = {

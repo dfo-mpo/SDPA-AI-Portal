@@ -12,7 +12,7 @@ import { Box, Paper, CircularProgress, Alert } from '@mui/material';
 import { GovHeader, LeftPanel } from '.';
 import { getToolByName } from '../utils';
 import { HomePage } from '../pages';
-import { useTerms, useLanguage } from '../contexts';
+import { useLanguage } from '../contexts';
 import { Footer, TermsModalContainer } from '../components/common';
 
 import {

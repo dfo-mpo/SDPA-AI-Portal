@@ -114,20 +114,24 @@ export const adaptPIIRedactorSettings = (settings) => {
       if (info.enabled) {
         switch (category) {
           case 'PERSONAL_IDENTIFIERS':
-            enabledEntities.push('PERSON', 'US_SSN', 'GOVERNMENT_ID', 'CA_SSN', 'CA_PRI');
-            break;
+        enabledEntities.push('PERSON', 'US_SSN', 'GOVERNMENT_ID', 'CA_SSN', 'CA_PRI');
+        break;
           case 'CONTACT_INFO':
-            enabledEntities.push('PHONE_NUMBER', 'EMAIL_ADDRESS', 'ADDRESS', 'CA_POSTAL_CODE');
-            break;
-            case 'FINANCIAL_INFO':
-              enabledEntities.push('CREDIT_CARD', 'FINANCIAL_ID', 'CA_SIN');
-              break;
-            case 'ORGANIZATIONAL_INFO':
-              enabledEntities.push('ORGANIZATION');
-              break;
-            case 'LOCATION_DATA':
-              enabledEntities.push('LOCATION', 'CA_POSTAL_CODE', 'CA_ADDRESS_COMPONENT');
-              break;
+        enabledEntities.push('PHONE_NUMBER', 'EMAIL_ADDRESS', 'ADDRESS', 'CA_POSTAL_CODE');
+        break;
+          case 'FINANCIAL_INFO':
+        enabledEntities.push('CREDIT_CARD', 'FINANCIAL_ID', 'CA_SIN');
+        break;
+          case 'ORGANIZATIONAL_INFO':
+        enabledEntities.push('ORGANIZATION');
+        break;
+          case 'LOCATION_DATA':
+        enabledEntities.push('LOCATION', 'CA_POSTAL_CODE', 'CA_ADDRESS_COMPONENT');
+        break;
+          default:
+        // If an unknown category is enabled, add it as-is
+        enabledEntities.push(category);
+        break;
         }
       }
     }

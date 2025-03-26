@@ -369,7 +369,7 @@ export const askOpenAI = async (chatHistory, document) => {
             response_counter += 1;  
             openai_response += choice;  
               
-            if (response_counter == 3) {  
+            if (response_counter === 3) {  
               openai_response = cleanApiResponse(openai_response);  
             }  
           }  

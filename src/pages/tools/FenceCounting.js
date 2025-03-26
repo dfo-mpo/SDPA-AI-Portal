@@ -7,7 +7,7 @@
  */
 
 import React, { useState } from 'react';
-import { useTheme, Box, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import axios from 'axios';
 import { ToolPage } from '../../components/tools';
 import { useLanguage } from '../../contexts';
@@ -16,7 +16,6 @@ import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 
 export function FenceCounting() {
   const { language } = useLanguage();
-  const theme = useTheme();
   const toolData = getToolTranslations("fenceCounting", language);
   const toolStyles = useComponentStyles('tool');
   

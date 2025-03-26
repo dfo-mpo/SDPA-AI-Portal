@@ -70,7 +70,6 @@ export function SensitivityScore() {
     isProcessing, 
     uploadKey, 
     handleFileSelected,
-    error 
   } = useFileUpload({
     processFile,
     onError: (err) => {

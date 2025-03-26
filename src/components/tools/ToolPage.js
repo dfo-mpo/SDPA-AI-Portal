@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
-import { Typography, Button, Stack, Paper, CircularProgress, Box } from '@mui/material';
+import { Typography, Button, Stack, CircularProgress, Box } from '@mui/material';
 import { Upload } from 'lucide-react';
 import ToolContentWrapper from './ToolContentWrapper';
 import Banner from '../common/Banner';

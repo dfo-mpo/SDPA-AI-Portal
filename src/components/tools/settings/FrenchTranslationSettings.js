@@ -9,7 +9,6 @@ import React, { useState } from 'react';
 import { 
   Select, 
   MenuItem,
-  useTheme
 } from '@mui/material';
 import { useLanguage } from '../../../contexts';
 import { getToolTranslations } from '../../../utils';
@@ -24,7 +23,6 @@ import {
 
 export default function FrenchTranslationSettings() {
   const { language } = useLanguage();
-  const theme = useTheme();
   const translations = getToolTranslations("frenchTranslator", language)?.settings || {};
 
   // Settings state

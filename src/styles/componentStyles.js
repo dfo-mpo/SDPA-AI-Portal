@@ -38,7 +38,7 @@ export const containerStyles = {
    * Content area with card styling
    */
   card: (theme) => ({
-    p: 3,
+    // p: 3,
     borderRadius: theme.shape.borderRadius,
     border: `1px solid ${theme.palette.divider}`,
     bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : dfoColors.white,
