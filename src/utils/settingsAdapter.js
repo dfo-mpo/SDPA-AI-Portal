@@ -19,14 +19,36 @@
  */
 export const adaptCSVAnalyzerSettings = (settings) => {
   // Currently, the backend only officially supports outputType="json",
-// but we'll pass the selected format for our mock implementation
-return {
-  outputType: settings.outputType || 'json',
-  // Add the outputFormats for our mock to know what the user selected
-  // outputFormats: settings.outputFormats || { json: true }
-};
+  // but we'll pass the selected format for our mock implementation
+  return {
+    outputType: settings.outputType || 'json',
+    // Add the outputFormats for our mock to know what the user selected
+    // outputFormats: settings.outputFormats || { json: true }
+  };
 };
 
+/**
+* Adapts Fence Counting settings for the backend API
+* 
+* @param {Object} settings - Full settings object from the ToolSettingsContext
+* @returns {Object} Settings object with only backend-supported properties
+*/
+export const adaptFenceCountingSettings = (settings = {}) => {
+  // Currently, the backend doesn't accept any settings parameters
+  // Store the settings in a normalized format so they're ready when the backend supports them
+  return {
+    // Convert species object to a format the backend would likely use
+    enabled_species: settings.species ? 
+      Object.entries(settings.species)
+        .filter(([_, enabled]) => enabled)
+        .map(([species]) => species)
+        .join(',') : 
+      'chum', // Default to chum if no species settings
+      
+    direction: settings.direction || 'both',
+    track_objects: settings.trackObjects !== undefined ? settings.trackObjects : true
+  };
+};
 /**
 * Adapts Scale Ageing settings for the backend API
 * 
@@ -46,10 +68,42 @@ export const adaptScaleAgeingSettings = (settings) => {
 * @param {Object} settings - Full settings object from the ToolSettingsContext
 * @returns {Object} Settings object with only backend-supported properties
 */
-export const adaptSensitivityScoreSettings = (settings) => {
-// Currently, backend doesn't support customizing weights via API
-// This is a placeholder for future extension
-return {};
+export const adaptSensitivityScoreSettings = (settings = {}) => {
+  /// Create backend-compatible settings object
+  const adaptedSettings = {};
+
+  // Add enabled categories
+  const enabledCategories = [];
+  if (settings.checkPersonalInfo) enabledCategories.push('personalInfo');
+  if (settings.checkBusinessInfo) enabledCategories.push('businessInfo');
+  if (settings.checkScientificData) enabledCategories.push('scientificData');
+  if (settings.checkLocationData) enabledCategories.push('locationData');
+
+  adaptedSettings.enabledCategories = enabledCategories;
+
+  // Add category weights
+  if (settings.showAdvanced && settings.weights) {
+    adaptedSettings.categoryWeights = {
+      personalInfo: settings.weights.personalInfo || 25,
+      businessInfo: settings.weights.businessInfo || 25,
+      scientificData: settings.weights.scientificData || 25,
+      locationData: settings.weights.locationData || 25
+    };
+  } else {
+    // If not in advanced mode, distribute weight evenly among enabled categories
+    const weight = enabledCategories.length > 0 ? (100 / enabledCategories.length) : 0;
+    
+    adaptedSettings.categoryWeights = {
+      personalInfo: settings.checkPersonalInfo ? weight : 0,
+      businessInfo: settings.checkBusinessInfo ? weight : 0,
+      scientificData: settings.checkScientificData ? weight : 0,
+      locationData: settings.checkLocationData ? weight : 0
+    };
+  }
+  // Add autoFlag setting
+  adaptedSettings.autoFlag = settings.autoFlag !== undefined ? settings.autoFlag : true;
+  
+  return adaptedSettings;
 };
 
 /**
@@ -82,20 +136,24 @@ export const adaptPIIRedactorSettings = (settings) => {
       if (info.enabled) {
         switch (category) {
           case 'PERSONAL_IDENTIFIERS':
-            enabledEntities.push('PERSON', 'US_SSN', 'GOVERNMENT_ID', 'CA_SSN', 'CA_PRI');
-            break;
+        enabledEntities.push('PERSON', 'US_SSN', 'GOVERNMENT_ID', 'CA_SSN', 'CA_PRI');
+        break;
           case 'CONTACT_INFO':
-            enabledEntities.push('PHONE_NUMBER', 'EMAIL_ADDRESS', 'ADDRESS', 'CA_POSTAL_CODE');
-            break;
-            case 'FINANCIAL_INFO':
-              enabledEntities.push('CREDIT_CARD', 'FINANCIAL_ID', 'CA_SIN');
-              break;
-            case 'ORGANIZATIONAL_INFO':
-              enabledEntities.push('ORGANIZATION');
-              break;
-            case 'LOCATION_DATA':
-              enabledEntities.push('LOCATION', 'CA_POSTAL_CODE', 'CA_ADDRESS_COMPONENT');
-              break;
+        enabledEntities.push('PHONE_NUMBER', 'EMAIL_ADDRESS', 'ADDRESS', 'CA_POSTAL_CODE');
+        break;
+          case 'FINANCIAL_INFO':
+        enabledEntities.push('CREDIT_CARD', 'FINANCIAL_ID', 'CA_SIN');
+        break;
+          case 'ORGANIZATIONAL_INFO':
+        enabledEntities.push('ORGANIZATION');
+        break;
+          case 'LOCATION_DATA':
+        enabledEntities.push('LOCATION', 'CA_POSTAL_CODE', 'CA_ADDRESS_COMPONENT');
+        break;
+          default:
+        // If an unknown category is enabled, add it as-is
+        enabledEntities.push(category);
+        break;
         }
       }
     }
@@ -107,7 +165,21 @@ export const adaptPIIRedactorSettings = (settings) => {
   return adaptedSettings;
 };
 
-
+/**
+* Adapts French Translation settings for the backend API
+* 
+* @param {Object} settings - Full settings object from the ToolSettingsContext
+* @returns {Object} Settings object with only backend-supported properties
+*/
+export const adaptFrenchTranslationSettings = (settings = {}) => {
+  // Currently, the backend doesn't accept any settings parameters
+  // Store the settings in a normalized format so they're ready when the backend supports them
+  return {
+    // Frontend uses camelCase, backend will likely use snake_case
+    model_type: settings.modelType || 'scientific',
+    preserve_formatting: settings.preserveFormatting !== undefined ? settings.preserveFormatting : true
+  };
+};
 
 /**
 * Adapts PDF Chatbot settings for the backend API
@@ -164,6 +236,8 @@ const adapters = {
   'sensitivityScore': adaptSensitivityScoreSettings,
   'piiRedactor': adaptPIIRedactorSettings,
   'pdfChatbot': adaptPdfChatbotSettings,
+  'frenchTranslation': adaptFrenchTranslationSettings,
+  'fenceCounting': adaptFenceCountingSettings,
 };
 
 return adapters[toolName] || adaptGenericSettings;

@@ -12,7 +12,7 @@ import { Box, Paper, CircularProgress, Alert } from '@mui/material';
 import { GovHeader, LeftPanel } from '.';
 import { getToolByName } from '../utils';
 import { HomePage } from '../pages';
-import { useTerms, useLanguage } from '../contexts';
+import { useLanguage } from '../contexts';
 import { Footer, TermsModalContainer } from '../components/common';
 
 import {
@@ -41,20 +41,21 @@ export default function Dashboard({ onLogout }) {
 
   // Translations for disabled tool alert
   const disabledToolAlert = {
-    en: "The Sensitivity Score Calculator is temporarily unavailable while we make improvements. Please check back later.",
-    fr: "Le calculateur de score de sensibilité est temporairement indisponible pendant que nous l'améliorons. Veuillez réessayer plus tard."
+    en: "This tool is temporarily unavailable while we make improvements. Please check back later.",
+    fr: "Cet outil est temporairement indisponible pendant que nous l'améliorons. Veuillez réessayer plus tard."
   };
 
   // Check if the tool should be disabled
   const isToolDisabled = (toolName) => {
-    return toolName === 'Sensitivity Score Calculator';
+    return toolName === 'Sensitivity Score Calculator' || toolName === 'PII Redactor';;
+    // return false;
   };
 
   // Handle direct URL navigation attempts
   useEffect(() => {
     // Check if selected tool is disabled
     if (isToolDisabled(selectedTool)) {
-      setShowDisabledAlert(true);
+      setShowDisabledAlert(true); 
     } else {
       setShowDisabledAlert(false);
     }
@@ -110,7 +111,7 @@ export default function Dashboard({ onLogout }) {
     return (
       <>
         {showDisabledAlert && (
-          <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, px: 2 }}>
+          <Box sx={{ maxWidth: 800, mt: 4, px: 2 }}>
             <Alert 
               severity="warning" 
               sx={{ mb: 2 }}

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Alert, CircularProgress, Chip } from '@mui/material';
 import { Download, Shield } from 'lucide-react';
 import { ToolPage } from '../../components/tools';
@@ -14,9 +14,6 @@ export function PIIRedactor() {
   const toolData = getToolTranslations("piiRedactor", language);
   const translations = toolData?.settings; // Get settings translations from toolData
   const { piiRedactorSettings } = useToolSettings();
-  
-  // Create ref for the file input
-  const fileInputRef = useRef(null);
   
   // Use centralized style hooks
   const styles = useComponentStyles('piiRedactor');

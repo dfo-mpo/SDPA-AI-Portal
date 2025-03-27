@@ -10,7 +10,9 @@ import {
   adaptCSVAnalyzerSettings, 
   adaptScaleAgeingSettings, 
   adaptSensitivityScoreSettings ,
-  adaptPIIRedactorSettings
+  adaptPIIRedactorSettings,
+  adaptFrenchTranslationSettings,
+  adaptFenceCountingSettings
 } from '../utils/settingsAdapter';
 
 /**
@@ -18,6 +20,35 @@ import {
  * All services are on port 8080
  */
 const API_BASE_URL = 'localhost:8080';
+
+/**
+ * Process a video for fish counting
+ * Returns a processed video with fish counts
+ * 
+ * @param {File} file - The video file to process
+ * @param {Object} settings - Settings for fish counting
+ * @returns {Promise<Blob>} The processed video blob
+ */
+export const processFenceCounting = async (file, settings = {}) => {
+  // Use the adapter to transform settings
+  const adaptedSettings = adaptFenceCountingSettings(settings);
+  
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  // Currently no settings are added to formData since backend doesn't support them
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/fence_counting/`, formData, {
+      responseType: 'blob',
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error in processFenceCounting:', error);
+    throw error;
+  }
+};
 
 /**
  * Process a scale image for age estimation
@@ -205,10 +236,14 @@ export const redactPII = async (file, settings = {}) => {
  * @param {File} file - The PDF file to translate
  * @returns {Promise<Object>} Object with translation property
  */
-export const translateToFrench = async (file) => {
+export const translateToFrench = async (file, settings = {}) => {
+  const adaptedSettings = adaptFrenchTranslationSettings(settings);
+
   const formData = new FormData();
   formData.append('file', file);
-
+  // TODO:
+  // In the future, when backend supports settings, add them to formData here
+  // Currently, no settings are added since backend doesn't accept any
   try {
     const response = await fetch(`http://${API_BASE_URL}/pdf_to_french/`, {
       method: 'POST',
@@ -252,17 +287,16 @@ export const translateToFrench = async (file) => {
  * @param {Object} settings - Settings for sensitivity score calculation
  * @returns {Promise<Object>} Object with sensitivity_score property
  */
-export const calculateSensitivityScore = async (file, settings) => {
+export const calculateSensitivityScore = async (file, settings = {}) => {
   const formData = new FormData();
   formData.append('file', file);
+  
+  // Use the adapter to transform settings
+  const adaptedSettings = adaptSensitivityScoreSettings(settings);
+  
+  // Add the adapted settings as JSON
+  formData.append('settings', JSON.stringify(adaptedSettings));
 
-  // If we have settings, add them to the request
-  if (settings) {
-    // TODO: add customized weights extension
-    // backend currently doesn't support customizing entity weights via API.
-    // preparing for future extension.
-    formData.append('settings', JSON.stringify(settings));
-  }
 
   try {
     const response = await fetch(`http://${API_BASE_URL}/sensitivity_score/`, {

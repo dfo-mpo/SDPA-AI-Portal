@@ -36,48 +36,7 @@ export function SensitivityScore() {
   const validationMessage = sensitivityScoreSettings.showAdvanced && !isWeightValid 
     ? (`Weights add up to ${totalWeight}%, must be exactly 100%`)   //TODO: translate to the current language
     : '';
-
-  /**
-   * Prepare settings for the backend
-   * Creates entity weights based on UI category settings
-   */
-  const prepareBackendSettings = useCallback(() => {
-    // Create an array of enabled categories based on checkbox selections
-    const enabledCategories = [];
-    if (sensitivityScoreSettings.checkPersonalInfo) enabledCategories.push('personalInfo');
-    if (sensitivityScoreSettings.checkBusinessInfo) enabledCategories.push('businessInfo');
-    if (sensitivityScoreSettings.checkScientificData) enabledCategories.push('scientificData');
-    if (sensitivityScoreSettings.checkLocationData) enabledCategories.push('locationData');
-
-    let categoryWeights = {};
-    let weight = 0;
-
-    // Use the showAdvanced state from the context to determine how to calculate weights
-    if (sensitivityScoreSettings.showAdvanced) { // Use the advanced weights specified by the user
-      categoryWeights = {
-        personalInfo: sensitivityScoreSettings.weights.personalInfo,
-        businessInfo: sensitivityScoreSettings.weights.businessInfo,
-        scientificData: sensitivityScoreSettings.weights.scientificData,
-        locationData: sensitivityScoreSettings.weights.locationData
-      };
-    }
-    else { // Distribute weight evenly across enabled categories
-      weight = enabledCategories.length > 0 ? (100 / enabledCategories.length) : 0;
-      categoryWeights = {
-        personalInfo: sensitivityScoreSettings.checkPersonalInfo ? weight : 0,
-        businessInfo: sensitivityScoreSettings.checkBusinessInfo ? weight : 0,
-        scientificData: sensitivityScoreSettings.checkScientificData ? weight : 0,
-        locationData: sensitivityScoreSettings.checkLocationData ? weight : 0
-      };
-    }
-
-    return {
-      enabledCategories,
-      categoryWeights,
-      autoFlag: sensitivityScoreSettings.autoFlag
-    };
-  }, [sensitivityScoreSettings]);
-
+  
   /**
    * Process the uploaded file
    * This function is passed to the useFileUpload hook
@@ -94,11 +53,8 @@ export function SensitivityScore() {
       }
     }
     
-    // Prepare settings based on user configuration
-    const backendSettings = prepareBackendSettings();
-    
     // Pass settings to the API
-    const response = await calculateSensitivityScore(file, backendSettings);
+    const response = await calculateSensitivityScore(file, sensitivityScoreSettings);
     
     if (response && typeof response.sensitivity_score === 'number') {
       // Set the score state with the result
@@ -107,14 +63,13 @@ export function SensitivityScore() {
     } else {
       throw new Error('Invalid response format from sensitivity score service');
     }
-  }, [prepareBackendSettings, sensitivityScoreSettings]);
+  }, [sensitivityScoreSettings]);
 
   // Use the file upload hook to handle file operations
   const { 
     isProcessing, 
     uploadKey, 
     handleFileSelected,
-    error 
   } = useFileUpload({
     processFile,
     onError: (err) => {

@@ -10,6 +10,20 @@ const ToolSettingsContext = createContext();
  * @returns {JSX.Element} The provider component
  */
 export function ToolSettingsProvider({ children }) {
+
+  // Add Fence Counting settings
+const [fenceCountingSettings, setFenceCountingSettings] = useState({
+  // Species selection (default all to true)
+  species: {
+    sockeye: true,
+    chum: true,
+    chinook: true,
+    coho: true,
+    pink: true
+  },
+  direction: 'both',  // 'both', 'upstream', or 'downstream'
+  trackObjects: true  // Whether to track individual fish
+});
   
   // Scale ageing settings
   const [scaleAgeingSettings, setScaleAgeingSettings] = useState({
@@ -58,7 +72,7 @@ export function ToolSettingsProvider({ children }) {
     }
   });
 
-// Enhanced PII Redactor settings with improved Canadian-specific information detection
+// PII Redactor settings with improved Canadian-specific information detection
 const [piiRedactorSettings, setPiiRedactorSettings] = useState({
   redactionMethod: 'mask', // 'mask' or 'typePlaceholder'
   redactionColor: '#000000', // Default: black
@@ -213,7 +227,11 @@ const [piiRedactorSettings, setPiiRedactorSettings] = useState({
 
     // PII Redactor with improved handling
     piiRedactorSettings,
-    setPiiRedactorSettings: updatePiiRedactorSettings
+    setPiiRedactorSettings: updatePiiRedactorSettings,
+
+    // Fence Counting
+    fenceCountingSettings,
+    setFenceCountingSettings
   };
 
   return (

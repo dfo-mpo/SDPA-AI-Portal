@@ -17,7 +17,6 @@ export default function Home() {
   
   // Get styles from our component styles system
   const homeStyles = useComponentStyles('homePage');
-  const toolStyles = useComponentStyles('tool');
 
   // Translations
   const translations = {

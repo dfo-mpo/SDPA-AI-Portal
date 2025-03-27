@@ -7,16 +7,19 @@
  */
 
 import React, { useState } from 'react';
-import { useTheme, Box, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import axios from 'axios';
 import { ToolPage } from '../../components/tools';
-import { useLanguage } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+import { processFenceCounting } from '../../services/apiService';
+import { useLanguage, useToolSettings } from '../../contexts';
+
+
 
 export function FenceCounting() {
   const { language } = useLanguage();
-  const theme = useTheme();
+  const { fenceCountingSettings } = useToolSettings();
   const toolData = getToolTranslations("fenceCounting", language);
   const toolStyles = useComponentStyles('tool');
   
@@ -36,21 +39,12 @@ export function FenceCounting() {
     const originalVideoUrl = URL.createObjectURL(inputFile);
     setOriginalVideo(originalVideoUrl);
     
-    const formData = new FormData();  
-    formData.append('file', inputFile);  
-  
     try {
-      const response = await axios.post('http://localhost:8080/fence_counting/', formData, {    
-        responseType: 'blob',  
-      }); 
+      const response = await processFenceCounting(inputFile, fenceCountingSettings);
       
-      if (response.status === 200) {
-        const videoUrl = URL.createObjectURL(new Blob([response.data]));
-        setProcessedVideo(videoUrl);
-      } else {  
-        console.error('Failed to retrieve processed video');  
-        alert('Failed to retrieve processed video');  
-      }
+      // Create URL from the blob response
+      const videoUrl = URL.createObjectURL(response);
+      setProcessedVideo(videoUrl);
     } catch (error) {  
       console.error('Error:', error);  
       alert('An error occurred while processing the video.');  

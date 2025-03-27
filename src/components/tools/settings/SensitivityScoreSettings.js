@@ -7,7 +7,6 @@ import {
   Grid,
   Typography,
   IconButton,
-  useTheme
 } from '@mui/material';
 import { RotateCcw } from 'lucide-react';
 import { useLanguage, useToolSettings } from '../../../contexts';
@@ -16,7 +15,6 @@ import { CustomSwitch } from '../../common';
 import { 
   SettingsContainer, 
   SettingRow, 
-  SettingHelperText, 
   SettingCheckboxGroup,
   SettingHeader,
   SettingDivider
@@ -25,7 +23,6 @@ import { useComponentStyles } from '../../../styles/hooks/useComponentStyles';
 
 export default function SensitivityScoreSettings() {
   const { language } = useLanguage();
-  const theme = useTheme();
   const sensitivityScoreStyles = useComponentStyles('sensitivityScore');
   const translations = getToolTranslations("sensitivityScore", language)?.settings;
   

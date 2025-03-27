@@ -22,7 +22,7 @@ import {
   Chip,
   Tooltip
 } from '@mui/material';
-import { Send, Upload, Bot, RefreshCw, Thermometer } from 'lucide-react';
+import { Send, Bot, RefreshCw, Thermometer } from 'lucide-react';
 import { ToolPage } from '../../components/tools';
 import { useLanguage, useToolSettings } from '../../contexts';
 import { getToolTranslations } from '../../utils';
@@ -34,7 +34,7 @@ export function PDFChatbot() {
   const toolData = getToolTranslations("pdfChatbot", language);
   
   // Get context settings instead of local state
-  const { pdfChatbotSettings, updatePdfChatbotSettings, updatePdfChatbotTokenUsage } = useToolSettings();
+  const { pdfChatbotSettings, updatePdfChatbotTokenUsage } = useToolSettings();
   
   // Get styles from our styling system
   const toolStyles = useComponentStyles('tool');
