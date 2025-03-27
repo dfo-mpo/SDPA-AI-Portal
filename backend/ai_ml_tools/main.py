@@ -1,9 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import api_router
 from dotenv import load_dotenv
 import os
-
 
 # Load environment variables from .env file  
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))  
@@ -35,7 +34,3 @@ app.include_router(api_router)
 @app.get("/")  
 async def read_root():  
     return {"Hello": "World"}  
-
-@app.get("/items/{item_id}")  
-async def read_item(item_id: int, q: str = None):  
-    return {"item_id": item_id, "q": q}  
