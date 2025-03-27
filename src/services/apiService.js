@@ -9,15 +9,15 @@ import axios from 'axios';
 import { 
   adaptCSVAnalyzerSettings, 
   adaptScaleAgeingSettings, 
-  adaptSensitivityScoreSettings ,
+  adaptSensitivityScoreSettings,
   adaptPIIRedactorSettings,
   adaptFrenchTranslationSettings,
   adaptFenceCountingSettings
 } from '../utils/settingsAdapter';
 
 /**
- * Base URL for the FastAPI backend
- * All services are on port 8080
+ * Base URL for the FastAPI backend.
+ * Note: For HTTP requests we use http://, and for WebSocket connections we’ll use ws://.
  */
 const API_BASE_URL = 'localhost:8080';
 
@@ -32,17 +32,15 @@ const API_BASE_URL = 'localhost:8080';
 export const processFenceCounting = async (file, settings = {}) => {
   // Use the adapter to transform settings
   const adaptedSettings = adaptFenceCountingSettings(settings);
-  
   const formData = new FormData();
   formData.append('file', file);
   
   // Currently no settings are added to formData since backend doesn't support them
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/fence_counting/`, formData, {
+    const response = await axios.post(`http://${API_BASE_URL}/fence_counting/`, formData, {
       responseType: 'blob',
     });
-    
     return response.data;
   } catch (error) {
     console.error('Error in processFenceCounting:', error);
@@ -61,22 +59,18 @@ export const processFenceCounting = async (file, settings = {}) => {
  */
 export const processScaleAge = async (file, settings = {}) => {
   const adaptedSettings = adaptScaleAgeingSettings(settings);
-  
   const formData = new FormData();
   formData.append('file', file);
   formData.append('enhance', adaptedSettings.enhance.toString());
-  formData.append('fish_type', adaptedSettings.fish);
-
+  formData.append('fish_type', adaptedSettings.fishType);
   try {
     const response = await fetch(`http://${API_BASE_URL}/age_scale/`, {
       method: 'POST',
       body: formData
     });
-    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
     return await response.json();
   } catch (error) {
     console.error('Error in processScaleAge:', error);
@@ -94,12 +88,10 @@ export const processScaleAge = async (file, settings = {}) => {
 export const convertToPng = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
-
   try {
     const response = await axios.post(`http://${API_BASE_URL}/to_png/`, formData, {
       responseType: 'blob',
     });
-    
     return response.data;
   } catch (error) {
     console.error('Error in convertToPng:', error);
@@ -140,26 +132,18 @@ export const analyzeCsvPdf = async (csvFile, pdfFile, settings = {}) => {
     const formData = new FormData();
     formData.append('csv_file', csvFile); 
     formData.append('pdf_file', pdfFile);
-    
     try {
       console.log(`Processing ${format} format...`);
-      
       const params = new URLSearchParams();
       if (adaptedSettings.outputType) {
         params.append('outputType', adaptedSettings.outputType);
       }
-      // Add other params as they become available in adaptedSettings
-
-      // Make the API call for this format
       const response = await axios.post(
         `http://${API_BASE_URL}/openai_csv_analyze/?${params.toString()}`, 
         formData, 
         { responseType: 'blob' }
       );
-      
       const blob = response.data;
-      
-      // Process the response based on format
       if (format === 'json') {
         const text = await blob.text();
         try {
@@ -190,7 +174,6 @@ export const analyzeCsvPdf = async (csvFile, pdfFile, settings = {}) => {
   
   // Set the primary format (first selected format)
   result.primaryFormat = selectedFormats[0];
-  
   return result;
 };
 
@@ -214,14 +197,11 @@ export const redactPII = async (file, settings = {}) => {
   for (const [key, value] of Object.entries(adaptedSettings)) {
     formData.append(key, value);
   }
-  
-
   try {
     const response = await axios.post(`http://${API_BASE_URL}/pii_redact/`, formData, {
       responseType: 'blob',
       timeout: 60000 // 60 second timeout for processing larger documents
     });
-    
     return response.data;
   } catch (error) {
     console.error('Error in redactPII:', error);
@@ -238,7 +218,6 @@ export const redactPII = async (file, settings = {}) => {
  */
 export const translateToFrench = async (file, settings = {}) => {
   const adaptedSettings = adaptFrenchTranslationSettings(settings);
-
   const formData = new FormData();
   formData.append('file', file);
   // TODO:
@@ -249,11 +228,9 @@ export const translateToFrench = async (file, settings = {}) => {
       method: 'POST',
       body: formData
     });
-    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
     const result = await response.json();
     
     // Handle the nested JSON structure that comes from the backend
@@ -270,7 +247,6 @@ export const translateToFrench = async (file, settings = {}) => {
         return result; // Return original result if parsing fails
       }
     }
-    
     return result;
   } catch (error) {
     console.error('Error in translateToFrench:', error);
@@ -307,7 +283,6 @@ export const calculateSensitivityScore = async (file, settings = {}) => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
     return await response.json();
   } catch (error) {
     console.error('Error in calculateSensitivityScore:', error);
@@ -315,123 +290,70 @@ export const calculateSensitivityScore = async (file, settings = {}) => {
   }
 };
 
-/**
- * Process a pdf document
- * Returns the text extraction of a document as a JSON string
- * 
- * @param {File} file - The PDF to extract
- * @returns {Promise<Object>} String containing JSON exraction of document
- */
 export const processPdfDocument = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
-
   try {
     const response = await fetch(`http://${API_BASE_URL}/di_extract_document/`, {
       method: 'POST',
       body: formData
     });
-    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
-    const result = await response.json();
-    
-    // Handle the nested JSON structure that comes from the backend
-    if (result && result.extracted_document) {
-      try {
-        return {
-          extracted_document: result.extracted_document
-        };
-      } catch (parseError) {
-        console.error('Error parsing extraction JSON:', parseError);
-        return result; // Return original result if parsing fails
-      }
-    }
-    
-    return result;
+    return await response.json();
   } catch (error) {
     console.error('Error in processPdfDocument:', error);
     throw error;
   }
-}
-
-/**  
- * Ask question to OpenAI  
- * Returns the response as a stream  
- *  
- * @param {Array} chatHistory - Conversation history
- * @param {Array} currentMessage - Current question being asked  
- * @param {String} document - Extracted document  
- * @returns {Promise<String>} Response from OpenAI  
- */  
-export async function* askOpenAI(chatHistory, currentMessage, document) {  
-  const websocket = new WebSocket(`ws://${API_BASE_URL}/ws/chat_stream`);  
-  let tokens_used = 0;  
-
-  // Create a promise that resolves when the WebSocket closes  
-  const closePromise = new Promise((resolve, reject) => {  
-      websocket.onclose = () => {  
-          console.log('WebSocket connection closed');   
-          resolve({ content: '', tokens_used });  
-      };  
-
-      websocket.onerror = (error) => {  
-          console.error('WebSocket error:', error);  
-          reject(error);  
-      };  
-  });  
-
-  // Create a promise that resolves with each message  
-  const messageQueue = [];  
-  websocket.onmessage = (event) => {  
-      const data = JSON.parse(event.data);  
-
-      if (data.error) {  
-          websocket.close();  
-      } else {  
-          if (data.finish_reason === 'stop') {
-              console.log("Stoping for this: ****************") 
-              console.log(data)
-              tokens_used = data.tokens_used;  
-              websocket.close();  
-          } else {  
-              messageQueue.push({ content: data.content });  
-          }  
-      }  
-  };  
-
-  websocket.onopen = () => {  
-      console.log('WebSocket connection opened.');  
-      const data = {  
-          chat_history: chatHistory.concat({"role": "user", "content": currentMessage}),  
-          document: document.toString()  
-          // model: 'gpt-4o-mini',  
-          // temperature: 0.3,  
-          // reasoning_effort: 'high'  
-      };  
-      websocket.send(JSON.stringify(data));  
-  };  
-
-  while (websocket.readyState !== WebSocket.CLOSED) {  
-      while (messageQueue.length > 0) {  
-          yield messageQueue.shift();  
-      }  
-      await new Promise(resolve => setTimeout(resolve, 100));  
-  }  
-
-  const finalMessage = await closePromise;  
-  yield finalMessage;  
-}  
+};
 
 /**
- * Cleans the API response from unnecessary markdown or HTML formatting.
- * 
- * @param {string} responseText - The raw response text from the API.
- * @return {string} The cleaned text.
+ * Updated askOpenAI function using a WebSocket connection.
+ * It sends a payload with only the parameters supported by your backend and yields streaming response chunks.
  */
-function cleanApiResponse(responseText) {
-  let cleanText = responseText.replace(/```html/g, "").replace(/```/g, "");
-  return cleanText;
+export async function* askOpenAI(chatHistory, currentMessage, documentContent) {
+  const wsUrl = `ws://${API_BASE_URL}/ws/chat_stream`;
+  const socket = new WebSocket(wsUrl);
+
+  await new Promise((resolve, reject) => {
+    socket.onopen = resolve;
+    socket.onerror = reject;
+  });
+
+  const payload = {
+    chat_history: [...chatHistory, { role: 'user', content: currentMessage }],
+    document: documentContent,
+    model: "gpt-4o-mini",
+    temperature: 0.7,
+    reasoning_effort: "high"
+  };
+
+  socket.send(JSON.stringify(payload));
+
+  const messageQueue = [];
+  let finished = false;
+
+  socket.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      messageQueue.push(data);
+    } catch (e) {
+      console.error("Error parsing websocket message", e);
+    }
+  };
+
+  socket.onclose = () => { finished = true; };
+  socket.onerror = (err) => {
+    finished = true;
+    console.error("WebSocket error", err);
+  };
+
+  while (!finished || messageQueue.length > 0) {
+    if (messageQueue.length > 0) {
+      yield messageQueue.shift();
+    } else {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  }
 }
