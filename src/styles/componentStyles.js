@@ -1218,17 +1218,19 @@ export const scaleAgeingStyles = {
     maxWidth: '800px',
     margin: '0 auto',            // center it horizontally
     padding: '1rem',            // some padding inside
-    backgroundColor: '#f9f9f9',  // light background
-    border: '1px solid #ddd',   // subtle border
+    backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.8)' : '#f9f9f9',  // Responsive background
+    border: (theme) => `1px solid ${theme.palette.divider}`,   // Use theme divider color
     borderRadius: '8px',        // rounded corners
   },
   resultCard: {
     marginTop: '1rem',
     padding: '1rem',
-    backgroundColor: '#fff',
-    border: '1px solid #ccc',
+    backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.9)' : '#fff',
+    border: (theme) => `1px solid ${theme.palette.divider}`,
     borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    boxShadow: (theme) => theme.palette.mode === 'dark' 
+      ? '0 2px 8px rgba(0, 0, 0, 0.3)' 
+      : '0 2px 4px rgba(0, 0, 0, 0.1)',
   },
   resultContainer: {
     // A container to hold text lines in a column
@@ -1242,6 +1244,7 @@ export const scaleAgeingStyles = {
     // A small style for each line of info
     margin: '0.25rem 0',
     fontSize: '1rem',
+    color: (theme) => theme.palette.text.primary, // Use theme color to ensure readability
   },
   resultImage: {
     // Controls how the scale image is displayed
@@ -1249,7 +1252,7 @@ export const scaleAgeingStyles = {
     maxWidth: '600px',        
     height: 'auto',
     marginTop: '1rem',
-    border: '1px solid #ccc',  // subtle border around the image
+    border: (theme) => `1px solid ${theme.palette.divider}`,  // Use theme divider color
     borderRadius: '4px',       // slightly rounded corners
   },
 };
@@ -1267,7 +1270,6 @@ export const piiRedactorStyles = (theme) => ({
     flexDirection: 'column',
     alignItems: 'center',
   },
-  // You can add more styles as needed, for example:
   downloadButton: {
     marginTop: theme.spacing(2),
   },
