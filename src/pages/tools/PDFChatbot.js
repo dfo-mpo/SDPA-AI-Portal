@@ -278,25 +278,26 @@ export function PDFChatbot() {
       timestamp: new Date()
     };
     
-    // Append the user message.
+    // Append the user message
     setMessages(prev => [...prev, userMessage]);
     setCurrentMessage('');
     setIsResponding(true);
     
-    // Create a temporary assistant message for live updates.
+    // Create a temporary assistant message for live updates
     const tempResponse = { role: 'assistant', content: '', timestamp: new Date() };
     setMessages(prev => [...prev, tempResponse]);
     
     try {
-      const generator = askOpenAI(llmChatHistory, currentMessage, fileContent);
+      // Use the generator with settings from context
+      const generator = askOpenAI(llmChatHistory, currentMessage, fileContent, pdfChatbotSettings);
       let tokensUsed = 0;
       
-      // Process stream: update live as chunks arrive.
+      // Process stream: update live as chunks arrive
       for await (const chunk of generator) {
         if (chunk.content) {
-          // Append the chunk's content.
+          // Append the chunk's content
           tempResponse.content += chunk.content;
-          // Update the last message in the state to trigger re-render.
+          // Update the last message in the state to trigger re-render
           setMessages(prev => {
             const newMessages = [...prev];
             newMessages[newMessages.length - 1] = { ...tempResponse };
@@ -304,20 +305,21 @@ export function PDFChatbot() {
           });
         }
         
-        // Break when finish reason is provided.
+        // Break when finish reason is provided
         if (chunk.finish_reason !== undefined && chunk.finish_reason !== null) {
           tokensUsed = chunk.tokens_used;
           break;
         }
       }
       
-      // Update LLM chat history.
+      // Update LLM chat history
       if (llmChatHistory[0] === '') {
         setLlmChatHistory([{ role: 'user', content: currentMessage }, { role: 'assistant', content: tempResponse.content }]);
       } else {
         setLlmChatHistory(prev => [...prev, { role: 'user', content: currentMessage }, { role: 'assistant', content: tempResponse.content }]);
       }
       
+      // Update token usage in context
       updatePdfChatbotTokenUsage(
         Math.min(
           pdfChatbotSettings.tokenUsage.total, 

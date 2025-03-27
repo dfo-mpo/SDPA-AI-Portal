@@ -188,11 +188,11 @@ export const adaptFrenchTranslationSettings = (settings = {}) => {
 * @returns {Object} Settings object with only backend-supported properties
 */
 export const adaptPdfChatbotSettings = (settings) => {
-return {
-  model: mapModelTypeToAPIValue(settings.modelType),
-  tempurature: settings.temperature || 0.3,
-  reasoning_effort: "high"
-};
+  return {
+    model: mapModelTypeToAPIValue(settings.modelType),
+    tempurature: settings.temperature || 0.3,
+    reasoning_effort: "high"
+  };
 };
 
 /**
@@ -202,14 +202,14 @@ return {
 * @returns {string} The backend API model value
 */
 function mapModelTypeToAPIValue(modelType) {
-const modelMap = {
-  'gpt4o': 'gpt-4o',
-  'gpt4omini': 'gpt-4o-mini',
-  'gpt35': 'gpt-3.5-turbo',
-  'o3mini': 'o3-mini'
-};
+  const modelMap = {
+    'gpt4o': 'gpt-4o',
+    'gpt4omini': 'gpt-4o-mini',
+    'gpt35': 'gpt-3.5-turbo',
+    'o3mini': 'o3-mini'
+  };
 
-return modelMap[modelType] || 'gpt-4o-mini'; // Default to gpt-4o-mini if not found
+  return modelMap[modelType] || 'gpt-4o-mini'; // Default to gpt-4o-mini if not found
 }
 
 /**
@@ -219,8 +219,8 @@ return modelMap[modelType] || 'gpt-4o-mini'; // Default to gpt-4o-mini if not fo
 * @param {Object} settings - Full settings object from the ToolSettingsContext
 * @returns {Object} The same settings object
 */
-export const adaptGenericSettings = (settings) => {
-return { ...settings };
+  export const adaptGenericSettings = (settings) => {
+  return { ...settings };
 };
 
 /**
@@ -230,15 +230,15 @@ return { ...settings };
 * @returns {Function} Adapter function for the specified tool
 */
 export const getSettingsAdapter = (toolName) => {
-const adapters = {
-  'csvAnalyzer': adaptCSVAnalyzerSettings,
-  'scaleAgeing': adaptScaleAgeingSettings,
-  'sensitivityScore': adaptSensitivityScoreSettings,
-  'piiRedactor': adaptPIIRedactorSettings,
-  'pdfChatbot': adaptPdfChatbotSettings,
-  'frenchTranslation': adaptFrenchTranslationSettings,
-  'fenceCounting': adaptFenceCountingSettings,
-};
+  const adapters = {
+    'csvAnalyzer': adaptCSVAnalyzerSettings,
+    'scaleAgeing': adaptScaleAgeingSettings,
+    'sensitivityScore': adaptSensitivityScoreSettings,
+    'piiRedactor': adaptPIIRedactorSettings,
+    'pdfChatbot': adaptPdfChatbotSettings,
+    'frenchTranslation': adaptFrenchTranslationSettings,
+    'fenceCounting': adaptFenceCountingSettings,
+  };
 
-return adapters[toolName] || adaptGenericSettings;
+  return adapters[toolName] || adaptGenericSettings;
 };

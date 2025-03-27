@@ -12,7 +12,8 @@ import {
   adaptSensitivityScoreSettings,
   adaptPIIRedactorSettings,
   adaptFrenchTranslationSettings,
-  adaptFenceCountingSettings
+  adaptFenceCountingSettings,
+  adaptPdfChatbotSettings
 } from '../utils/settingsAdapter';
 
 /**
@@ -309,11 +310,18 @@ export const processPdfDocument = async (file) => {
 };
 
 /**
- * Updated askOpenAI function using a WebSocket connection.
- * It sends a payload with only the parameters supported by your backend and yields streaming response chunks.
+ * Ask question to OpenAI with streaming response
+ * 
+ * @param {Array} chatHistory - Conversation history  
+ * @param {String} documentContent - Extracted document text
+ * @param {Object} settings - Settings for the chatbot
+ * @returns {AsyncGenerator} A generator that yields response chunks
  */
-export async function* askOpenAI(chatHistory, currentMessage, documentContent) {
-  const wsUrl = `ws://${API_BASE_URL}/ws/chat_stream`;
+export async function* askOpenAI(chatHistory, currentMessage, documentContent, settings = {}) {
+  // Use the adapter to transform settings
+  const adaptedSettings = adaptPdfChatbotSettings(settings);
+  
+  const wsUrl = `ws://${API_BASE_URL.replace('http://', '')}/ws/chat_stream`;
   const socket = new WebSocket(wsUrl);
 
   await new Promise((resolve, reject) => {
@@ -324,9 +332,9 @@ export async function* askOpenAI(chatHistory, currentMessage, documentContent) {
   const payload = {
     chat_history: [...chatHistory, { role: 'user', content: currentMessage }],
     document: documentContent,
-    model: "gpt-4o-mini",
-    temperature: 0.7,
-    reasoning_effort: "high"
+    model: adaptedSettings.model,
+    temperature: adaptedSettings.temperature,
+    reasoning_effort: adaptedSettings.reasoning_effort
   };
 
   socket.send(JSON.stringify(payload));
