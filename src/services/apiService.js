@@ -11,7 +11,8 @@ import {
   adaptScaleAgeingSettings, 
   adaptSensitivityScoreSettings ,
   adaptPIIRedactorSettings,
-  adaptFrenchTranslationSettings
+  adaptFrenchTranslationSettings,
+  adaptFenceCountingSettings
 } from '../utils/settingsAdapter';
 
 /**
@@ -20,7 +21,34 @@ import {
  */
 const API_BASE_URL = 'http://localhost:8080';
 
+/**
+ * Process a video for fish counting
+ * Returns a processed video with fish counts
+ * 
+ * @param {File} file - The video file to process
+ * @param {Object} settings - Settings for fish counting
+ * @returns {Promise<Blob>} The processed video blob
+ */
+export const processFenceCounting = async (file, settings = {}) => {
+  // Use the adapter to transform settings
+  const adaptedSettings = adaptFenceCountingSettings(settings);
+  
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  // Currently no settings are added to formData since backend doesn't support them
 
+  try {
+    const response = await axios.post(`${API_BASE_URL}/fence_counting/`, formData, {
+      responseType: 'blob',
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error in processFenceCounting:', error);
+    throw error;
+  }
+};
 
 /**
  * Process a scale image for age estimation

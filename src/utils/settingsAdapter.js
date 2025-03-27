@@ -19,14 +19,36 @@
  */
 export const adaptCSVAnalyzerSettings = (settings) => {
   // Currently, the backend only officially supports outputType="json",
-// but we'll pass the selected format for our mock implementation
-return {
-  outputType: settings.outputType || 'json',
-  // Add the outputFormats for our mock to know what the user selected
-  // outputFormats: settings.outputFormats || { json: true }
-};
+  // but we'll pass the selected format for our mock implementation
+  return {
+    outputType: settings.outputType || 'json',
+    // Add the outputFormats for our mock to know what the user selected
+    // outputFormats: settings.outputFormats || { json: true }
+  };
 };
 
+/**
+* Adapts Fence Counting settings for the backend API
+* 
+* @param {Object} settings - Full settings object from the ToolSettingsContext
+* @returns {Object} Settings object with only backend-supported properties
+*/
+export const adaptFenceCountingSettings = (settings = {}) => {
+  // Currently, the backend doesn't accept any settings parameters
+  // Store the settings in a normalized format so they're ready when the backend supports them
+  return {
+    // Convert species object to a format the backend would likely use
+    enabled_species: settings.species ? 
+      Object.entries(settings.species)
+        .filter(([_, enabled]) => enabled)
+        .map(([species]) => species)
+        .join(',') : 
+      'chum', // Default to chum if no species settings
+      
+    direction: settings.direction || 'both',
+    track_objects: settings.trackObjects !== undefined ? settings.trackObjects : true
+  };
+};
 /**
 * Adapts Scale Ageing settings for the backend API
 * 
@@ -215,6 +237,7 @@ const adapters = {
   'piiRedactor': adaptPIIRedactorSettings,
   'pdfChatbot': adaptPdfChatbotSettings,
   'frenchTranslation': adaptFrenchTranslationSettings,
+  'fenceCounting': adaptFenceCountingSettings,
 };
 
 return adapters[toolName] || adaptGenericSettings;
