@@ -20,9 +20,27 @@ import {
   LinearProgress,
   Stack,
   Chip,
-  Tooltip
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
+  Card,
+  CardContent
 } from '@mui/material';
-import { Send, Bot, RefreshCw, Thermometer } from 'lucide-react';
+import { 
+  Send, 
+  Bot, 
+  RefreshCw, 
+  Thermometer, 
+  FileText, 
+  LogOut, 
+  Download, 
+  Clock,
+  MessageCircle,
+  Upload
+} from 'lucide-react';
 import { ToolPage } from '../../components/tools';
 import { useLanguage, useToolSettings } from '../../contexts';
 import { getToolTranslations } from '../../utils';
@@ -33,9 +51,78 @@ export function PDFChatbot() {
   const { language } = useLanguage();
   const toolData = getToolTranslations("pdfChatbot", language);
   
+  // Translations based on selected language
+  const translations = {
+    en: {
+      chatSessionEnded: "Chat session ended.",
+      chatSummary: "Chat Summary",
+      document: "Document",
+      duration: "Duration",
+      messages: "Messages",
+      user: "user",
+      assistant: "assistant",
+      tokensUsed: "Tokens used",
+      endedAt: "Ended at",
+      newChat: "New Chat",
+      uploadNewDocument: "Upload New Document",
+      downloadChat: "Download Chat",
+      thinking: "Thinking...",
+      send: "Send",
+      askQuestion: "Ask a question about the document...",
+      endChatTitle: "End Chat Session",
+      endChatMessage: "Are you sure you want to end this chat session? You won't be able to ask any more questions in this session.",
+      cancel: "Cancel",
+      endChat: "End Chat",
+      suggestedQuestions: "Suggested questions:",
+      tokensRemaining: "tokens remaining",
+      // Tooltips
+      temperatureTooltip: "Current temperature setting",
+      tokenUsageTooltip: "Token usage",
+      resetChatTooltip: "Reset chat",
+      endChatTooltip: "End chat session",
+      // Temperature labels
+      precise: "Precise",
+      balanced: "Balanced",
+      creative: "Creative"
+    },
+    fr: {
+      chatSessionEnded: "Session de chat terminée.",
+      chatSummary: "Résumé du chat",
+      document: "Document",
+      duration: "Durée",
+      messages: "Messages",
+      user: "utilisateur",
+      assistant: "assistant",
+      tokensUsed: "Jetons utilisés",
+      endedAt: "Terminé à",
+      newChat: "Nouveau chat",
+      uploadNewDocument: "Téléverser un nouveau document",
+      downloadChat: "Télécharger le chat",
+      thinking: "Réflexion en cours...",
+      send: "Envoyer",
+      askQuestion: "Posez une question sur le document...",
+      endChatTitle: "Terminer la session de chat",
+      endChatMessage: "Êtes-vous sûr de vouloir terminer cette session de chat? Vous ne pourrez plus poser de questions dans cette session.",
+      cancel: "Annuler",
+      endChat: "Terminer",
+      suggestedQuestions: "Questions suggérées:",
+      tokensRemaining: "jetons restants",
+      // Tooltips
+      temperatureTooltip: "Réglage de température actuel",
+      tokenUsageTooltip: "Utilisation de jetons",
+      resetChatTooltip: "Réinitialiser le chat",
+      endChatTooltip: "Terminer la session de chat",
+      // Temperature labels
+      precise: "Précis",
+      balanced: "Équilibré",
+      creative: "Créatif"
+    }
+  };
+  
   // Get context settings from ToolSettingsContext
   const { pdfChatbotSettings, updatePdfChatbotTokenUsage } = useToolSettings();
   
+  // Get styles from our styling system
   const toolStyles = useComponentStyles('tool');
   const styles = useComponentStyles('pdfChatbot');
   
@@ -51,6 +138,12 @@ export function PDFChatbot() {
   const [currentMessage, setCurrentMessage] = useState('');
   const [isResponding, setIsResponding] = useState(false);
   
+  // Chat session state
+  const [isChatEnded, setIsChatEnded] = useState(false);
+  const [chatSummary, setChatSummary] = useState(null);
+  const [endChatDialogOpen, setEndChatDialogOpen] = useState(false);
+  const [chatStartTime, setChatStartTime] = useState(null);
+  
   // Ref for scrolling to bottom of chat
   const messagesEndRef = useRef(null);
   
@@ -59,11 +152,11 @@ export function PDFChatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
   
-  // Reset token usage on initial load
+    // Reset token usage on initial load and when language changes
   useEffect(() => {
-    // Reset the token usage to 0 on component mount
-    updatePdfChatbotTokenUsage(0);
-  }, []);
+    // Reset the token usage to 0 on component mount or language change
+    updatePdfChatbotTokenUsage(pdfChatbotSettings.tokenUsage.used || 0);
+  }, [language]);
 
   /**
    * Handle document upload
@@ -75,6 +168,9 @@ export function PDFChatbot() {
     
     setSelectedFile(file);
     setIsFileProcessing(true);
+    setIsChatEnded(false);
+    setChatSummary(null);
+    setChatStartTime(new Date());
     
     try {
       const response = await processPdfDocument(file);
@@ -142,6 +238,16 @@ export function PDFChatbot() {
     // Replace "Source_page:" with "Source Page:"
     content = content.replace(/Source_page:/g, 'Source Page:');
     
+    // Add custom styling to fix table double borders
+    const customStyle = `
+      <style>
+        table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        table, th, td { border: 1px solid #ddd; }
+        th, td { padding: 8px; text-align: left; }
+        th { background-color: #f5f5f5; }
+      </style>
+    `;
+    
     // Split the content if the marker exists.
     const marker = "Source Page:";
     const markerIndex = content.lastIndexOf(marker);
@@ -150,21 +256,21 @@ export function PDFChatbot() {
       const sourceContent = content.substring(markerIndex).trim();
       return (
         <div>
-          <div dangerouslySetInnerHTML={{ __html: mainContent }} />
-          <Typography variant="caption" sx={{ display: 'block', marginTop: '8px', color: 'grey' }}>
+          <div dangerouslySetInnerHTML={{ __html: customStyle + mainContent }} />
+          <Typography variant="caption" sx={{ display: 'block', marginTop: '8px', color: 'text.secondary', fontStyle: 'italic' }}>
             {sourceContent}
           </Typography>
         </div>
       );
     }
-    return <div dangerouslySetInnerHTML={{ __html: content }} />;
+    return <div dangerouslySetInnerHTML={{ __html: customStyle + content }} />;
   };
 
   /**
    * Handle sending a message with live stream updates.
    */
   const handleSendMessage = async () => {
-    if (!currentMessage.trim()) return;
+    if (!currentMessage.trim() || isChatEnded) return;
     
     const userMessage = {
       role: 'user',
@@ -221,6 +327,16 @@ export function PDFChatbot() {
       
     } catch (error) {
       console.error('Error sending message:', error);
+      // Display error message to the user
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1] = { 
+          role: 'error', 
+          content: 'Sorry, there was an error processing your request. Please try again.',
+          timestamp: new Date() 
+        };
+        return newMessages;
+      });
     } finally {
       setIsResponding(false);
     }
@@ -249,6 +365,9 @@ export function PDFChatbot() {
    * Reset the chat.
    */
   const handleResetChat = () => {
+    setChatStartTime(new Date());
+    setIsChatEnded(false);
+    setChatSummary(null);
     setMessages([
       {
         role: 'bot',
@@ -256,15 +375,98 @@ export function PDFChatbot() {
         timestamp: new Date()
       }
     ]);
+    setLlmChatHistory(['']);
     updatePdfChatbotTokenUsage(0);
   };
-
+  
+  /**
+   * Open the end chat confirmation dialog
+   */
+  const handleOpenEndChatDialog = () => {
+    setEndChatDialogOpen(true);
+  };
+  
+  /**
+   * End the chat session and generate a summary
+   */
+  const handleEndChat = () => {
+    setEndChatDialogOpen(false);
+    setIsChatEnded(true);
+    
+    // Calculate session duration
+    const endTime = new Date();
+    const durationMs = chatStartTime ? endTime - chatStartTime : 0;
+    const durationMinutes = Math.floor(durationMs / 60000);
+    const durationSeconds = Math.floor((durationMs % 60000) / 1000);
+    
+    // Count messages by type
+    const userMessages = messages.filter(m => m.role === 'user').length;
+    const botMessages = messages.filter(m => m.role === 'assistant' || m.role === 'bot').length;
+    
+    // Generate chat summary
+    setChatSummary({
+      fileName: selectedFile.name,
+      fileSize: Math.round(selectedFile.size / 1024) + ' KB',
+      duration: `${durationMinutes}m ${durationSeconds}s`,
+      messageCount: messages.length,
+      userMessages,
+      botMessages,
+      tokensUsed: pdfChatbotSettings.tokenUsage.used,
+      endTime: endTime.toLocaleString()
+    });
+    
+    // Add a chat ended message
+    setMessages(prev => [
+      ...prev, 
+      {
+        role: 'system',
+        content: translations[language].chatSessionEnded,
+        timestamp: new Date()
+      }
+    ]);
+  };
+  
+  /**
+   * Start a new chat session
+   */
+  const handleStartNewChat = () => {
+    handleResetChat();
+  };
+  
+  /**
+   * Upload a new document
+   */
+  const handleUploadNewDocument = () => {
+    // Reset states
+    setIsFileUploaded(false);
+    setSelectedFile(null);
+    setIsChatEnded(false);
+    setChatSummary(null);
+    setMessages([]);
+    setLlmChatHistory(['']);
+    updatePdfChatbotTokenUsage(0);
+    
+    // Programmatically trigger the file input click event after a short delay
+    // to ensure the UI has updated
+    setTimeout(() => {
+      // Find the file input and trigger click
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) {
+        fileInput.click();
+      }
+    }, 100);
+  };
+  
+  // Calculate token usage percentage
   const tokenPercentage = (pdfChatbotSettings.tokenUsage.used / pdfChatbotSettings.tokenUsage.total) * 100;
 
+  /**
+   * Get temperature label text based on value
+   */
   const getTemperatureLabel = (value) => {
-    if (value <= 0.3) return "Precise";
-    if (value <= 0.7) return "Balanced";
-    return "Creative";
+    if (value <= 0.3) return translations[language].precise;
+    if (value <= 0.7) return translations[language].balanced;
+    return translations[language].creative;
   };
 
   return (
@@ -276,7 +478,8 @@ export function PDFChatbot() {
       actionButtonText={isFileUploaded ? "Upload New Document" : toolData.actionButtonText}
       onFileSelected={handleFileSelected}
       isProcessing={isFileProcessing}
-      containerSx={toolStyles.container}
+      hideActionButton={isFileUploaded}
+      uploadKey={Date.now()} // Ensure input is refreshed
     >
       {/* Chat interface appears only when a file is uploaded */}
       {isFileUploaded && (
@@ -292,7 +495,7 @@ export function PDFChatbot() {
               </Typography>
             </Box>
             
-            {/* Token usage display */}
+                          {/* Token usage display */}
             <Box sx={styles.tokenStatusContainer}>
               {/* Temperature indicator */}
               <Tooltip title="Current temperature setting">
@@ -308,11 +511,13 @@ export function PDFChatbot() {
               {/* Token usage counter */}
               <Tooltip title="Token usage">
                 <Box sx={styles.tokenCounter}>
-                  <Typography variant="caption" sx={styles.tokenText}>
-                    {pdfChatbotSettings.tokenUsage.used.toLocaleString()} / {pdfChatbotSettings.tokenUsage.total.toLocaleString()}
-                  </Typography>
+                                        <Typography variant="body2" sx={styles.tokenText}>
+                      {pdfChatbotSettings.tokenUsage.used.toLocaleString()} / {pdfChatbotSettings.tokenUsage.total.toLocaleString()}
+                    </Typography>
                 </Box>
               </Tooltip>
+              
+              {/* Action buttons */}
               
               {/* Reset button */}
               <Tooltip title="Reset chat">
@@ -320,9 +525,49 @@ export function PDFChatbot() {
                   size="small" 
                   onClick={handleResetChat}
                   disabled={isResponding}
-                  sx={styles.resetButton}
+                  sx={{
+                    width: '28px',
+                    height: '28px',
+                    color: 'text.secondary',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: theme => theme.palette.mode === 'dark' 
+                      ? 'rgba(255,255,255,0.05)' 
+                      : 'rgba(255,255,255,0.9)',
+                    '&:hover': {
+                      bgcolor: theme => theme.palette.mode === 'dark' 
+                        ? 'rgba(255,255,255,0.1)' 
+                        : 'rgba(0,0,0,0.05)',
+                    }
+                  }}
                 >
                   <RefreshCw size={16} />
+                </IconButton>
+              </Tooltip>
+              
+              {/* End chat button */}
+              <Tooltip title="End chat session">
+                <IconButton 
+                  size="small" 
+                  onClick={handleOpenEndChatDialog}
+                  disabled={isResponding || isChatEnded}
+                  sx={{
+                    width: '28px',
+                    height: '28px',
+                    color: 'primary.main',
+                    border: '1px solid',
+                    borderColor: isChatEnded ? 'divider' : 'primary.light',
+                    bgcolor: theme => theme.palette.mode === 'dark' 
+                      ? 'rgba(255,255,255,0.05)' 
+                      : 'rgba(255,255,255,0.9)',
+                    '&:hover': {
+                      bgcolor: theme => theme.palette.mode === 'dark' 
+                        ? 'rgba(255,255,255,0.1)' 
+                        : 'rgba(0,0,0,0.05)',
+                    }
+                  }}
+                >
+                  <LogOut size={16} />
                 </IconButton>
               </Tooltip>
             </Box>
@@ -334,36 +579,112 @@ export function PDFChatbot() {
             value={tokenPercentage} 
             sx={{
               ...styles.tokenProgressBar, 
-              props: { percentage: tokenPercentage }
+              '& .MuiLinearProgress-bar': {
+                bgcolor: 
+                  tokenPercentage > 90 ? 'error.main' : 
+                  tokenPercentage > 70 ? 'warning.main' : 
+                  'success.main'
+              }
             }}
           />
           
           {/* Remaining tokens display */}
           <Box sx={styles.remainingTokensContainer}>
             <Typography variant="caption" sx={styles.remainingTokensText}>
-              {(pdfChatbotSettings.tokenUsage.total - pdfChatbotSettings.tokenUsage.used).toLocaleString()} tokens remaining
+              {(pdfChatbotSettings.tokenUsage.total - pdfChatbotSettings.tokenUsage.used).toLocaleString()} {translations[language].tokensRemaining}
             </Typography>
           </Box>
           
           {/* Messages container */}
-          <Box sx={styles.messagesContainer}>
+          <Box sx={{
+            ...styles.messagesContainer,
+            height: 'auto',
+            maxHeight: 'calc(100% - 180px)', // Adjust to allow room for input and header
+            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
             {messages.map((message, index) => (
-              <Box key={index}>
-                <Paper 
-                  elevation={0} 
-                  sx={message.role === 'user' ? styles.userMessage : styles.botMessage}
-                >
-                  {message.role === 'assistant' ? (
-                    renderAssistantMessage(message)
-                  ) : (
+              <Box key={index} sx={{ mb: 2 }}>
+                {message.role === 'system' ? (
+                  // System message (like "Chat session ended")
+                  <Box sx={{
+                    textAlign: 'center',
+                    py: 1,
+                    px: 2,
+                    my: 2,
+                    mx: 'auto',
+                    backgroundColor: 'action.hover',
+                    borderRadius: '16px',
+                    display: 'inline-block',
+                    maxWidth: '80%'
+                  }}>
+                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                      {message.content}
+                    </Typography>
+                  </Box>
+                ) : message.role === 'error' ? (
+                  // Error message
+                  <Paper 
+                    elevation={0} 
+                    sx={{
+                      ...styles.botMessage,
+                      bgcolor: 'error.light',
+                      color: 'error.contrastText'
+                    }}
+                  >
                     <Typography variant="body2">{message.content}</Typography>
-                  )}
-                </Paper>
+                  </Paper>
+                ) : (
+                  // Regular message (user or bot)
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    {/* Message bubble */}
+                    <Paper 
+                      elevation={0} 
+                      sx={{
+                        ...(message.role === 'user' ? styles.userMessage : styles.botMessage),
+                        position: 'relative',
+                        '&::after': message.role === 'user' ? {
+                          content: '""',
+                          position: 'absolute',
+                          bottom: '10px',
+                          right: '-8px',
+                          width: 0,
+                          height: 0,
+                          borderTop: '8px solid transparent',
+                          borderBottom: '8px solid transparent',
+                          borderLeft: '10px solid',
+                          borderLeftColor: 'primary.main'
+                        } : {}
+                      }}
+                    >
+                      {message.role === 'assistant' ? (
+                        renderAssistantMessage(message)
+                      ) : (
+                        <Typography variant="body2">{message.content}</Typography>
+                      )}
+                    </Paper>
+                    
+                    {/* Timestamp for messages */}
+                    <Typography 
+                      variant="caption" 
+                      color="text.secondary"
+                      sx={{
+                        alignSelf: message.role === 'user' ? 'flex-end' : 'flex-start',
+                        ml: message.role === 'user' ? 0 : 2,
+                        mr: message.role === 'user' ? 2 : 0,
+                        fontSize: '0.7rem'
+                      }}
+                    >
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Typography>
+                  </Box>
+                )}
                 
                 {message.role === 'bot' && message.followupQuestions && (
                   <Stack direction="column" spacing={1} sx={{ mt: 1, ml: 1 }}>
                     <Typography variant="caption" color="text.secondary">
-                      Suggested questions:
+                      {translations[language].suggestedQuestions}
                     </Typography>
                     
                     {message.followupQuestions.map((question, qIndex) => (
@@ -381,38 +702,267 @@ export function PDFChatbot() {
               </Box>
             ))}
             
+            {/* Chat summary shown when ended */}
+            {isChatEnded && chatSummary && (
+              <Card variant="outlined" sx={{ 
+                mb: 2, 
+                bgcolor: theme => theme.palette.mode === 'dark' 
+                  ? 'rgba(30, 30, 30, 0.95)' 
+                  : 'rgba(250, 250, 250, 0.95)',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+                width: '100%',
+                maxHeight: 'none', // Remove any height constraints
+                display: 'block', // Ensure it uses block display mode
+                overflow: 'visible' // Ensure content isn't hidden
+              }}>
+                <CardContent sx={{ 
+                  p: 3,
+                  height: 'auto', // Allow natural height 
+                  overflow: 'visible' // Ensure content isn't clipped
+                }}>
+                  <Typography variant="h6" sx={{ 
+                    mb: 1, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1,
+                    color: 'text.primary',
+                    fontWeight: 600
+                  }}>
+                    <MessageCircle size={18} />
+                    {translations[language].chatSummary}
+                  </Typography>
+                  
+                  <Divider sx={{ mb: 2 }} />
+                  
+                  <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, 
+                    gap: 2,
+                    bgcolor: theme => theme.palette.mode === 'dark' 
+                      ? 'rgba(40, 40, 40, 0.95)' 
+                      : 'rgba(255, 255, 255, 0.95)',
+                    p: 2,
+                    borderRadius: 1,
+                    height: 'auto', // Allow height to grow as needed
+                    overflow: 'visible' // Ensure content is visible
+                  }}>
+                    <Typography variant="body2" sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 1,
+                      color: 'text.primary',
+                      fontWeight: 500,
+                      wordBreak: 'break-word' // Allow long text to wrap
+                    }}>
+                      <FileText size={16} />
+                      <span>
+                        <strong>{translations[language].document}:</strong> {chatSummary.fileName} ({chatSummary.fileSize})
+                      </span>
+                    </Typography>
+                    
+                    <Typography variant="body2" sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 1,
+                      color: 'text.primary',
+                      fontWeight: 500
+                    }}>
+                      <Clock size={16} />
+                      <span>
+                        <strong>{translations[language].duration}:</strong> {chatSummary.duration}
+                      </span>
+                    </Typography>
+                    
+                    <Typography variant="body2" sx={{ 
+                      color: 'text.primary', 
+                      fontWeight: 500,
+                      wordBreak: 'break-word'
+                    }}>
+                      <strong>{translations[language].messages}:</strong> {chatSummary.messageCount} ({chatSummary.userMessages} {translations[language].user}, {chatSummary.botMessages} {translations[language].assistant})
+                    </Typography>
+                    
+                    <Typography variant="body2" sx={{ 
+                      color: 'text.primary', 
+                      fontWeight: 500,
+                      wordBreak: 'break-word'
+                    }}>
+                      <strong>{translations[language].tokensUsed}:</strong> {chatSummary.tokensUsed.toLocaleString()}
+                    </Typography>
+                    
+                    <Typography variant="body2" gridColumn="span 2" sx={{ 
+                      color: 'text.primary', 
+                      fontWeight: 500,
+                      wordBreak: 'break-word'
+                    }}>
+                      <strong>{translations[language].endedAt}:</strong> {chatSummary.endTime}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            )}
+            
             {/* Scroll to this element */}
             <div ref={messagesEndRef} />
           </Box>
           
           {/* Input container */}
           <Box sx={styles.inputContainer}>
-            <TextField
-              variant="outlined"
-              placeholder="Ask a question about the document..."
-              value={currentMessage}
-              onChange={(e) => setCurrentMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              fullWidth
-              size="small"
-              disabled={isResponding}
-              multiline
-              maxRows={3}
-              sx={styles.messageInput}
-            />
-            
-            <Button
-              variant="contained"
-              color="primary"
-              endIcon={isResponding ? <CircularProgress size={16} color="inherit" /> : <Send />}
-              onClick={handleSendMessage}
-              disabled={!currentMessage.trim() || isResponding}
-            >
-              {isResponding ? "Thinking..." : "Send"}
-            </Button>
+            {isChatEnded ? (
+              // Show chat ended actions
+              <Stack direction="row" spacing={2} width="100%" justifyContent="center">
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<RefreshCw size={16} />}
+                  onClick={handleStartNewChat}
+                >
+                  {translations[language].newChat}
+                </Button>
+                
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<Upload size={16} />}
+                  onClick={handleUploadNewDocument}
+                >
+                  {translations[language].uploadNewDocument}
+                </Button>
+                
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<Download size={16} />}
+                  disabled
+                >
+                  {translations[language].downloadChat}
+                </Button>
+              </Stack>
+            ) : (
+              // Show normal chat input
+              <>
+                <TextField
+                  variant="outlined"
+                  placeholder={translations[language].askQuestion}
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  fullWidth
+                  size="small"
+                  disabled={isResponding}
+                  multiline
+                  maxRows={3}
+                  sx={styles.messageInput}
+                />
+                
+                <Button
+                  variant="contained"
+                  color="primary"
+                  endIcon={isResponding ? <CircularProgress size={16} color="inherit" /> : <Send />}
+                  onClick={handleSendMessage}
+                  disabled={!currentMessage.trim() || isResponding}
+                  sx={{
+                    minWidth: { xs: '80px', sm: '100px' },
+                    whiteSpace: 'nowrap',
+                    px: { xs: 2, sm: 3 }
+                  }}
+                >
+                  {isResponding ? translations[language].thinking : translations[language].send}
+                </Button>
+              </>
+            )}
           </Box>
         </Box>
       )}
+      
+      {/* End Chat Confirmation Dialog */}
+      <Dialog
+        open={endChatDialogOpen}
+        onClose={() => setEndChatDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: theme => theme.palette.mode === 'dark' 
+              ? 'rgba(30, 30, 30, 0.95)' 
+              : 'rgba(255, 255, 255, 0.95)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+            borderRadius: '8px',
+            padding: '8px',
+            border: '1px solid',
+            borderColor: 'divider'
+          }
+        }}
+        BackdropProps={{
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.7)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          fontWeight: 600, 
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          pb: 2,
+          backgroundColor: theme => theme.palette.mode === 'dark' 
+            ? 'rgba(0, 0, 0, 0.2)' 
+            : 'rgba(240, 240, 240, 0.8)'
+        }}>
+          {translations[language].endChatTitle}
+        </DialogTitle>
+        <DialogContent sx={{ 
+          mt: 2, 
+          backgroundColor: theme => theme.palette.mode === 'dark' 
+            ? 'rgba(40, 40, 40, 0.95)' 
+            : 'rgba(255, 255, 255, 0.95)'
+        }}>
+          <Typography variant="body1" sx={{ 
+            color: 'text.primary',
+            fontWeight: 500
+          }}>
+            {translations[language].endChatMessage}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ 
+          px: 3, 
+          pb: 2,
+          backgroundColor: theme => theme.palette.mode === 'dark' 
+            ? 'rgba(30, 30, 30, 0.95)' 
+            : 'rgba(250, 250, 250, 0.95)'
+        }}>
+          <Button 
+            onClick={() => setEndChatDialogOpen(false)} 
+            sx={{ 
+              color: 'text.secondary',
+              borderColor: 'divider',
+              bgcolor: theme => theme.palette.mode === 'dark' 
+                ? 'rgba(50, 50, 50, 0.9)' 
+                : 'rgba(245, 245, 245, 0.9)',
+              '&:hover': {
+                bgcolor: theme => theme.palette.mode === 'dark' 
+                  ? 'rgba(60, 60, 60, 0.9)' 
+                  : 'rgba(235, 235, 235, 0.9)'
+              }
+            }}
+            variant="outlined"
+          >
+            {translations[language].cancel}
+          </Button>
+          <Button 
+            onClick={handleEndChat} 
+            color="primary" 
+            variant="contained"
+            sx={{
+              minWidth: '100px',
+              boxShadow: 2
+            }}
+          >
+            {translations[language].endChat}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ToolPage>
   );
 }
