@@ -17,7 +17,7 @@ import {
  * Base URL for the FastAPI backend
  * All services are on port 8080
  */
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'localhost:8080';
 
 /**
  * Process a scale image for age estimation
@@ -37,7 +37,7 @@ export const processScaleAge = async (file, settings = {}) => {
   formData.append('fish_type', adaptedSettings.fish);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/age_scale/`, {
+    const response = await fetch(`http://${API_BASE_URL}/age_scale/`, {
       method: 'POST',
       body: formData
     });
@@ -65,7 +65,7 @@ export const convertToPng = async (file) => {
   formData.append('file', file);
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/to_png/`, formData, {
+    const response = await axios.post(`http://${API_BASE_URL}/to_png/`, formData, {
       responseType: 'blob',
     });
     
@@ -121,7 +121,7 @@ export const analyzeCsvPdf = async (csvFile, pdfFile, settings = {}) => {
 
       // Make the API call for this format
       const response = await axios.post(
-        `${API_BASE_URL}/openai_csv_analyze/?${params.toString()}`, 
+        `http://${API_BASE_URL}/openai_csv_analyze/?${params.toString()}`, 
         formData, 
         { responseType: 'blob' }
       );
@@ -186,7 +186,7 @@ export const redactPII = async (file, settings = {}) => {
   
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/pii_redact/`, formData, {
+    const response = await axios.post(`http://${API_BASE_URL}/pii_redact/`, formData, {
       responseType: 'blob',
       timeout: 60000 // 60 second timeout for processing larger documents
     });
@@ -210,7 +210,7 @@ export const translateToFrench = async (file) => {
   formData.append('file', file);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/pdf_to_french/`, {
+    const response = await fetch(`http://${API_BASE_URL}/pdf_to_french/`, {
       method: 'POST',
       body: formData
     });
@@ -265,7 +265,7 @@ export const calculateSensitivityScore = async (file, settings) => {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/sensitivity_score/`, {
+    const response = await fetch(`http://${API_BASE_URL}/sensitivity_score/`, {
       method: 'POST',
       body: formData
     });
@@ -293,7 +293,7 @@ export const processPdfDocument = async (file) => {
   formData.append('file', file);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/di_extract_document/`, {
+    const response = await fetch(`http://${API_BASE_URL}/di_extract_document/`, {
       method: 'POST',
       body: formData
     });
@@ -327,78 +327,69 @@ export const processPdfDocument = async (file) => {
  * Ask question to OpenAI  
  * Returns the response as a stream  
  *  
- * @param {Array} chatHistory - Conversation history  
+ * @param {Array} chatHistory - Conversation history
+ * @param {Array} currentMessage - Current question being asked  
  * @param {String} document - Extracted document  
  * @returns {Promise<String>} Response from OpenAI  
  */  
-export const askOpenAI = async (chatHistory, document) => {  
-  const formData = new FormData();  
-  formData.append('chat_history', chatHistory);  
-  formData.append('document', document.toString());  
-    
-  let openai_response = '';  
-    
-  try {  
-    const response = await fetch(`${API_BASE_URL}/openai_question/`, {  
-      method: 'POST',  
-      body: formData  
-    });  
-      
-    if (!response.ok) {  
-      throw new Error(`HTTP error! status: ${response.status}`);  
-    } else {  
-      const eventSource = new EventSource(response.url); // Not sure what happens when multiple users try this at once  
-      let isFirstChunk = true;  
-      let response_counter = 0;  
-      let tokenCount = 0;  
-        
-      eventSource.onmessage = function(event) {  
-        // Read the returned JSON data  
-        const data = JSON.parse(event.data);  
-        console.log(data)  
-        const tokensUsed = data.tokens_used;  
-          
-        // Error checking for the returned json data  
-        if ((data.content && data.content.length > 0) || data.finish_reason !== null) {  
-          const choice = data.content;  
-          const isFinished = data.finish_reason;  
-            
-          if (isFirstChunk && choice.trim() !== '') {  
-            isFirstChunk = false;  
-            openai_response += choice;  
-          } else if (!isFirstChunk && choice) {  
-            response_counter += 1;  
-            openai_response += choice;  
-              
-            if (response_counter == 3) {  
-              openai_response = cleanApiResponse(openai_response);  
-            }  
-          }  
-            
-          if (isFinished !== null) {  
-            openai_response = cleanApiResponse(openai_response);  
-            isFirstChunk = true;  
-            tokenCount += tokensUsed;  
-              
-            if (tokenCount >= 100000) {  
-              // handle token limit part  
-            }  
-          }  
-        }  
+export async function* askOpenAI(chatHistory, currentMessage, document) {  
+  const websocket = new WebSocket(`ws://${API_BASE_URL}/ws/chat_stream`);  
+  let tokens_used = 0;  
+
+  // Create a promise that resolves when the WebSocket closes  
+  const closePromise = new Promise((resolve, reject) => {  
+      websocket.onclose = () => {  
+          console.log('WebSocket connection closed');   
+          resolve({ content: '', tokens_used });  
       };  
-        
-      eventSource.onerror = function(event) {  
-        console.error('EventSource failed.');  
-        eventSource.close();  
+
+      websocket.onerror = (error) => {  
+          console.error('WebSocket error:', error);  
+          reject(error);  
       };  
-    }  
-      
-    return openai_response;  
-  } catch (error) {  
-    console.error('Error in askOpenAI:', error);  
-    throw error;  
+  });  
+
+  // Create a promise that resolves with each message  
+  const messageQueue = [];  
+  websocket.onmessage = (event) => {  
+      const data = JSON.parse(event.data);  
+
+      if (data.error) {  
+          websocket.close();  
+      } else {  
+          if (data.finish_reason === 'stop') {
+              console.log("Stoping for this: ****************") 
+              console.log(data)
+              tokens_used = data.tokens_used;  
+              websocket.close();  
+          } else {  
+              messageQueue.push({ content: data.content });  
+          }  
+      }  
+  };  
+
+  websocket.onopen = () => {  
+      console.log('WebSocket connection opened.');  
+      const data = {  
+          chat_history: chatHistory.concat({"role": "user", "content": currentMessage}),  
+          document: document.toString()  
+          // model: 'gpt-4o-mini',  
+          // temperature: 0.3,  
+          // reasoning_effort: 'high'  
+      };  
+      websocket.send(JSON.stringify(data));  
+  };  
+
+  while (websocket.readyState !== WebSocket.CLOSED) {  
+      while (messageQueue.length > 0) {  
+          yield messageQueue.shift();  
+      }  
+      await new Promise(resolve => setTimeout(resolve, 100));  
   }  
-};  
+
+  const finalMessage = await closePromise;  
+  yield finalMessage;  
+}  
 
 /**
  * Cleans the API response from unnecessary markdown or HTML formatting.
@@ -410,22 +401,3 @@ function cleanApiResponse(responseText) {
   let cleanText = responseText.replace(/```html/g, "").replace(/```/g, "");
   return cleanText;
 }
-
-
-
-   // const result = await response.json();
-    
-    // // Handle the nested JSON structure that comes from the backend
-    // if (result && result.translation) {
-    //   try {
-    //     // Parse the stringified JSON in the translation field
-    //     const parsedTranslation = JSON.parse(result.extracted_document);
-    //     // Return a clean object with just the translated text
-    //     return {
-    //       extracted_document: parsedTranslation.output
-    //     };
-    //   } catch (parseError) {
-    //     console.error('Error parsing response JSON:', parseError);
-    //     return result; // Return original result if parsing fails
-    //   }
-    // }

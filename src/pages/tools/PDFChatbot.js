@@ -48,6 +48,7 @@ export function PDFChatbot() {
   
   // Chat state
   const [messages, setMessages] = useState([]);
+  const [llmChatHistory, setLlmChatHistory] = useState(['']);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isResponding, setIsResponding] = useState(false);
   
@@ -139,15 +140,25 @@ export function PDFChatbot() {
     
     try {
       // In a real implementation, you would call your API here to get a response
-      const response = await askOpenAI([''], fileContent);
+      const generator = askOpenAI(llmChatHistory, currentMessage, fileContent); 
+      let fullResponce = ''
+      let tokensUsed = 0
       
-      // Simulate API call
-      // await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulate token usage increase
-      // In a real implementation, you would get this from the API response
-      const tokensUsed = estimateTokenUsage(currentMessage) + Math.floor(Math.random() * 500);
-      
+      for await (const chunk of generator) {  
+        if (chunk.tokens_used !== undefined) {  
+            console.log('Total tokens used:', chunk.tokens_used);
+            tokensUsed = chunk.tokens_used;
+            break;  
+        } else {
+            console.log(chunk.content);
+            fullResponce += chunk.content;
+            // responseElement.innerHTML += chunk.content;  
+        }  
+      }
+      console.log(fullResponce);
+      if (llmChatHistory[0] === '') setLlmChatHistory([{"role": 'user', "content": currentMessage}, {"role": 'assistant', "content": fullResponce}]);
+      else setLlmChatHistory(prev => [...prev, {"role": 'user', "content": currentMessage}, {"role": 'assistant', "content": fullResponce}]);
+
       // Update token usage through context
       updatePdfChatbotTokenUsage(
         Math.min(
