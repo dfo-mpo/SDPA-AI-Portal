@@ -58,7 +58,7 @@ export function ToolSettingsProvider({ children }) {
     }
   });
 
-// Enhanced PII Redactor settings with improved Canadian-specific information detection
+// PII Redactor settings with improved Canadian-specific information detection
 const [piiRedactorSettings, setPiiRedactorSettings] = useState({
   redactionMethod: 'mask', // 'mask' or 'typePlaceholder'
   redactionColor: '#000000', // Default: black

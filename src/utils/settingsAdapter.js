@@ -143,7 +143,21 @@ export const adaptPIIRedactorSettings = (settings) => {
   return adaptedSettings;
 };
 
-
+/**
+* Adapts French Translation settings for the backend API
+* 
+* @param {Object} settings - Full settings object from the ToolSettingsContext
+* @returns {Object} Settings object with only backend-supported properties
+*/
+export const adaptFrenchTranslationSettings = (settings = {}) => {
+  // Currently, the backend doesn't accept any settings parameters
+  // Store the settings in a normalized format so they're ready when the backend supports them
+  return {
+    // Frontend uses camelCase, backend will likely use snake_case
+    model_type: settings.modelType || 'scientific',
+    preserve_formatting: settings.preserveFormatting !== undefined ? settings.preserveFormatting : true
+  };
+};
 
 /**
 * Adapts PDF Chatbot settings for the backend API
@@ -200,6 +214,7 @@ const adapters = {
   'sensitivityScore': adaptSensitivityScoreSettings,
   'piiRedactor': adaptPIIRedactorSettings,
   'pdfChatbot': adaptPdfChatbotSettings,
+  'frenchTranslation': adaptFrenchTranslationSettings,
 };
 
 return adapters[toolName] || adaptGenericSettings;

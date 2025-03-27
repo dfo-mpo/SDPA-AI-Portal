@@ -10,7 +10,8 @@ import {
   adaptCSVAnalyzerSettings, 
   adaptScaleAgeingSettings, 
   adaptSensitivityScoreSettings ,
-  adaptPIIRedactorSettings
+  adaptPIIRedactorSettings,
+  adaptFrenchTranslationSettings
 } from '../utils/settingsAdapter';
 
 /**
@@ -18,6 +19,8 @@ import {
  * All services are on port 8080
  */
 const API_BASE_URL = 'http://localhost:8080';
+
+
 
 /**
  * Process a scale image for age estimation
@@ -205,10 +208,14 @@ export const redactPII = async (file, settings = {}) => {
  * @param {File} file - The PDF file to translate
  * @returns {Promise<Object>} Object with translation property
  */
-export const translateToFrench = async (file) => {
+export const translateToFrench = async (file, settings = {}) => {
+  const adaptedSettings = adaptFrenchTranslationSettings(settings);
+
   const formData = new FormData();
   formData.append('file', file);
-
+  // TODO:
+  // In the future, when backend supports settings, add them to formData here
+  // Currently, no settings are added since backend doesn't accept any
   try {
     const response = await fetch(`${API_BASE_URL}/pdf_to_french/`, {
       method: 'POST',
@@ -409,22 +416,3 @@ function cleanApiResponse(responseText) {
   let cleanText = responseText.replace(/```html/g, "").replace(/```/g, "");
   return cleanText;
 }
-
-
-
-   // const result = await response.json();
-    
-    // // Handle the nested JSON structure that comes from the backend
-    // if (result && result.translation) {
-    //   try {
-    //     // Parse the stringified JSON in the translation field
-    //     const parsedTranslation = JSON.parse(result.extracted_document);
-    //     // Return a clean object with just the translated text
-    //     return {
-    //       extracted_document: parsedTranslation.output
-    //     };
-    //   } catch (parseError) {
-    //     console.error('Error parsing response JSON:', parseError);
-    //     return result; // Return original result if parsing fails
-    //   }
-    // }
