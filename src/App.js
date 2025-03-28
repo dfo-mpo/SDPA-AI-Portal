@@ -57,7 +57,7 @@ function AppContent() {
             display: 'flex',
             flexDirection: 'column',
             height: '100vh',
-            overflow: 'auto',
+            overflow: 'hidden',
             bgcolor: 'background.default',
           }}
         >

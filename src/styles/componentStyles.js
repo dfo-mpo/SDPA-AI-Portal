@@ -290,6 +290,7 @@ export const dashboardStyles = {
     // Change from overflow: 'hidden' to allow content to be visible
     // overflowX: 'hidden',
     // overflowY: 'auto',
+    overflow: 'auto'
   }),
   
   /**
@@ -305,7 +306,7 @@ export const dashboardStyles = {
     maxWidth: '1800px',
     flexGrow: 1,
     // Allow content to scroll
-    overflow: 'auto',
+    overflow: 'visible',
     position: 'relative',
   },
   
@@ -319,10 +320,9 @@ export const dashboardStyles = {
     gap: 3,
     minHeight: 'auto',
     width: '100%', // Ensure it takes full width
+    minWidth: 0, // Allow it to shrink below nominal size
     // Let content flow naturally
     overflow: 'visible',
-    // Ensure content can be seen on small screens
-    minWidth: 0,
   },
   
   /**
@@ -1297,12 +1297,14 @@ export const signInStyles = (theme) => ({
   styledCard: {
     display: 'flex',
     flexDirection: 'column',
-    alignSelf: 'center',
     width: '100%',
     padding: theme.spacing(4),
     gap: theme.spacing(2),
     margin: 'auto',
     maxWidth: { xs: '100%', sm: '450px' },
+    // Ensure it doesn't grow too big with zoom
+    maxHeight: { xs: '100%', sm: '90vh' },
+    overflow: 'auto', // Add overflow auto to allow scrolling within the card
     boxShadow:
       theme.palette.mode === 'dark'
         ? 'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px'
@@ -1427,7 +1429,7 @@ export const termsModalStyles = {
     width: '100%',
     maxWidth: '100%',
     maxHeight: '60vh',
-    overflow: 'visible',
+    overflow: 'auto',
     p: 3,
     bgcolor: theme.palette.background.paper
   }),
