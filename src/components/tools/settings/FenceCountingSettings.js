@@ -135,6 +135,7 @@ export default function FenceCountingSettings() {
                 checked={settings.species.sockeye} 
                 onChange={handleSpeciesChange('sockeye')}
                 size="small"
+                disabled
               />
             }
             label={getCleanSpeciesName('sockeye')}
@@ -145,6 +146,7 @@ export default function FenceCountingSettings() {
                 checked={settings.species.chum} 
                 onChange={handleSpeciesChange('chum')}
                 size="small"
+                disabled
               />
             }
             label={getCleanSpeciesName('chum')}
@@ -155,6 +157,7 @@ export default function FenceCountingSettings() {
                 checked={settings.species.chinook} 
                 onChange={handleSpeciesChange('chinook')}
                 size="small"
+                disabled
               />
             }
             label={getCleanSpeciesName('chinook')}
@@ -165,6 +168,7 @@ export default function FenceCountingSettings() {
                 checked={settings.species.coho} 
                 onChange={handleSpeciesChange('coho')}
                 size="small"
+                disabled
               />
             }
             label={getCleanSpeciesName('coho')}
@@ -175,6 +179,7 @@ export default function FenceCountingSettings() {
                 checked={settings.species.pink} 
                 onChange={handleSpeciesChange('pink')}
                 size="small"
+                disabled
               />
             }
             label={getCleanSpeciesName('pink')}

@@ -3,19 +3,28 @@
  * 
  * Main component for the Fence Counting tool, which uses computer vision to count
  * fish in monitoring videos. This component displays the user interface for the tool,
- * including its description and video upload functionality.
+ * including its description, video upload functionality, and sample video options.
  */
 
 import React, { useState } from 'react';
-import { Box, Typography } from '@mui/material';
-import axios from 'axios';
+import {
+  Box,
+  Typography,
+  Card,
+  CardMedia,
+  CardContent,
+  CardActions,
+  Button,
+  Paper,
+  Grid,
+  Divider
+} from '@mui/material';
+import { Play, Upload } from 'lucide-react'; 
 import { ToolPage } from '../../components/tools';
 import { getToolTranslations } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { processFenceCounting } from '../../services/apiService';
 import { useLanguage, useToolSettings } from '../../contexts';
-
-
 
 export function FenceCounting() {
   const { language } = useLanguage();
@@ -26,14 +35,19 @@ export function FenceCounting() {
   const [originalVideo, setOriginalVideo] = useState(null);
   const [processedVideo, setProcessedVideo] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [showSamples, setShowSamples] = useState(true);
 
   /**
-   * Handle file upload and processing
+   * Handle file upload and processing for real file uploads
    * 
    * @param {File} inputFile
    */
   const handleFileSelected = async (inputFile) => {
+    if (!inputFile) return;
+    
     setIsProcessing(true);
+    setShowSamples(false);
     
     // Create URL for displaying the original video
     const originalVideoUrl = URL.createObjectURL(inputFile);
@@ -53,36 +67,312 @@ export function FenceCounting() {
     }
   };
 
+  /**
+   * Handle sample video selection and processing
+   * 
+   * @param {string} filename - The filename of the sample video
+   * @param {string} label - The display label for the video
+   */
+  const handleUseSample = async (filename, label) => {
+    try {
+      setIsProcessing(true);
+      setProcessedVideo(null);
+      setSelectedVideo(label);
+      setShowSamples(false);
+
+      const response = await fetch(`/assets/videos/${filename}`);
+      const blob = await response.blob();
+
+      // Wrap Blob in a File object so the backend sees a "file upload"
+      const demoFile = new File([blob], filename, { type: "video/mp4" });
+      
+      // Use the regular file handler now that we have a proper File object
+      const originalVideoUrl = URL.createObjectURL(demoFile);
+      setOriginalVideo(originalVideoUrl);
+      
+      const processedResponse = await processFenceCounting(demoFile, fenceCountingSettings);
+      const videoUrl = URL.createObjectURL(processedResponse);
+      setProcessedVideo(videoUrl);
+    } catch (error) {
+      console.error("Error processing sample:", error);
+      alert("Failed to process the sample video. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Sample video data
+  const sampleVideos = [
+    { 
+      filename: "Chinook-9s.mp4", 
+      label: "Chinook (9s)", 
+      description: "Sample showing Chinook salmon passing through a counting fence"
+    },
+    { 
+      filename: "Sockeye-2s.mp4", 
+      label: "Sockeye (2s)",
+      description: "Sample showing Sockeye salmon migration"
+    },
+  ];
+
+  // Get translated text
+  const translations = {
+    en: {
+      uploadVideo: "Upload Video",
+      uploadDisabled: "Upload functionality is temporarily disabled",
+      sampleTitle: "Sample Videos",
+      sampleSubtitle: "Select a sample to see the tool in action",
+      viewResults: "Use This Video",
+      processing: "Processing...",
+      tryAgain: "Try Another Video",
+      resultsHeading: "Fish Detection Results",
+      resultsDescription: "Fish detected and counted",
+      resultsNote: "See video for detailed counts and tracking",
+      source: "Source"
+    },
+    fr: {
+      uploadVideo: "Téléverser une vidéo",
+      uploadDisabled: "La fonctionnalité de téléchargement est temporairement désactivée",
+      sampleTitle: "Vidéos d'exemple",
+      sampleSubtitle: "Sélectionnez un exemple pour voir l'outil en action",
+      viewResults: "Utiliser cette vidéo",
+      processing: "Traitement en cours...",
+      tryAgain: "Essayer une autre vidéo",
+      resultsHeading: "Résultats de détection de poissons",
+      resultsDescription: "Poissons détectés et comptés",
+      resultsNote: "Voir la vidéo pour les comptages détaillés et le suivi",
+      source: "Source"
+    }
+  }[language] || {
+    uploadVideo: "Upload Video",
+    uploadDisabled: "Upload functionality is temporarily disabled",
+    sampleTitle: "Sample Videos",
+    sampleSubtitle: "Select a sample to see the tool in action",
+    viewResults: "Use This Video",
+    processing: "Processing...",
+    tryAgain: "Try Another Video",
+    resultsHeading: "Fish Detection Results",
+    resultsDescription: "Fish detected and counted",
+    resultsNote: "See video for detailed counts and tracking",
+    source: "Source"
+  };
+
   return (
     <ToolPage
       title={toolData.title}
       shortDescription={toolData.shortDescription}
       longDescription={toolData.longDescription}
       backgroundImage="/assets/fence-counting.png"
-      actionButtonText={toolData.actionButtonText}
-      onFileSelected={handleFileSelected}
-      isProcessing={isProcessing}
-      containerSx={toolStyles.container} // if needed
+      // Hide the default button, we'll use our own custom button
+      hideActionButton={true}
+      containerSx={toolStyles.container}
     >
-      {originalVideo && (
-        <Box sx={toolStyles.videoContainer}>
-          <Box sx={toolStyles.videoSection}>
-            <Typography variant="h6" gutterBottom>
-              Original Video
-            </Typography>
-            <video src={originalVideo} controls style={toolStyles.video} />
+      {/* Custom Upload Button - Visible but Disabled */}
+      <Box sx={{ mb: 3 }}>
+        <div style={{ 
+          display: 'inline-block', 
+          cursor: 'not-allowed',
+          position: 'relative'
+        }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<Upload size={16} />}
+            sx={{
+              ...toolStyles.actionButton,
+              pointerEvents: 'none', // Prevents hover effects
+              opacity: 0.7, // Makes it look disabled
+            }}
+          >
+            {translations.uploadVideo}
+          </Button>
+          {/* Tooltip-like element that appears on hover */}
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: -40,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              p: 1,
+              bgcolor: 'rgba(0,0,0,0.7)',
+              color: 'white',
+              borderRadius: 1,
+              fontSize: '0.75rem',
+              whiteSpace: 'nowrap',
+              opacity: 0,
+              transition: 'opacity 0.2s ease',
+              zIndex: 10,
+              '&:before': {
+                content: '""',
+                position: 'absolute',
+                top: -5,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 0,
+                height: 0,
+                borderLeft: '5px solid transparent',
+                borderRight: '5px solid transparent',
+                borderBottom: '5px solid rgba(0,0,0,0.7)',
+              },
+              '.not-allowed-container:hover &': {
+                opacity: 1,
+              }
+            }}
+            className="tooltip-style"
+          >
+            {translations.uploadDisabled}
           </Box>
+        </div>
+      </Box>
+
+      {/* Sample Videos Section - Show only if no video is being displayed/processed */}
+      {showSamples && !originalVideo && !isProcessing && (
+        <Paper 
+          elevation={0} 
+          variant="outlined" 
+          sx={{ 
+            mt: 2,
+            p: 3, 
+            borderRadius: 2,
+            borderColor: 'divider',
+            bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)'
+          }}
+        >
+          <Typography variant="h5" component="h3" sx={{ mb: 1, fontWeight: 600 }}>
+            {translations.sampleTitle}
+          </Typography>
           
-          {processedVideo && (
+          <Typography variant="body1" sx={{ mb: 3 }}>
+            {translations.sampleSubtitle}
+          </Typography>
+          
+          <Grid container spacing={3}>
+            {sampleVideos.map((video) => (
+              <Grid item xs={12} sm={6} key={video.filename}>
+                <Card 
+                  variant="outlined"
+                  sx={{ 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: 3
+                    }
+                  }}
+                >
+                  <CardMedia
+                    component="video"
+                    src={`/assets/videos/${video.filename}`}
+                    controls
+                    sx={{ height: { xs: 180, sm: 220 }, objectFit: "cover" }}
+                  />
+                  <CardContent sx={{ flexGrow: 1, pb: 1 }}>
+                    <Typography variant="h6" gutterBottom>
+                      {video.label}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {video.description}
+                    </Typography>
+                  </CardContent>
+                  <CardActions sx={{ px: 2, pb: 2, pt: 0 }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => handleUseSample(video.filename, video.label)}
+                      startIcon={<Play size={16} />}
+                      fullWidth
+                      sx={{
+                        ...toolStyles.actionButton,
+                        textTransform: 'none',
+                        py: 1
+                      }}
+                    >
+                      {translations.viewResults}
+                    </Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+      )}
+
+      {/* Processing Indicator */}
+      {isProcessing && (
+        <Box sx={{ 
+          width: '100%', 
+          textAlign: 'center', 
+          py: 4,
+          mt: 2,
+          backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.7)',
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider'
+        }}>
+          <Typography variant="h6">
+            {translations.processing} {selectedVideo ? selectedVideo : ''}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Analyzing video frames and tracking fish. This may take a few moments.
+          </Typography>
+        </Box>
+      )}
+
+      {/* Results Display */}
+      {originalVideo && !isProcessing && (
+        <Box sx={{ mt: 2 }}>
+          <Box sx={toolStyles.videoContainer}>
             <Box sx={toolStyles.videoSection}>
               <Typography variant="h6" gutterBottom>
-                Processed Video with Fish Count
+                Original Video
               </Typography>
-              <video src={processedVideo} controls style={toolStyles.video} />
+              <video src={originalVideo} controls style={toolStyles.video} />
+              {selectedVideo && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  {translations.source}: {selectedVideo}
+                </Typography>
+              )}
             </Box>
-          )}
+            
+            {processedVideo && (
+              <Box sx={toolStyles.videoSection}>
+                <Typography variant="h6" gutterBottom>
+                  Processed Video with Fish Count
+                </Typography>
+                <video src={processedVideo} controls style={toolStyles.video} />
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" fontWeight="medium">
+                    <strong>{translations.resultsHeading}:</strong> {translations.resultsDescription}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {translations.resultsNote}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+          </Box>
+          
+          {/* Try Another Video Button */}
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+            <Button 
+              variant="outlined" 
+              onClick={() => {
+                setOriginalVideo(null);
+                setProcessedVideo(null);
+                setSelectedVideo(null);
+                setShowSamples(true);
+              }}
+              sx={{ textTransform: 'none' }}
+            >
+              {translations.tryAgain}
+            </Button>
+          </Box>
         </Box>
       )}
     </ToolPage>
   );
 }
+
+export default FenceCounting;
