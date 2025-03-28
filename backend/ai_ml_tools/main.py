@@ -18,6 +18,7 @@ app = FastAPI()
 origins = [  
     "http://localhost:3000",  # React frontend  
     "http://localhost:3001",  # React frontend  
+    "http://localhost:3080",  # React frontend  
     # Add other origins if needed  
 ]  
 
