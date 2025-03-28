@@ -1,7 +1,7 @@
 # Dockerfile for FastAPI backend  
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.10  
   
-WORKDIR /app  
+WORKDIR /ai_ml_tools 
   
 COPY requirements.txt .  
   
@@ -11,4 +11,4 @@ COPY . .
   
 EXPOSE 8000  
   
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]  
+CMD ["uvicorn", "ai_ml_tools.main:app", "--host", "0.0.0.0", "--port", "8000"]  

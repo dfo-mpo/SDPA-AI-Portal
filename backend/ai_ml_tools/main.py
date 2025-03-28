@@ -1,6 +1,6 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import api_router
+from ai_ml_tools.routers import api_router
 from dotenv import load_dotenv
 import os
 
