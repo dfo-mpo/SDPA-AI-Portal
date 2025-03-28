@@ -206,8 +206,9 @@ export default function Dashboard({ onLogout }) {
               flexGrow: 1,
               width: '100%',
               minWidth: 0, // Allow content to shrink
-              overflowX: 'auto', // Enable horizontal scrolling when needed
-              overflowY: 'visible', // Let content flow naturally
+              // overflowX: 'auto', // Enable horizontal scrolling when needed
+              // overflowY: 'visible', // Let content flow naturally
+              overflow: 'visible'
             }}>
               <Suspense
                 fallback={

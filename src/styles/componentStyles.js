@@ -288,8 +288,8 @@ export const dashboardStyles = {
     flexGrow: 1,
     height: `calc(100vh - ${headerHeight}px)`,
     // Change from overflow: 'hidden' to allow content to be visible
-    overflowX: 'hidden',
-    overflowY: 'auto',
+    // overflowX: 'hidden',
+    // overflowY: 'auto',
   }),
   
   /**
@@ -527,6 +527,8 @@ export const toolStyles = {
     width: '100%',
     mt: 2,
     mb: 4,
+    overflow: 'visible', // Change from 'auto' to 'visible'
+
   },
   
   /**
@@ -1422,8 +1424,10 @@ export const termsModalStyles = {
     overflow: 'hidden', // Prevent DialogContent's default scroll
   },
   contentContainer: (theme) => ({
+    width: '100%',
+    maxWidth: '100%',
     maxHeight: '60vh',
-    overflow: 'auto',
+    overflow: 'visible',
     p: 3,
     bgcolor: theme.palette.background.paper
   }),

@@ -56,9 +56,8 @@ function AppContent() {
           sx={{
             display: 'flex',
             flexDirection: 'column',
-            minHeight: '100vh',
-            maxHeight: '100vh',
-            overflow: 'hidden',
+            height: '100vh',
+            overflow: 'auto',
             bgcolor: 'background.default',
           }}
         >
