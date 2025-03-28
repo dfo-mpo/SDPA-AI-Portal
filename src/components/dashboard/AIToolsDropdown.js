@@ -16,22 +16,15 @@ import {
   FormControl,
 } from '@mui/material';
 import { Home, AlertCircle } from 'lucide-react';
+import { useTheme } from '@mui/material/styles';
 import { useLanguage } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { TOOL_CATEGORIES } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 
-
-/**
- * AI Tools dropdown for tool selection
- * 
- * @param {Object} props - Component props
- * @param {Function} props.onToolSelect - Callback when a tool is selected
- * @param {String} [props.selectedTool] - Currently selected tool (if any)
- * @returns {JSX.Element} The rendered component
- */
 export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
   const { language } = useLanguage();
+  const theme = useTheme();
   const translations = getToolTranslations("aiToolsDropdown", language);
   const aiToolsDropdownStyles = useComponentStyles('aiToolsDropdown');
 
@@ -48,27 +41,27 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
   return (
     <FormControl fullWidth>
       <Select
-          value={selectedTool || ''}
-          onChange={handleChange}
-          displayEmpty
-          renderValue={(selected) => {
-            if (!selected) {
-              return (
-                <ListItemText
-                  primary={translations.home}
-                  secondary={translations.selectTool}
-                />
-              );
-            }
-            // Look up the translation for the selected tool name and allow wrapping
+        value={selectedTool || ''}
+        onChange={handleChange}
+        displayEmpty
+        renderValue={(selected) => {
+          if (!selected) {
             return (
-              <div style={{ whiteSpace: 'normal' }}>
-                {translations.tools[selected] || selected}
-              </div>
+              <ListItemText
+                primary={translations.home}
+                secondary={translations.selectTool}
+              />
             );
-          }}
-          sx={aiToolsDropdownStyles.select}
-        >
+          }
+          // Look up the translation for the selected tool name and allow wrapping
+          return (
+            <div style={{ whiteSpace: 'normal' }}>
+              {translations.tools[selected] || selected}
+            </div>
+          );
+        }}
+        sx={aiToolsDropdownStyles.select}
+      >
         {/* Reset / Back to Portal Home option */}
         <MenuItem value="" sx={aiToolsDropdownStyles.menuItem}>
           <ListItemIcon sx={aiToolsDropdownStyles.listItemIcon}>
@@ -92,24 +85,24 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
               <MenuItem
                 key={tool.name}
                 value={tool.name}
-                // disabled={isDisabled} // disable items in dropdown
                 sx={{
                   ...aiToolsDropdownStyles.menuItem,
                   ...(isDisabled && {
                     opacity: 0.7,
-                    // You can add more styles for disabled items here
-                    '& .MuiListItemIcon-root': {
-                      opacity: 0.7,
-                    },
                     '& .MuiListItemText-root': {
                       opacity: 0.7,
                     }
                   })
                 }}
               >
-                <ListItemIcon sx={aiToolsDropdownStyles.listItemIcon}>
+                <ListItemIcon
+                  sx={{
+                    ...aiToolsDropdownStyles.listItemIcon,
+                    ...(isDisabled && { opacity: 1 }) // override opacity for icon
+                  }}
+                >
                   {isDisabled ? 
-                    <AlertCircle size={18} color="warning" /> : 
+                    <AlertCircle size={18} color={theme.palette.warning.main} /> : 
                     <IconComponent size={18} />
                   }
                 </ListItemIcon>
@@ -124,13 +117,6 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
                     }
                   }}
                 />
-                {isDisabled && (
-                  <AlertCircle 
-                    size={16} 
-                    color="warning" 
-                    style={{ marginLeft: 8 }}
-                  />
-                )}
               </MenuItem>
             );
           })

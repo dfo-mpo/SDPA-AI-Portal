@@ -100,15 +100,18 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
                         opacity: 0.5,
                         cursor: 'not-allowed',
                         pointerEvents: 'auto',
-                        bgcolor: 'action.disabledBackground',
                         color: 'text.disabled',
-                        borderLeft: '3px solid',
-                        borderLeftColor: 'warning.main',
+                        // borderLeft: '3px solid',
+                        // borderLeftColor: 'warning.main',
                         '&:hover': {
                           bgcolor: 'action.disabledBackground',
-                          borderLeftColor: 'warning.main',
+                          // borderLeftColor: 'warning.main',
                         }
-                      })
+                      }),
+                      '&:hover': {
+                        borderLeft: '3px solid',
+                        borderLeftColor: 'primary.palette.warning.main',
+                      }
                     }}
                   >
                     <ListItemIcon sx={dropdownStyles.listItemIcon}>
