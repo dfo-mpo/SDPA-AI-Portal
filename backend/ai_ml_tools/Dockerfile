@@ -1,7 +1,7 @@
 # Dockerfile for FastAPI backend  
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.10  
   
-WORKDIR /ai_ml_tools 
+WORKDIR /app 
   
 COPY requirements.txt .  
   
