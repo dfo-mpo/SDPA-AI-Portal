@@ -423,7 +423,7 @@ async def pii_redact(
     contents = await file.read()
     
     # List of words to redact (can be expanded as needed)
-    words_to_redact = ["Health", "Safety", "Kyle"]
+    words_to_redact = ["Health", "Safety", "Kyle", 'John', 'Doe', 'Springfield, ST, 12345', '1234 Mockingbird Lane', '123-456-789', 'First Bank', 'Third Bank', 'Demo Company', 'Wendy', 'Green', '3838 Woodpecker Road', 'Cedar Creek, ST, 53532', '123-123-123', 'Second Bank', 'Chris', 'Baker', '4040-201 Huckleberry Suite', 'Port Summersville, ST, 98989', '123-456-789', '121-343-456', '550-901-4242', 'JOHN-555-doe']
     
     # Call the helper function to perform redaction
     redacted_pdf = redact_pdf_content(contents, words_to_redact)
