@@ -12,7 +12,7 @@ services:
   
   backend:  
     build:  
-      context: ./backend/ai_ml_tools 
+      context: ./backend
       dockerfile: Dockerfile  
     ports:  
       - "8080:8000"  

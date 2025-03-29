@@ -13,6 +13,38 @@ Backend structure has main.py to communicate with frontend, core folder for conf
 using Node.js v22.12.0 for frontend<br>
 to run frontend use the following command: npm start
 
+docker tag ai-ml-tools-backend <your_registry_name>.azurecr.io/ai-ml-tools-backend:v1  
+docker tag ai-ml-tools-frontend <your_registry_name>.azurecr.io/ai-ml-tools-frontend:v1  
+az login --tenant 8c1a4d93-d828-4d0e-9303-fd3bd611c822
+az acr login --name sdpatools
+docker push <your_registry_name>.azurecr.io/ai-ml-tools-backend:v1  
+docker push <your_registry_name>.azurecr.io/ai-ml-tools-frontend:v1  
+
+web app:
+configuration -> csm and ftp to on
+configuration -> HTTPS Only turned off (optional, needed if using http requests, be aware of the risks for doing this!)
+identity -> system assigned
+
+acr:
+check admin user option.
+IAM -> add new role assignent. AcrPull, assign to webapp (can past object ID while doing it)
+
+web app:
+deployment center to container registry. use doker compose option
+set admin credentials and use the following config
+version: '3.8'  
+services:  
+  frontend:  
+    image: sdpatools.azurecr.io/frontend:latest  
+    ports:  
+      - "3080:80"  
+    depends_on:  
+      - backend  
+  backend:  
+    image: sdpatools.azurecr.io/backend:latest  
+    ports:  
+      - "8080:8000"  
+
 # TODO, add backend framework (include how to add new url), how to run the backend (wiht or without venv), each API call (inputs and outputs), measure for sqlite for azure web apps 
 
 ## Description
