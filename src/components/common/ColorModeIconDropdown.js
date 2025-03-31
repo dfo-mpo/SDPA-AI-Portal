@@ -12,6 +12,8 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { useColorScheme } from '@mui/material/styles';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+import { getLayoutTranslations } from '../../translations/layout';
+import { useLanguage } from '../../contexts';
 
 /**
  * Color mode selection dropdown
@@ -23,8 +25,10 @@ export default function ColorModeIconDropdown(props) {
   const { mode, systemMode, setMode } = useColorScheme();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
-  const styles = useComponentStyles('colorModeIconDropdown');  
-  
+  const styles = useComponentStyles('colorModeIconDropdown');
+  const { language } = useLanguage();
+  const themeTranslations = getLayoutTranslations('header', language).theme;
+
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -63,13 +67,13 @@ export default function ColorModeIconDropdown(props) {
         }}
       >
         <MenuItem selected={mode === 'system'} onClick={handleMode('system')}>
-          System
+          {themeTranslations.system}
         </MenuItem>
         <MenuItem selected={mode === 'light'} onClick={handleMode('light')}>
-          Light
+          {themeTranslations.light}
         </MenuItem>
         <MenuItem selected={mode === 'dark'} onClick={handleMode('dark')}>
-          Dark
+          {themeTranslations.dark}
         </MenuItem>
       </Menu>
     </React.Fragment>

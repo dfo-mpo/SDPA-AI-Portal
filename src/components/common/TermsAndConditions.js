@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { Box, Typography, Divider } from '@mui/material';
 import { useLanguage } from '../../contexts';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
-import { getTermsTranslations } from '../../utils'
+import { getTermsTranslations } from '../../translations/components/terms';
 
 function TermsAndConditions({ variant = 'full' }) {
     const { language } = useLanguage();

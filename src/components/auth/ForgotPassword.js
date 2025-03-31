@@ -15,6 +15,7 @@ import {
     OutlinedInput,
     useTheme
 } from '@mui/material';
+import { getAuthTranslations } from '../../translations/auth';
 
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 // For now, use a placeholder style object since useComponentStyles may have issues
@@ -39,26 +40,7 @@ function ForgotPassword({ open, handleClose, language = 'en' }) {
     // const forgotPasswordStyles = useComponentStyles('forgotPassword');
     const forgotPasswordStyles = placeholderStyles;
 
-
-    // Translations
-    const translations = {
-        en: {
-            title: "Reset password",
-            description: "Enter your account's email address, and we'll send you a link to reset your password.",
-            emailPlaceholder: "Email address",
-            cancel: "Cancel",
-            continue: "Continue"
-        },
-        fr: {
-            title: "Réinitialiser le mot de passe",
-            description: "Entrez l'adresse courriel de votre compte et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
-            emailPlaceholder: "Adresse courriel",
-            cancel: "Annuler",
-            continue: "Continuer"
-        }
-    };
-
-    const t = translations[language] || translations.en;
+    const t = getAuthTranslations('forgotPassword', language);
 
     const handleSubmit = (event) => {
         event.preventDefault();

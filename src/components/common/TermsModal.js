@@ -16,7 +16,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import TermsAndConditions from './TermsAndConditions';
 import { useLanguage } from '../../contexts';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
-import { getTermsTranslations } from '../../utils';
+import { getTermsTranslations } from '../../translations/components/terms';
 import { Check, X } from 'lucide-react';
 
 function TermsModal({ 

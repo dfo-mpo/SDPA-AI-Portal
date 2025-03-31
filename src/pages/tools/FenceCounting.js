@@ -17,7 +17,6 @@ import {
   Button,
   Paper,
   Grid,
-  Divider
 } from '@mui/material';
 import { Play, Upload } from 'lucide-react'; 
 import { ToolPage } from '../../components/tools';
@@ -106,56 +105,14 @@ export function FenceCounting() {
     { 
       filename: "Chinook-9s.mp4", 
       label: "Chinook (9s)", 
-      description: "Sample showing Chinook salmon passing through a counting fence"
+      description: toolData.sample.chinook
     },
     { 
       filename: "Sockeye-2s.mp4", 
       label: "Sockeye (2s)",
-      description: "Sample showing Sockeye salmon migration"
+      description: toolData.sample.sockeye
     },
   ];
-
-  // Get translated text
-  const translations = {
-    en: {
-      uploadVideo: "Upload Video",
-      uploadDisabled: "Upload functionality is temporarily disabled",
-      sampleTitle: "Sample Videos",
-      sampleSubtitle: "Select a sample to see the tool in action",
-      viewResults: "Use This Video",
-      processing: "Processing...",
-      tryAgain: "Try Another Video",
-      resultsHeading: "Fish Detection Results",
-      resultsDescription: "Fish detected and counted",
-      resultsNote: "See video for detailed counts and tracking",
-      source: "Source"
-    },
-    fr: {
-      uploadVideo: "Téléverser une vidéo",
-      uploadDisabled: "La fonctionnalité de téléchargement est temporairement désactivée",
-      sampleTitle: "Vidéos d'exemple",
-      sampleSubtitle: "Sélectionnez un exemple pour voir l'outil en action",
-      viewResults: "Utiliser cette vidéo",
-      processing: "Traitement en cours...",
-      tryAgain: "Essayer une autre vidéo",
-      resultsHeading: "Résultats de détection de poissons",
-      resultsDescription: "Poissons détectés et comptés",
-      resultsNote: "Voir la vidéo pour les comptages détaillés et le suivi",
-      source: "Source"
-    }
-  }[language] || {
-    uploadVideo: "Upload Video",
-    uploadDisabled: "Upload functionality is temporarily disabled",
-    sampleTitle: "Sample Videos",
-    sampleSubtitle: "Select a sample to see the tool in action",
-    viewResults: "Use This Video",
-    processing: "Processing...",
-    tryAgain: "Try Another Video",
-    resultsHeading: "Fish Detection Results",
-    resultsDescription: "Fish detected and counted",
-    resultsNote: "See video for detailed counts and tracking",
-    source: "Source"
-  };
 
   return (
     <ToolPage
@@ -163,7 +120,6 @@ export function FenceCounting() {
       shortDescription={toolData.shortDescription}
       longDescription={toolData.longDescription}
       backgroundImage="/assets/fence-counting.png"
-      // Hide the default button, we'll use our own custom button
       hideActionButton={true}
       containerSx={toolStyles.container}
     >
@@ -184,7 +140,7 @@ export function FenceCounting() {
               opacity: 0.7, // Makes it look disabled
             }}
           >
-            {translations.uploadVideo}
+            {toolData.ui.uploadVideo}
           </Button>
           {/* Tooltip-like element that appears on hover */}
           <Box
@@ -220,7 +176,7 @@ export function FenceCounting() {
             }}
             className="tooltip-style"
           >
-            {translations.uploadDisabled}
+            {toolData.ui.uploadDisabled}
           </Box>
         </div>
       </Box>
@@ -239,11 +195,11 @@ export function FenceCounting() {
           }}
         >
           <Typography variant="h5" component="h3" sx={{ mb: 1, fontWeight: 600 }}>
-            {translations.sampleTitle}
+            {toolData.ui.sampleTitle}
           </Typography>
           
           <Typography variant="body1" sx={{ mb: 3 }}>
-            {translations.sampleSubtitle}
+            {toolData.ui.sampleSubtitle}
           </Typography>
           
           <Grid container spacing={3}>
@@ -289,7 +245,7 @@ export function FenceCounting() {
                         py: 1
                       }}
                     >
-                      {translations.viewResults}
+                      {toolData.ui.viewResults}
                     </Button>
                   </CardActions>
                 </Card>
@@ -312,10 +268,10 @@ export function FenceCounting() {
           borderColor: 'divider'
         }}>
           <Typography variant="h6">
-            {translations.processing} {selectedVideo ? selectedVideo : ''}
+            {toolData.ui.processing} {selectedVideo ? selectedVideo : ''}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Analyzing video frames and tracking fish. This may take a few moments.
+            {toolData.ui.processingMessage}
           </Typography>
         </Box>
       )}
@@ -326,12 +282,12 @@ export function FenceCounting() {
           <Box sx={toolStyles.videoContainer}>
             <Box sx={toolStyles.videoSection}>
               <Typography variant="h6" gutterBottom>
-                Original Video
+                {toolData.ui.originalVideo}
               </Typography>
               <video src={originalVideo} controls style={toolStyles.video} />
               {selectedVideo && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  {translations.source}: {selectedVideo}
+                  {toolData.ui.source}: {selectedVideo}
                 </Typography>
               )}
             </Box>
@@ -339,15 +295,15 @@ export function FenceCounting() {
             {processedVideo && (
               <Box sx={toolStyles.videoSection}>
                 <Typography variant="h6" gutterBottom>
-                  Processed Video with Fish Count
+                  {toolData.ui.processedVideo}
                 </Typography>
                 <video src={processedVideo} controls style={toolStyles.video} />
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="body2" fontWeight="medium">
-                    <strong>{translations.resultsHeading}:</strong> {translations.resultsDescription}
+                    <strong>{toolData.ui.resultsHeading}:</strong> {toolData.ui.resultsDescription}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {translations.resultsNote}
+                    {toolData.ui.resultsNote}
                   </Typography>
                 </Box>
               </Box>
@@ -366,7 +322,7 @@ export function FenceCounting() {
               }}
               sx={{ textTransform: 'none' }}
             >
-              {translations.tryAgain}
+              {toolData.ui.tryAgain}
             </Button>
           </Box>
         </Box>

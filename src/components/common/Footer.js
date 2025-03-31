@@ -2,32 +2,18 @@ import React from 'react';
 import { Box, Typography, Button, useTheme } from '@mui/material';
 import { useLanguage, useTerms } from '../../contexts';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+import { getFooterTranslations } from '../../translations/components/footer';
+
 
 function Footer({ headerHeight }) { // Accept headerHeight as prop
   const theme = useTheme();
   const { language } = useLanguage();
   const { openTermsModal } = useTerms();
-  
-  // Get footer styles from the styling system
   const footerStyles = useComponentStyles('footer');
 
   // Get the current date for "Last Updated"
   const lastUpdated = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-
-  const translations = {
-    en: {
-      copyright: "© 2025 Fisheries and Oceans Canada",
-      terms: "Terms of Use",
-      lastUpdated: `Last Updated: ${lastUpdated}`,
-    },
-    fr: {
-      copyright: "© 2025 Pêches et Océans Canada",
-      terms: "Conditions d'utilisation",
-      lastUpdated: `Dernière mise à jour : ${lastUpdated}`,
-    },
-  };
-
-  const t = translations[language];
+  const t = getFooterTranslations(language, lastUpdated);
 
   const logoSrc =
     theme.palette.mode === 'dark'

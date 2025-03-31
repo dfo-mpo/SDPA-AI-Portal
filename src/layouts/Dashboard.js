@@ -14,6 +14,8 @@ import { getToolByName } from '../utils';
 import { HomePage } from '../pages';
 import { useLanguage } from '../contexts';
 import { Footer, TermsModalContainer } from '../components/common';
+import { getLayoutTranslations } from '../translations/layout'
+
 
 import {
   ScaleAgeing,
@@ -31,6 +33,7 @@ export default function Dashboard({ onLogout }) {
   const [selectedTool, setSelectedTool] = useState('');
   const [headerHeight, setHeaderHeight] = useState(80); // Default to 80px, dynamically updated
   const { language } = useLanguage();
+  const dashboardTranslations = getLayoutTranslations('dashboard', language);
   const [showDisabledAlert, setShowDisabledAlert] = useState(false);
 
   // Use the styling hook with the dashboard style collection
@@ -38,12 +41,6 @@ export default function Dashboard({ onLogout }) {
 
   // Determine if we're on the home page (no tool selected)
   const isHomePage = !selectedTool;
-
-  // Translations for disabled tool alert
-  const disabledToolAlert = {
-    en: "This tool is temporarily unavailable while we make improvements. Please check back later.",
-    fr: "Cet outil est temporairement indisponible pendant que nous l'améliorons. Veuillez réessayer plus tard."
-  };
 
   // Check if the tool should be disabled
   const isToolDisabled = (toolName) => {
@@ -117,7 +114,7 @@ export default function Dashboard({ onLogout }) {
               sx={{ mb: 2 }}
               onClose={() => setShowDisabledAlert(false)}
             >
-              {disabledToolAlert[language] || disabledToolAlert.en}
+              {dashboardTranslations.disabledToolAlert}
             </Alert>
           </Box>
         )}

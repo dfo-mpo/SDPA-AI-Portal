@@ -50,6 +50,16 @@ export const en = {
       heading: "Welcome to the DFO PSSI AI Portal",
       body: "Welcome to the DFO PSSI AI Portal, a platform designed to explore the potential of artificial intelligence in fisheries and oceans research. This portal features tools powered by computer vision and large language models, helping scientists analyze data, automate tasks, and uncover new insights.\n\nUse the Tools menu on the left to discover AI-driven solutions that support DFO's mission.",
       alert: "Demonstration Use Only: These tools are prototypes designed to illustrate possible AI applications for DFO scientists. Please avoid uploading any sensitive or operational data."
+    },
+    app: {
+      title: "DFO AI Portal"
+    },
+    userMenu: {
+      profile: "Profile",
+      account: "My account",
+      addAccount: "Add another account",
+      settings: "Settings",
+      logout: "Logout"
     }
   };
   
@@ -101,6 +111,16 @@ export const en = {
       heading: "Bienvenue sur le Portail IA du PSSI MPO",
       body: "Bienvenue sur le Portail IA du PSSI MPO, une plateforme dédiée à l'exploration du potentiel de l'intelligence artificielle dans la recherche sur les pêches et les océans. Ce portail met en avant des outils utilisant la vision par ordinateur et les modèles de langage avancés pour aider les scientifiques à analyser des données, automatiser des tâches et découvrir de nouvelles perspectives.\n\nUtilisez le menu des outils à gauche pour explorer les solutions basées sur l'IA qui soutiennent la mission du MPO.",
       alert: "Utilisation à des fins de démonstration uniquement : Ces outils sont des prototypes destinés à illustrer les applications possibles de l'IA pour les scientifiques du MPO. Veuillez éviter de téléverser des données sensibles ou opérationnelles."
+    },
+    app: {
+      title: "Portail d'IA du MPO"
+    },
+    userMenu: {
+      profile: "Profil",
+      account: "Mon compte",
+      addAccount: "Ajouter un autre compte",
+      settings: "Paramètres",
+      logout: "Déconnexion"
     }
   };
   
@@ -119,4 +139,4 @@ export const en = {
     }
     
     return translations;
-  }
+  } 

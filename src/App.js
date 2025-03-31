@@ -6,6 +6,8 @@ import { TermsModalContainer } from './components/common';
 import { CssBaseline, Box } from '@mui/material';
 import { Dashboard } from './layouts';
 import { useTerms, useLanguage } from './contexts';
+import { getLayoutTranslations } from './translations/layout'
+
 
 /**
  * Main Application Component that handles authentication state
@@ -15,16 +17,17 @@ function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { handleLogout: termsLogout } = useTerms();
   const { language } = useLanguage();
+  const appTranslations = getLayoutTranslations('app', language)
   
   // Set HTML lang attribute
   useEffect(() => {
     document.documentElement.lang = language;
-  }, [language]);
+  }, [language]); 
   
   // Set document title
   useEffect(() => {
-    document.title = language === 'en' ? 'DFO AI Portal' : 'Portail d\'IA du MPO';
-  }, [language]);
+    document.title = appTranslations.title;
+  }, [language, appTranslations]);
   
   // Check for existing auth on mount
   useEffect(() => {

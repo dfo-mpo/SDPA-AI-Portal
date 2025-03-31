@@ -51,7 +51,24 @@ export const en = {
       followupQuestions: "Suggest Follow-up Questions",
       followupTooltip: "AI will suggest relevant follow-up questions after each response",
       chatHistoryNote: "Chat history is not saved after you close the session."
-    }
+    },
+    error: {
+      processing: "Sorry, there was an error processing your request. Please try again.",
+      fileProcessing: "An error occurred while processing the file.",
+      sampleProcessing: "Failed to process the sample file. Please try again."
+    },
+    bot: {
+      initialGreeting: "I've analyzed \"{fileName}\". What would you like to know about this document?"
+    },
+    tooltips: {
+      temperature: "Current temperature setting",
+      tokenUsage: "Token usage",
+      resetChat: "Reset chat",
+      endChat: "End chat session"
+    },
+    fileInfo: {
+      size: "{size} KB"
+    },
   };
   
   export const fr = {
@@ -103,5 +120,22 @@ export const en = {
       followupQuestions: "Suggérer des questions de suivi",
       followupTooltip: "L'IA suggérera des questions de suivi pertinentes après chaque réponse",
       chatHistoryNote: "L'historique des conversations n'est pas enregistré après la fermeture de la session."
-    }
+    },
+    error: {
+      processing: "Désolé, une erreur s'est produite lors du traitement de votre demande. Veuillez réessayer.",
+      fileProcessing: "Une erreur s'est produite lors du traitement du fichier.",
+      sampleProcessing: "Échec du traitement du fichier exemple. Veuillez réessayer."
+    },
+    bot: {
+      initialGreeting: "J'ai analysé \"{fileName}\". Que souhaitez-vous savoir sur ce document ?"
+    },
+    tooltips: {
+      temperature: "Réglage de température actuel",
+      tokenUsage: "Utilisation de jetons",
+      resetChat: "Réinitialiser le chat",
+      endChat: "Terminer la session de chat"
+    },
+    fileInfo: {
+      size: "{size} Ko"
+    },
   };

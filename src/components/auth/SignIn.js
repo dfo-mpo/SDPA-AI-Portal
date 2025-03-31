@@ -26,9 +26,11 @@ import { useLanguage, useTerms } from '../../contexts';
 import { ForgotPassword } from '.';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../common/CustomIcons';
 import { signInStyles } from '../../styles/componentStyles';
+import { getAuthTranslations } from '../../translations/auth';
 
 export default function SignIn({ onLogin }) {
     const { language } = useLanguage();
+    const t = getAuthTranslations('signIn', language);
     const theme = useTheme();
     const styles = signInStyles(theme);
     const [emailError, setEmailError] = useState(false);
@@ -39,43 +41,6 @@ export default function SignIn({ onLogin }) {
     const { termsAccepted, startLoginFlow, loginPending } = useTerms();
     const [showTermsRejectedWarning, setShowTermsRejectedWarning] = useState(false);
 
-    // Translations
-    const translations = {
-        en: {
-            title: "Sign in to DFO AI Portal",
-            email: "Email",
-            emailPlaceholder: "your@email.com",
-            password: "Password",
-            passwordPlaceholder: "••••••••",
-            rememberMe: "Remember me",
-            signIn: "Sign in",
-            forgotPassword: "Forgot your password?",
-            or: "or",
-            signInWithGoogle: "Sign in with Google",
-            signInWithFacebook: "Sign in with Facebook",
-            noAccount: "Don't have an account?",
-            signUp: "Sign up",
-            termsRejectedWarning: "You must accept the Terms and Conditions to sign in. Please try again."
-        },
-        fr: {
-            title: "Connectez-vous au portail d'IA du MPO",
-            email: "Courriel",
-            emailPlaceholder: "votre@courriel.com",
-            password: "Mot de passe",
-            passwordPlaceholder: "••••••••",
-            rememberMe: "Se souvenir de moi",
-            signIn: "Se connecter",
-            forgotPassword: "Mot de passe oublié?",
-            or: "ou",
-            signInWithGoogle: "Se connecter avec Google",
-            signInWithFacebook: "Se connecter avec Facebook",
-            noAccount: "Vous n'avez pas de compte?",
-            signUp: "S'inscrire",
-            termsRejectedWarning: "Vous devez accepter les conditions générales pour vous connecter. Veuillez réessayer."
-        }
-    };
-
-    const t = translations[language] || translations.en;
     
     // Effect to check for login completion after terms acceptance
     useEffect(() => {
