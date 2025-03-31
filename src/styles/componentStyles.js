@@ -133,6 +133,8 @@ export const bannerStyles = {
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
+    borderRadius: '8px 8px 0 0px',
+    overflow: 'hidden'
   }),
   
   /**
@@ -357,11 +359,7 @@ export const toolContentWrapperStyles = {
     minWidth: 0,
     width: '100%',
     overflowX: 'auto',
-    // Custom border radius with top-right corner square
-    borderRadius: 0,
-    borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    borderRadius: '8px 0px 8px 8px',
     backgroundColor: theme.palette.mode === 'dark' ? 'rgba(13, 25, 43, 0.7)' : dfoColors.white,
     borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : dfoColors.lightGray,
     boxShadow: theme.palette.mode === 'dark' 
