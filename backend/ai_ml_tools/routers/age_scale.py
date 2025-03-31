@@ -11,8 +11,9 @@ router = APIRouter()
 async def age_scale(
     file: UploadFile = File(...),
     enhance: bool = Form(False),
-    fish_type: str = Form("Chum")
+    species: str = Form("Chum")
     ):
+    print(f"Received species: {species}")
     """
     Endpoint for scale ageing that processes the file
     and calls the scale_model_api function.
@@ -21,7 +22,7 @@ async def age_scale(
     tiff_file = await file_to_path(file)
     
     # Convert image to array
-    image_array = image_to_array(tiff_file)
+    image_array = image_to_array(tiff_file) 
     
     # Call the model API function
     result = await scale_model_api(image_array)
@@ -31,7 +32,7 @@ async def age_scale(
         "age": result["value"],  # Always a string
         "error": result["error"],  # Will be None if no error
         "enhanced": enhance,
-        "fishType": fish_type,
+        "species": species,
         "placeholder": False if result["error"] is None else "This result is a placeholder for the actual model output."
     }
     
