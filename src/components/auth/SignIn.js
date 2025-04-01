@@ -219,7 +219,7 @@ export default function SignIn({ onLogin }) {
                         fullWidth
                         variant="contained"
                     >
-                        {t.signIn}
+                        {t.signInButton}
                     </Button>
                     <Link
                         component="button"
