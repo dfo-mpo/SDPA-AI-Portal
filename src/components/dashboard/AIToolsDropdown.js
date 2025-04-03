@@ -80,7 +80,7 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
           </ListSubheader>,
           ...tools.map((tool) => {
             const IconComponent = tool.icon;
-            const isDisabled = tool.name === 'Sensitivity Score Calculator' || tool.name === 'PII Redactor';
+            const isDisabled = tool.disabled;
             return (
               <MenuItem
                 key={tool.name}

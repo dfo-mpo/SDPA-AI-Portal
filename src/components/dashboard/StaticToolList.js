@@ -46,6 +46,11 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
     en: "Temporarily unavailable while we make improvements",
     fr: "Temporairement indisponible pendant que nous l'améliorons"
   };
+  // Translations for "Coming Soon" tooltip
+  const comingSoonTooltip = {
+    en: "Coming soon! This feature is currently in development.",
+    fr: "Bientôt disponible ! Cette fonctionnalité est en cours de développement."
+  };
 
   return (
     <Paper
@@ -85,11 +90,15 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
           <List disablePadding>
             {tools.map((tool) => {
               const IconComponent = tool.icon;
-              const isDisabled = tool.name === 'Sensitivity Score Calculator' || tool.name === 'PII Redactor';;
+              const isDisabled = tool.disabled;
               return (
                 <ListItem key={tool.name} disablePadding>
                   <Tooltip 
-                    title={isDisabled ? (unavailableTooltip[language] || unavailableTooltip.en) : ""}
+                    title={isDisabled ? 
+                      (tool.category === 'Optical Character Recognition' ? 
+                        (comingSoonTooltip[language] || comingSoonTooltip.en) : 
+                        (unavailableTooltip[language] || unavailableTooltip.en)) : 
+                      ""}
                     placement="right"
                   >
                   <ListItemButton

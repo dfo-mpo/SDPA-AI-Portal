@@ -24,7 +24,8 @@ import {
   PDFChatbot,
   PIIRedactor,
   SensitivityScore,
-  FrenchTranslation
+  FrenchTranslation,
+  DocumentOCR
 } from '../pages/tools';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
@@ -44,8 +45,8 @@ export default function Dashboard({ onLogout }) {
 
   // Check if the tool should be disabled
   const isToolDisabled = (toolName) => {
-    return toolName === 'Sensitivity Score Calculator' || toolName === 'PII Redactor';;
-    // return false;
+    const tool = getToolByName(toolName);
+    return tool && tool.disabled;
   };
 
   // Handle direct URL navigation attempts
@@ -93,6 +94,7 @@ export default function Dashboard({ onLogout }) {
     'PII Redactor': <PIIRedactor />,
     'Sensitivity Score Calculator': <SensitivityScore />,
     'French Translation': <FrenchTranslation />,
+    'Document OCR': <DocumentOCR />
   };
 
   /**
