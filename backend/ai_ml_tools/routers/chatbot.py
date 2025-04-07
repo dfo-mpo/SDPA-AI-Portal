@@ -80,7 +80,7 @@ async def pdf_to_chunks(files: List[UploadFile] = File(...)):
         )
 
 # Takes a document and model information then provides an LLM response
-@router.post("/openai_question_rag/") # TODO: implement input for document chunks and metadata lists
+@router.post("/ws/rag_stream/") # TODO: implement input for document chunks and metadata lists
 async def llm_responce_rag(chat_history: list, document_vectors: str, model: str, tempurature=0.3, reasoning_effort="high"):
     try:
         # TODO: get list of document chunks and metadata
