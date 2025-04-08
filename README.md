@@ -2,7 +2,7 @@
 ## Backend Image Logic
 The backend is implemented using fastapi/uvicorn, the backend folder contains the dockerfile for creating its image. It uses Python 3.10 and imports all packages specified in the requirments.txt file. It is exposed to port 8000 but the port is not used by the frontend due to the reverse proxy.
 ## Frontend Image Logic
-The frontend is implemented using Reactjs, the root of this project contains the dockerfile.frontend for creating its image. It uses Node 22.12.0 and for installing depedencies the package and package-lock jsons. The nginx-app.conf file will create a reverse proxy that allows HTTPS and WSS requests from the frontend image to be internally sent to the backend image as HTTP and WS requests. This allows the frontend and backend images communcate with out exposing non secure requests. It is exposed to port 80.
+The frontend is implemented using Reactjs, the root of this project contains the dockerfile.frontend for creating its image. It uses Node 22.12.0 and for installing depedencies the package and package-lock jsons. The nginx-app.conf file will create a reverse proxy that allows HTTPS and WSS requests from the frontend image to be internally sent to the backend image as HTTP and WS requests. This allows the frontend and backend images communcate with out exposing non secure requests. The nginx-app.conf file also has a max file size limit set for all requests passed through the reverse proxy. It is exposed to port 80.
 ## Building the Docker Container Locally
 The docker-compose.yml file will allow for a docker container be created using the frontend and backend images. It reroutes the frontend exposure port to 3080 while rerouting the backend port to 8080. To set up your container locally:
 1. In the backend/ai_ml_tools folder, copy and rename the '.env.sample' file to '.env'. Fill in the keys for OpenAI and Document Intelligence.
@@ -11,7 +11,7 @@ The docker-compose.yml file will allow for a docker container be created using t
 docker-compose up --build
 ```
 ## Deploying the Docker Container on Azure Webapps
-This approach will use Azure Container Registry to host the docker images and the Azure Web App will use a docker-compose file to build the container. This will require an already existing ACR and Azure Web App (with runtime set to container on creation).
+This approach will use Azure Container Registry to host the docker images and the Azure Web App will use a docker-compose file to build the container. This will require an already existing ACR resource, Azure Web App resource (with runtime set to container on creation), and both Docker and Azure CLI installed locally on your machine. 
 
 ### Prerequisites
 #### Setup Web App Resource
@@ -30,20 +30,31 @@ This approach will use Azure Container Registry to host the docker images and th
     * Under 'Role' select *AcrPull* then click next.
     * Under 'Memebers click on *Select members* and under the Object ID copied from step 3 into the search bar. Select the web app resource that appears. Click Next and finish the creation of the role assignment.
 6. Now go to the *Properties* page and make sure the Admin user option is selected.
-#### Setup Terminal Connection (NOT COMPLETE)
-7. Download and install Azure CLI from Microsoft:
-[Azure CLI Downloads](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?pivots=msi). Note that you may need admin privileges to run the msi file.
-7. Open a terminal on your PC and log into the azure tenant you wish to use:
+#### Install Docker Desktop (If you don't already have it on your device)
+7. First you need to install the Linux subsystem for Windows, open a PowerShell or Command Prompt terminal using Admin Privileges and run the following command: 
 ```bash
-az login --tenant <tenantID>
+wsl --install 
 ```
-Note SSC tenantID is 8c1a4d93-d828-4d0e-9303-fd3bd611c822.
-You can also log in normally instead and see the tenant options at appear:
+You may need to restart the computer after this step.
+
+8. Download and install Docker Desktop from the Docker Website [Docker Downloads](https://docs.docker.com/desktop/setup/install/windows-install/). 
+
+When prompted, ensure the Use WSL 2 instead of Hyper-V option on the Configuration page is selected 
+#### Setup Terminal Connection
+9. Download and install Azure CLI from Microsoft:
+[Azure CLI Downloads](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?pivots=msi). Note that you may need admin privileges to run the msi file.
+10. Open a terminal on your PC and log into the azure subscription you wish to use:
 ```bash
 az login
 ```
-You will be given an option to select the subscription you want to log into for the given tenant.
-8. Log into your Azure Container Registry resource using the following command:
+You will be shown all available subscriptions, select the one with your Azure Container registry. <br>
+If the subscription you are looking for is in a tenant that does not appear, then you will need to login to that specific tenant: 
+```bash
+az login --tenant <tenantID>
+```
+Note SSC 163oXygen tenantID is 8c1a4d93-d828-4d0e-9303-fd3bd611c822. You can find it as Directory ID when viewing directories in Azure. 
+
+11. Log into your Azure Container Registry resource using the following command:
 ```bash
 az acr login --name <acr_resource>
 ```
