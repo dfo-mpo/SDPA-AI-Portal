@@ -181,7 +181,8 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
                           fontStyle: 'italic'
                         }),
                         ...(isExternalLink && {
-                          color: 'primary.main'
+                          color: 'text.disabled',
+                          fontStyle: 'italic'
                         })
                       }}
                     />
