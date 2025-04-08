@@ -1039,14 +1039,16 @@ export const staticToolListStyles = {
     },
   },
   subheader: (theme) => ({
-    py: 2,
+    py: 1,
+    pb: 0.5,
     fontSize: '0.875rem',
-    lineHeight: '2rem',
-    borderBottom: '1px solid',
+    lineHeight: '1.8rem',
+    borderTop: '1px solid',
     borderColor: 'divider',
     bgcolor: 'background.paper',
     color: 'text.primary',
     fontWeight: 600,
+    marginBottom: 0,
   }),
 };
 

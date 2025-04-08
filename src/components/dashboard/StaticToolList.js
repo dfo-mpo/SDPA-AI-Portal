@@ -20,7 +20,7 @@ import {
   useTheme,
   Tooltip,
 } from '@mui/material';
-import { Home, AlertCircle } from 'lucide-react';
+import { Home, AlertCircle, ExternalLink } from 'lucide-react';
 import { TOOL_CATEGORIES } from '../../utils';
 import { useLanguage } from '../../contexts';
 import { getToolTranslations } from '../../utils';
@@ -43,14 +43,21 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
 
   // Translations for "Temporarily unavailable" tooltip
   const unavailableTooltip = {
-    en: "Temporarily unavailable while we make improvements",
-    fr: "Temporairement indisponible pendant que nous l'améliorons"
+    en: "Coming Soon! Temporarily unavailable while we make improvements",
+    fr: "Bientôt disponible ! Temporairement indisponible pendant que nous l'améliorons"
   };
   // Translations for "Coming Soon" tooltip
   const comingSoonTooltip = {
     en: "Coming soon! This feature is currently in development.",
     fr: "Bientôt disponible ! Cette fonctionnalité est en cours de développement."
   };
+
+  // Translations for "External Link" tooltip
+  const externalLinkTooltip = {
+    en: "Opens in a new tab",
+    fr: "Ouvre dans un nouvel onglet"
+  };
+
 
   return (
     <Paper
@@ -91,18 +98,36 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
             {tools.map((tool) => {
               const IconComponent = tool.icon;
               const isDisabled = tool.disabled;
+              const isExternalLink = !!tool.externalUrl;
+              // Determine appropriate tooltip
+              let tooltipText = "";
+              if (isDisabled) {
+                tooltipText = tool.category === 'Optical Character Recognition' 
+                  ? (comingSoonTooltip[language] || comingSoonTooltip.en)
+                  : (unavailableTooltip[language] || unavailableTooltip.en);
+              } else if (isExternalLink) {
+                tooltipText = externalLinkTooltip[language] || externalLinkTooltip.en;
+              }
               return (
                 <ListItem key={tool.name} disablePadding>
                   <Tooltip 
-                    title={isDisabled ? 
-                      (tool.category === 'Optical Character Recognition' ? 
-                        (comingSoonTooltip[language] || comingSoonTooltip.en) : 
-                        (unavailableTooltip[language] || unavailableTooltip.en)) : 
-                      ""}
+                    title={tooltipText}
                     placement="right"
                   >
                   <ListItemButton
-                    onClick={() => !isDisabled && onToolSelect(tool.name)}
+                    onClick={() => {
+                      // Only proceed if the tool is not disabled - defined in constants.js
+                      if (!isDisabled) {
+                        if (tool.externalUrl) {
+                          // Open external URL in a new tab
+                          window.open(tool.externalUrl, '_blank', 'noopener,noreferrer');
+                        } else {
+                          // Normal tool selection
+                          onToolSelect(tool.name);
+                        }
+                      }
+                      // Do nothing if disabled
+                    }}
                     sx={{
                       ...staticToolListStyles.listItem,
                       ...(isDisabled && {
@@ -110,16 +135,22 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
                         cursor: 'not-allowed',
                         pointerEvents: 'auto',
                         color: 'text.disabled',
-                        // borderLeft: '3px solid',
-                        // borderLeftColor: 'warning.main',
                         '&:hover': {
                           bgcolor: 'action.disabledBackground',
-                          // borderLeftColor: 'warning.main',
+                        }
+                      }),
+                      // Special styling if it's an external link
+                      ...(isExternalLink && {
+                        cursor: 'pointer',
+                        '&:hover': {
+                          bgcolor: 'action.hover',
+                          borderLeft: '3px solid',
+                          borderLeftColor: 'success.main', // Different color for external links
                         }
                       }),
                       '&:hover': {
                         borderLeft: '3px solid',
-                        borderLeftColor: 'primary.palette.warning.main',
+                        borderLeftColor: 'primary.main',
                       }
                     }}
                   >
@@ -130,11 +161,27 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
                       }
                     </ListItemIcon>
                     <ListItemText 
-                      primary={translations.tools[tool.name] || tool.name}
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <span>{translations.tools[tool.name] || tool.name}</span>
+                          {isExternalLink && (
+                            <ExternalLink 
+                              size={14} 
+                              style={{ 
+                                marginLeft: '6px',
+                                color: theme.palette.primary.main
+                              }} 
+                            />
+                          )}
+                        </Box>
+                      }
                       primaryTypographyProps={{
                         ...(isDisabled && { 
                           color: 'text.disabled',
                           fontStyle: 'italic'
+                        }),
+                        ...(isExternalLink && {
+                          color: 'primary.main'
                         })
                       }}
                     />
@@ -149,7 +196,6 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
     </Paper>
   );
 }
-
 StaticToolList.propTypes = {
   /** Callback function when a tool is selected */
   onToolSelect: PropTypes.func.isRequired,
