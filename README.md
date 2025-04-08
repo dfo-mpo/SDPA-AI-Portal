@@ -10,6 +10,7 @@ The docker-compose.yml file will allow for a docker container be created using t
 ```bash
 docker-compose up --build
 ```
+You can now use the web app locally from, http://127.0.0.1:3080
 ## Deploying the Docker Container on Azure Webapps
 This approach will use Azure Container Registry to host the docker images and the Azure Web App will use a docker-compose file to build the container. This will require an already existing ACR resource, Azure Web App resource (with runtime set to container on creation), and both Docker and Azure CLI installed locally on your machine. 
 
