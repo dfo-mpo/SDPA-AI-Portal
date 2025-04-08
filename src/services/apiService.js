@@ -304,9 +304,8 @@ export const processPdfDocument = async (file) => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const responsee = await response.json();
-    console.log(responsee);
-    return responsee;
+
+    return await response.json();
   } catch (error) {
     console.error('Error in processPdfDocument:', error);
     throw error;

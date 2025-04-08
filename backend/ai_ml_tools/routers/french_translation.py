@@ -21,11 +21,9 @@ async def text_to_french(text: str):
         # http_api = "http://20.63.108.34:8000" # VM
         http_api = "https://ringtail-tops-hopelessly.ngrok-free.app" # Dat's local machine
 
-        print(text)
         r = requests.post(http_api+'/translate', json={"engtext": text})
         
         data = json.dumps({'output': r.json()['output']})
-        print(data)
         
         return {"translation": data}
     except Exception as e:
