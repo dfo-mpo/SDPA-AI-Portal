@@ -5,11 +5,11 @@
 export const en = {
     title: "Scale Ageing",
     shortDescription: "AI-powered fish ageing from scale images.",
-    longDescription: "This tool uses a computer vision model trained on annotated salmon scale images to estimate fish age with high accuracy. It automates ageing for fisheries research and management.\n\nUpload an image to get started. **This tool is for demonstration purposes only—do not upload sensitive data.**",
+    longDescription: "This tool uses a computer vision model trained on annotated salmon scale images to estimate fish age with high accuracy. It automates ageing for fisheries research and management.\n\nUpload an image to get started. This tool is for demonstration purposes only - do not upload sensitive data.",
     actionButtonText: "Upload Scale Image",
     results: {
       estimatedAge: "Estimated Fish Age: {age}",
-      fishType: "Fish Type: {type}",
+      species: "Species: {type}",
       enhanced: "Enhanced?: {value}",
       placeholder: "Placeholder?: {value}",
       yes: "Yes",
@@ -34,11 +34,11 @@ export const en = {
   export const fr = {
     title: "Âge des écailles",
     shortDescription: "Estimation de l'âge des poissons à partir d'images d'écailles.",
-    longDescription: "Cet outil utilise un modèle de vision par ordinateur entraîné sur des images annotées d'écailles de saumon pour estimer leur âge avec une grande précision. Il automatise le vieillissement pour la recherche et la gestion des pêches.\n\nTéléversez une image d'écaille pour commencer. **Cet outil est destiné à des fins de démonstration uniquement—ne téléversez pas de données sensibles.**",
+    longDescription: "Cet outil utilise un modèle de vision par ordinateur entraîné sur des images annotées d'écailles de saumon pour estimer leur âge avec une grande précision. Il automatise le vieillissement pour la recherche et la gestion des pêches.\n\nTéléversez une image d'écaille pour commencer. Cet outil est destiné à des fins de démonstration uniquement - ne téléversez pas de données sensibles.",
     actionButtonText: "Téléverser une image d'écaille",
     results: {
       estimatedAge: "Âge estimé du poisson : {age}",
-      fishType: "Type de poisson : {type}",
+      species: "Espèce : {type}",
       enhanced: "Amélioré ? : {value}",
       placeholder: "Placeholder ? : {value}",
       yes: "Oui",

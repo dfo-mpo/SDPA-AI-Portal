@@ -32,5 +32,5 @@ export const en = {
       };
     }
     
-    return translations;
+    return translations; 
   }

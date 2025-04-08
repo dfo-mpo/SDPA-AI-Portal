@@ -26,6 +26,8 @@ import {
 import { Settings, Home } from 'lucide-react'; 
 import { AIToolsDropdown, StaticToolList } from '../components/dashboard';
 import { OptionsMenu } from '../components/common';
+import { getLayoutTranslations } from '../translations/layout';
+import { useLanguage } from '../contexts';
 
 // Import our custom hooks and styles
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
@@ -59,8 +61,9 @@ export default function NewLeftPanel({
   onLogout 
 }) {
   const theme = useTheme();
+  const { language } = useLanguage();
+  const panelTranslations = getLayoutTranslations('leftPanel', language);
 
-  
   // Map tool names to their corresponding settings components
   const toolSettings = {
     'Scale Ageing': <ScaleAgeingSettings />,
@@ -237,7 +240,7 @@ export default function NewLeftPanel({
               <Box sx={styles.settingsHeader}>
                 <Settings size={16} style={styles.settingsIcon} />
                 <Typography variant="subtitle2" sx={styles.settingsTitle}>
-                  Settings
+                  {panelTranslations.settings}
                 </Typography>
               </Box>
               <Box sx={styles.settingsContent}>

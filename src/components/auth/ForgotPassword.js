@@ -13,8 +13,10 @@ import {
     DialogContentText,
     DialogTitle,
     OutlinedInput,
-    useTheme
+    useTheme,
+    Paper
 } from '@mui/material';
+import { getAuthTranslations } from '../../translations/auth';
 
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 // For now, use a placeholder style object since useComponentStyles may have issues
@@ -22,15 +24,22 @@ const placeholderStyles = {
     dialog: {
         width: '100%',
         maxWidth: '500px',
-        padding: 2
+        padding: 2,
+        backgroundColor: theme => theme.palette.background.paper,
+        border: theme => `1px solid ${theme.palette.divider}`,
+        boxShadow: theme => theme.palette.mode === 'dark'
+            ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+            : '0 8px 32px rgba(0, 0, 0, 0.1)',
     },
     dialogContent: {
         paddingBottom: 2,
-        paddingTop: 1
+        paddingTop: 1,
+        backgroundColor: theme => theme.palette.background.paper,
     },
     dialogActions: {
         padding: 2,
-        paddingTop: 0
+        paddingTop: 0,
+        backgroundColor: theme => theme.palette.background.paper,
     }
 };
 
@@ -39,26 +48,7 @@ function ForgotPassword({ open, handleClose, language = 'en' }) {
     // const forgotPasswordStyles = useComponentStyles('forgotPassword');
     const forgotPasswordStyles = placeholderStyles;
 
-
-    // Translations
-    const translations = {
-        en: {
-            title: "Reset password",
-            description: "Enter your account's email address, and we'll send you a link to reset your password.",
-            emailPlaceholder: "Email address",
-            cancel: "Cancel",
-            continue: "Continue"
-        },
-        fr: {
-            title: "Réinitialiser le mot de passe",
-            description: "Entrez l'adresse courriel de votre compte et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
-            emailPlaceholder: "Adresse courriel",
-            cancel: "Annuler",
-            continue: "Continuer"
-        }
-    };
-
-    const t = translations[language] || translations.en;
+    const t = getAuthTranslations('forgotPassword', language);
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -71,16 +61,22 @@ function ForgotPassword({ open, handleClose, language = 'en' }) {
         <Dialog
             open={open}
             onClose={handleClose}
-            slotProps={{
-                paper: {
-                    component: 'form',
-                    onSubmit: handleSubmit,
-                    sx: forgotPasswordStyles.dialog,
-                },
+            PaperComponent={Paper}
+            PaperProps={{
+                sx: {
+                    bgcolor: theme.palette.background.paper,
+                    backgroundImage: 'none',
+                    boxShadow: theme.palette.mode === 'dark'
+                        ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+                        : '0 8px 32px rgba(0, 0, 0, 0.1)',
+                    border: `1px solid ${theme.palette.divider}`,
+                    width: '100%',
+                    maxWidth: '500px',
+                }
             }}
         >
-            <DialogTitle>{t.title}</DialogTitle>
-            <DialogContent sx={forgotPasswordStyles.dialogContent}>
+            <DialogTitle sx={{ bgcolor: theme.palette.background.paper }}>{t.title}</DialogTitle>
+            <DialogContent sx={{ bgcolor: theme.palette.background.paper }}>
                 <DialogContentText>
                     {t.description}
                 </DialogContentText>
@@ -95,7 +91,7 @@ function ForgotPassword({ open, handleClose, language = 'en' }) {
                     fullWidth
                 />
             </DialogContent>
-            <DialogActions sx={forgotPasswordStyles.dialogActions}>
+            <DialogActions sx={{ bgcolor: theme.palette.background.paper }}>
                 <Button onClick={handleClose}>{t.cancel}</Button>
                 <Button variant="contained" type="submit">
                     {t.continue}

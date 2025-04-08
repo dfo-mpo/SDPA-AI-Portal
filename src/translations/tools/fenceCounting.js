@@ -20,7 +20,9 @@ export const en = {
       resultsNote: "See video for detailed counts and tracking",
       source: "Source",
       originalVideo: "Original Video",
-      processedVideo: "Processed Video with Fish Count"
+      processedVideo: "Processed Video with Fish Count",
+      processingMessage: "Analyzing video frames and tracking fish. This may take a few moments."
+
     },
     settings: {
       speciesLabel: "Species to Count",
@@ -62,7 +64,8 @@ export const en = {
       resultsNote: "Voir la vidéo pour les comptages détaillés et le suivi",
       source: "Source",
       originalVideo: "Vidéo originale",
-      processedVideo: "Vidéo traitée avec comptage de poissons"
+      processedVideo: "Vidéo traitée avec comptage de poissons",
+      processingMessage: "Analyse des images vidéo et suivi des poissons. Cela peut prendre quelques instants."
     },
     settings: {
       speciesLabel: "Espèces à compter",

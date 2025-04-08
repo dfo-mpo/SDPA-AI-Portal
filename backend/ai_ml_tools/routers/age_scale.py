@@ -11,8 +11,9 @@ router = APIRouter()
 async def age_scale(
     file: UploadFile = File(...),
     enhance: bool = Form(False),
-    fish_type: str = Form("Chum")
+    species: str = Form("Chum")
     ):
+    print(f"Received species: {species}")
     """
     Endpoint for scale ageing that processes the file
     and calls the scale_model_api function.
@@ -21,7 +22,7 @@ async def age_scale(
     tiff_file = await file_to_path(file)
     
     # Convert image to array
-    image_array = image_to_array(tiff_file)
+    image_array = image_to_array(tiff_file) 
     
     # Call the model API function
     result = await scale_model_api(image_array)
@@ -31,7 +32,7 @@ async def age_scale(
         "age": result["value"],  # Always a string
         "error": result["error"],  # Will be None if no error
         "enhanced": enhance,
-        "fishType": fish_type,
+        "species": species,
         "placeholder": False if result["error"] is None else "This result is a placeholder for the actual model output."
     }
     
@@ -46,7 +47,8 @@ def image_to_array(image_path):
 # Function that calls the model API
 async def scale_model_api(image_array):
     try:
-        http_api = "http://20.63.108.34:8000"
+        # http_api = "http://20.63.108.34:8000" # VM
+        http_api = "https://ringtail-tops-hopelessly.ngrok-free.app" # Dat's local machine
         
         r = requests.post(http_api + '/scale', json={"imagelist": image_array})
         
@@ -63,7 +65,7 @@ async def scale_model_api(image_array):
     except Exception as e:
         return {"value": "Age 4", "error": f"Unexpected error: {str(e)}"}
 
-@router.post("/to_png")
+@router.post("/to_png/")
 async def to_png(file:UploadFile = File(...)):
     # Read inputted document
     tiff_file = await file_to_path(file)

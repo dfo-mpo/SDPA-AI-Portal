@@ -58,7 +58,7 @@ export const adaptFenceCountingSettings = (settings = {}) => {
 export const adaptScaleAgeingSettings = (settings) => {
   return {
     enhance: settings.enhance || false, // default to false
-    fish_type: settings.fishType || 'chum' //default to chum
+    species: settings.species || 'chum' //default to chum
   };
 };
 

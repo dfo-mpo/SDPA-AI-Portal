@@ -17,6 +17,8 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { MenuButton } from '.';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+import { useLanguage } from '../../contexts';
+import { getLayoutTranslations } from '../../translations/layout';
 
 
 // Styled menu item with consistent margin
@@ -35,6 +37,8 @@ export default function OptionsMenu({ onLogout }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const styles = useComponentStyles('optionsMenu');
+  const { language } = useLanguage();
+  const menuTranslations = getLayoutTranslations('userMenu', language);
   
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -74,14 +78,14 @@ export default function OptionsMenu({ onLogout }) {
           [`& .${dividerClasses.root}`]: styles.menu.divider,
         }}
       >
-        <MenuItem onClick={handleClose} disabled>Profile</MenuItem>
-        <MenuItem onClick={handleClose} disabled>My account</MenuItem>
+        <MenuItem onClick={handleClose} disabled>{menuTranslations.profile}</MenuItem>
+        <MenuItem onClick={handleClose} disabled>{menuTranslations.account}</MenuItem>
         <Divider />
-        <MenuItem onClick={handleClose} disabled>Add another account</MenuItem>
-        <MenuItem onClick={handleClose} disabled>Settings</MenuItem>
+        <MenuItem onClick={handleClose} disabled>{menuTranslations.addAccount}</MenuItem>
+        <MenuItem onClick={handleClose} disabled>{menuTranslations.settings}</MenuItem>
         <Divider />
         <MenuItem onClick={handleLogout} sx={styles.logoutMenuItem}>
-          <ListItemText>Logout</ListItemText>
+          <ListItemText>{menuTranslations.logout}</ListItemText>
           <ListItemIcon>
             <LogoutRoundedIcon fontSize="small" />
           </ListItemIcon>

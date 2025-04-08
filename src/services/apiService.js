@@ -56,7 +56,7 @@ export const processFenceCounting = async (file, settings = {}) => {
  * 
  * @param {File} file - The image file to process
  * @param {boolean} enhance - Whether to enhance the image
- * @param {string} fishType - The type of fish
+ * @param {string} species - The type of fish
  * @returns {Promise<Object>} The processing result with age property
  */
 export const processScaleAge = async (file, settings = {}) => {
@@ -64,8 +64,9 @@ export const processScaleAge = async (file, settings = {}) => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('enhance', adaptedSettings.enhance.toString());
-  formData.append('fish_type', adaptedSettings.fishType);
+  formData.append('species', adaptedSettings.species);
   try {
+    console.log("Sending species:", adaptedSettings.species);
     const response = await fetch(`${API_BASE_URL}/age_scale/`, {
       method: 'POST',
       body: formData
@@ -75,7 +76,7 @@ export const processScaleAge = async (file, settings = {}) => {
     }
     return await response.json();
   } catch (error) {
-    console.error('Error in processScaleAge:', error);
+    console.error('Error in processScaleAge:', error); 
     throw error;
   }
 };
@@ -303,7 +304,9 @@ export const processPdfDocument = async (file) => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    const responsee = await response.json();
+    console.log(responsee);
+    return responsee;
   } catch (error) {
     console.error('Error in processPdfDocument:', error);
     throw error;
@@ -322,7 +325,7 @@ export async function* askOpenAI(chatHistory, currentMessage, documentContent, s
   // Use the adapter to transform settings
   const adaptedSettings = adaptPdfChatbotSettings(settings);
   
-    // Determine the correct protocol based on the current page
+  // Determine the correct protocol based on the current page
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   // Build the endpoint URL using the current host and a relative path
   const wsUrl = `${protocol}://${window.location.host}/ws/chat_stream`;

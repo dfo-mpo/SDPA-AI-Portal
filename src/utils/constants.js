@@ -10,7 +10,8 @@ import {
   Brain,
   Lock,
   Calculator,
-  Languages
+  Languages,
+  FileSearch
 } from 'lucide-react';
   
 
@@ -56,7 +57,8 @@ import {
       category: 'Large Language Models',
       icon: Lock,
       backgroundImage: '/assets/pii-redactor-banner.jpg',
-      actionText: 'Upload Document'
+      actionText: 'Upload Document',
+      disabled: true
     },
     SENSITIVITY_CALCULATOR: {
       id: 'sensitivity-calculator',
@@ -64,7 +66,8 @@ import {
       category: 'Large Language Models',
       icon: Calculator,
       backgroundImage: '/assets/sensitivity-calculator-banner.jpg',
-      actionText: 'Upload Document'
+      actionText: 'Upload Document',
+      disabled: true
     },
     FRENCH_TRANSLATION: {
       id: 'french-translation',
@@ -73,7 +76,19 @@ import {
       icon: Languages,
       backgroundImage: '/assets/french-translation-banner.jpg',
       actionText: 'Upload Document'
+    },
+
+    // Optical Character Recognition Tools
+    DOCUMENT_OCR: {
+      id: 'document-ocr',
+      name: 'Document OCR',
+      category: 'Optical Character Recognition',
+      icon: FileSearch,
+      backgroundImage: '/assets/OCR.gif',
+      actionText: 'Coming Soon',
+      disabled: true
     }
+    
   };
   
   /**
@@ -91,6 +106,9 @@ import {
       TOOLS.PII_REDACTOR,
       TOOLS.SENSITIVITY_CALCULATOR,
       TOOLS.FRENCH_TRANSLATION
+    ],
+    'Optical Character Recognition': [
+      TOOLS.DOCUMENT_OCR,
     ]
   };
   

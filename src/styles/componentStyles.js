@@ -9,11 +9,33 @@
 import { alpha } from '@mui/material/styles';
 import { dfoColors } from './themePrimitives';
 
-// ===== CONTAINER STYLES =====
+// ====== COMMON OR BASE STYLES USED ACROSS MULTIPLE OBJECTS ======
 
-/**
- * Container styles for page sections and content wrappers
- */
+// 1. A shared “flexBetween” for consistently spaced rows
+const flexBetween = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+};
+
+// 2. A shared “bannerContainerBase” for normal vs. hero banners
+const bannerContainerBase = (theme) => ({
+  position: 'relative',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  backgroundRepeat: 'no-repeat',
+});
+
+// 3. A shared “bannerTitleBase” for normal vs. hero banner titles
+const bannerTitleBase = {
+  mb: 2,
+  fontWeight: 700,
+  // Always use dfoColors.darkBlue
+  color: dfoColors.darkBlue,
+  textShadow: '1px 1px 0 rgba(255,255,255,0.5)',
+};
+
+// ===== CONTAINER STYLES =====
 export const containerStyles = {
   /**
    * Page container - centers content with responsive padding
@@ -25,37 +47,34 @@ export const containerStyles = {
     px: { xs: 2, sm: 3, md: 4 },
     py: 3,
   }),
-  
+
   /**
    * Section container - groups related content
    */
-  section: (theme) => ({
+  section: () => ({
     my: 3,
     width: '100%',
   }),
-  
+
   /**
    * Content area with card styling
    */
   card: (theme) => ({
-    // p: 3,
     borderRadius: theme.shape.borderRadius,
     border: `1px solid ${theme.palette.divider}`,
-    bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : dfoColors.white,
+    bgcolor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(0, 0, 0, 0.2)'
+        : dfoColors.white,
     boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
     width: '100%',
-    minWidth: 0, // Allow shrinking below content size
-    overflowX: 'auto', // Allow horizontal scrolling if needed
-    // Use responsive padding
+    minWidth: 0,
+    overflowX: 'auto',
     p: { xs: 2, sm: 3 },
   }),
 };
 
 // ===== LAYOUT STYLES =====
-
-/**
- * Layout patterns using flexbox and grid
- */
 export const layoutStyles = {
   /**
    * Flexbox column layout
@@ -64,7 +83,7 @@ export const layoutStyles = {
     display: 'flex',
     flexDirection: 'column',
   },
-  
+
   /**
    * Flexbox row layout with aligned items
    */
@@ -73,7 +92,7 @@ export const layoutStyles = {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  
+
   /**
    * Centers items both horizontally and vertically
    */
@@ -82,16 +101,12 @@ export const layoutStyles = {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
+
   /**
-   * Spaces items apart horizontally
+   * Unified “flexBetween” for spaced items
    */
-  spaceBetween: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  
+  flexBetween, // replaced old "spaceBetween" with new name
+
   /**
    * Responsive grid layout
    */
@@ -104,37 +119,29 @@ export const layoutStyles = {
       lg: 'repeat(4, 1fr)',
     },
     gap: 2,
-  }
+  },
 };
 
 // ===== BANNER STYLES =====
-
-/**
- * Styles for page headers and banners
- */
 export const bannerStyles = {
   /**
    * Container for standard banner
    */
   container: (theme) => ({
-    position: 'relative',
+    ...bannerContainerBase(theme), // use shared base
     height: '300px',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
   }),
-  
+
   /**
    * Container for hero-sized banner
    */
   heroContainer: (theme) => ({
-    position: 'relative',
+    ...bannerContainerBase(theme),
     height: '350px',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
+    borderRadius: '8px 8px 0 0px',
+    overflow: 'hidden',
   }),
-  
+
   /**
    * Content area inside banner
    */
@@ -148,51 +155,45 @@ export const bannerStyles = {
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'flex-start',
-    color: theme.palette.mode === 'dark' ? theme.palette.common.white : dfoColors.darkBlue,
+    color:
+      theme.palette.mode === 'dark'
+        ? theme.palette.common.white
+        : dfoColors.darkBlue,
     textAlign: 'left',
     p: 3,
     pl: 6,
     fontFamily: '"Lato", "Noto Sans", sans-serif',
     zIndex: 2,
   }),
-  
+
   /**
    * Banner title styling
    */
-  title: (theme) => ({
-    mb: 2,
-    fontWeight: 700,
+  title: () => ({
+    ...bannerTitleBase,
     fontSize: '2rem',
-    // Updated to always use dfoColors.darkBlue, regardless of theme mode
-    color: dfoColors.darkBlue,
-    textShadow: '1px 1px 0 rgba(255,255,255,0.5)',
   }),
-  
+
   /**
    * Banner title styling for hero banners
    */
-  heroTitle: (theme) => ({
-    mb: 2,
-    fontWeight: 700,
+  heroTitle: () => ({
+    ...bannerTitleBase,
     fontSize: '2.2rem',
-    // Updated to always use dfoColors.darkBlue, regardless of theme mode
-    color: dfoColors.darkBlue,
-    textShadow: '1px 1px 0 rgba(255,255,255,0.5)',
   }),
-  
+
   /**
    * Banner description text styling
    */
-  description: (theme) => ({
+  description: () => ({
     mb: 3,
     maxWidth: '500px',
     fontSize: '1.1rem',
     fontWeight: 500,
-    // Updated to always use dfoColors.darkBlue, regardless of theme mode
     color: dfoColors.darkBlue,
     textShadow: '1px 1px 0 rgba(255,255,255,0.5)',
   }),
-  
+
   /**
    * Gradient overlay for banners
    */
@@ -203,56 +204,38 @@ export const bannerStyles = {
     left: 0,
     width: '100%',
     height: '100%',
-    background: 'linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.95) 15%, rgba(255,255,255,0.8) 30%, rgba(255,255,255,0.2) 60%, rgba(255,255,255,0) 100%)',
+    background:
+      'linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.95) 15%, rgba(255,255,255,0.8) 30%, rgba(255,255,255,0.2) 60%, rgba(255,255,255,0) 100%)',
     zIndex: 1,
   },
 };
 
 // ===== FORM STYLES =====
-
-/**
- * Styles for form elements
- */
 export const formStyles = {
-  /**
-   * Form container
-   */
   container: (theme) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: 2,
     width: '100%',
   }),
-  
-  /**
-   * Form field container
-   */
+
   field: {
     mb: 2,
     width: '100%',
   },
-  
-  /**
-   * Form label
-   */
+
   label: (theme) => ({
     mb: 0.5,
     fontWeight: 500,
     color: theme.palette.text.primary,
   }),
-  
-  /**
-   * Form helper text
-   */
+
   helperText: (theme) => ({
     mt: 0.5,
     fontSize: '0.75rem',
     color: theme.palette.text.secondary,
   }),
-  
-  /**
-   * Form actions container
-   */
+
   actions: {
     mt: 3,
     display: 'flex',
@@ -262,94 +245,66 @@ export const formStyles = {
 };
 
 // ===== DASHBOARD STYLES =====
-
-/**
- * Styles for dashboard and tool components
- */
 export const dashboardStyles = {
-  /**
-   * Container for the dashboard
-   */
   container: (theme) => ({
     width: '100%',
     maxWidth: '1800px',
     mx: 'auto',
-    px: { xs: 2, sm: 4 }, // Responsive padding
+    px: { xs: 2, sm: 4 },
     display: 'flex',
     alignItems: 'center',
   }),
-  
-  /**
-   * Main wrapper styles
-   */
+
   mainWrapper: (theme, { headerHeight }) => ({
     display: 'flex',
     flexDirection: 'column',
     flexGrow: 1,
     height: `calc(100vh - ${headerHeight}px)`,
-    // Change from overflow: 'hidden' to allow content to be visible
-    // overflowX: 'hidden',
-    // overflowY: 'auto',
-    overflow: 'auto'
+    overflow: 'auto',
   }),
-  
-  /**
-   * Content wrapper styles
-   */
+
   contentWrapper: {
     display: 'flex',
-    flexDirection: { xs: 'column', md: 'row' }, // Stack on mobile, side by side on desktop
+    flexDirection: { xs: 'column', md: 'row' },
     gap: 3,
     mx: 'auto',
-    px: { xs: 1, sm: 2, md: 4 }, // Responsive padding
+    px: { xs: 1, sm: 2, md: 4 },
     width: '100%',
     maxWidth: '1800px',
     flexGrow: 1,
-    // Allow content to scroll
     overflow: 'visible',
     position: 'relative',
   },
-  
-  /**
-   * Main content area styling
-   */
+
   mainContent: {
     flexGrow: 1,
     display: 'flex',
     flexDirection: 'column',
     gap: 3,
     minHeight: 'auto',
-    width: '100%', // Ensure it takes full width
-    minWidth: 0, // Allow it to shrink below nominal size
-    // Let content flow naturally
+    width: '100%',
+    minWidth: 0,
     overflow: 'visible',
   },
-  
-  /**
-   * Content paper styling
-   */
+
   contentPaper: {
     flexGrow: 1,
     borderRadius: 2,
     bgcolor: 'transparent',
     border: 'none',
-    // Allow content to be visible
     overflow: 'visible',
     position: 'relative',
     width: '100%',
-    minWidth: 0, // Allow content to shrink below nominal size
+    minWidth: 0,
   },
-  
-  /**
-   * Loading container styling
-   */
+
   loadingContainer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
     minHeight: 400,
-  }
+  },
 };
 
 export const toolContentWrapperStyles = {
@@ -357,39 +312,35 @@ export const toolContentWrapperStyles = {
     minWidth: 0,
     width: '100%',
     overflowX: 'auto',
-    // Custom border radius with top-right corner square
-    borderRadius: 0,
-    borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
-    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(13, 25, 43, 0.7)' : dfoColors.white,
-    borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : dfoColors.lightGray,
-    boxShadow: theme.palette.mode === 'dark' 
-      ? '0 4px 12px rgba(0, 0, 0, 0.3)' 
-      : '0 2px 8px rgba(0, 0, 0, 0.05)',
+    borderRadius: '8px 0px 8px 8px',
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(13, 25, 43, 0.7)'
+        : dfoColors.white,
+    borderColor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(255, 255, 255, 0.1)'
+        : dfoColors.lightGray,
+    boxShadow:
+      theme.palette.mode === 'dark'
+        ? '0 4px 12px rgba(0, 0, 0, 0.3)'
+        : '0 2px 8px rgba(0, 0, 0, 0.05)',
   }),
   content: {
     p: { xs: 2.5, sm: 3.5 },
     '&:last-child': { pb: { xs: 2.5, sm: 3.5 } },
-    overflowWrap: 'break-word'
-  }
+    overflowWrap: 'break-word',
+  },
 };
 
 // ===== DROPDOWN STYLES =====
-
-/**
- * Styles for dropdown menus and selection components
- */
 export const dropdownStyles = {
-  /**
-   * Base select element
-   */
   select: (theme) => ({
     bgcolor: 'background.default',
     border: '1px solid',
     borderColor: 'divider',
     boxShadow: 1,
-    py: 3, // For consistent height matching buttons
+    py: 3,
     '&:hover': {
       borderColor: 'primary.main',
       bgcolor: 'background.paper',
@@ -408,21 +359,21 @@ export const dropdownStyles = {
       minHeight: '50px',
     },
   }),
-  
-  /**
-   * Subheader styling in dropdowns
-   */
+
   subheader: (theme) => ({
     py: 1,
     px: 2,
     fontWeight: 700,
-    bgcolor: theme.palette.mode === 'dark' ? theme.palette.background.paper : theme.palette.common.white,
-    color: theme.palette.mode === 'dark' ? theme.palette.text.primary : dfoColors.darkBlue,
+    bgcolor:
+      theme.palette.mode === 'dark'
+        ? theme.palette.background.paper
+        : theme.palette.common.white,
+    color:
+      theme.palette.mode === 'dark'
+        ? theme.palette.text.primary
+        : dfoColors.darkBlue,
   }),
-  
-  /**
-   * Menu item styling
-   */
+
   menuItem: {
     py: 2.5,
     px: 1.55,
@@ -431,10 +382,7 @@ export const dropdownStyles = {
       bgcolor: 'action.hover',
     },
   },
-  
-  /**
-   * Icon in list items
-   */
+
   listItemIcon: {
     minWidth: 36,
     display: 'flex',
@@ -444,28 +392,21 @@ export const dropdownStyles = {
 };
 
 // ===== TOOL-SPECIFIC STYLES =====
-
-/**
- * Styles for tool pages and components
- */
 export const toolStyles = {
-  /**
-   * Tool container
-   */
   container: {
     width: '100%',
-    maxWidth: '100%', // Ensure it never exceeds parent width
-    minWidth: 0, // Allow container to shrink below content size
-    overflowWrap: 'break-word', // Break words to prevent overflow
-    wordBreak: 'break-word', // Enhanced word breaking for all browsers
-    hyphens: 'auto', // Add automatic hyphenation
+    maxWidth: '100%',
+    minWidth: 0,
+    overflowWrap: 'break-word',
+    wordBreak: 'break-word',
+    hyphens: 'auto',
   },
-  
-  /**
-   * Tool description text
-   */
+
   description: (theme) => ({
-    color: theme.palette.mode === 'dark' ? dfoColors.lightGray : dfoColors.darkBlue,
+    color:
+      theme.palette.mode === 'dark'
+        ? dfoColors.lightGray
+        : dfoColors.darkBlue,
     lineHeight: 1.8,
     mb: 3,
     fontWeight: 400,
@@ -473,79 +414,66 @@ export const toolStyles = {
     overflowWrap: 'break-word',
     wordBreak: 'break-word',
     hyphens: 'auto',
-    width: '100%', // Ensure full width
-    maxWidth: '100%', // Prevent overflow
+    width: '100%',
+    maxWidth: '100%',
     '& strong': {
       fontWeight: 600,
-      color: theme.palette.mode === 'dark' ? dfoColors.white : dfoColors.darkBlue,
+      color:
+        theme.palette.mode === 'dark'
+          ? dfoColors.white
+          : dfoColors.darkBlue,
     },
   }),
-  
-  /**
-   * Container for action buttons
-   */
+
   actionContainer: {
     display: 'flex',
     alignItems: 'center',
     gap: 2,
-    flexWrap: 'wrap', // Allow buttons to wrap on smaller screens
-    width: '100%', // Use full width
-    mb: 2, // Add margin bottom
-    // Make sure items don't disappear on small screens
+    flexWrap: 'wrap',
+    width: '100%',
+    mb: 2,
     minWidth: 0,
   },
-  
-  /**
-   * Primary action button
-   */
+
   actionButton: (theme) => ({
     textTransform: 'none',
-    px: { xs: 2, sm: 3 }, // Responsive padding
+    px: { xs: 2, sm: 3 },
     py: 1.5,
     bgcolor: dfoColors.darkBlue,
     color: dfoColors.white,
     fontWeight: 500,
     borderRadius: '4px',
-    '&:hover': { 
-      bgcolor: 'rgba(38, 55, 74, 0.9)'
+    '&:hover': {
+      bgcolor: 'rgba(38, 55, 74, 0.9)',
     },
     whiteSpace: 'nowrap',
     transition: 'all 0.2s ease',
-    boxShadow: theme.palette.mode === 'dark' ? '0 2px 5px rgba(0,0,0,0.2)' : '0 2px 5px rgba(0,0,0,0.1)',
-    // Responsive sizing for small screens
+    boxShadow:
+      theme.palette.mode === 'dark'
+        ? '0 2px 5px rgba(0,0,0,0.2)'
+        : '0 2px 5px rgba(0,0,0,0.1)',
     fontSize: { xs: '0.875rem', sm: '1rem' },
-    // Ensure button doesn't disappear on small screens
     minWidth: { xs: 'auto', sm: '150px' },
   }),
-  /**
-   * Video container with responsive layout
-   */
+
   videoContainer: {
     display: 'flex',
-    flexDirection: { xs: 'column', md: 'row' }, // Stack on mobile, side by side on desktop
+    flexDirection: { xs: 'column', md: 'row' },
     gap: 2,
     width: '100%',
     mt: 2,
     mb: 4,
-    overflow: 'visible', // Change from 'auto' to 'visible'
-
+    overflow: 'visible',
   },
-  
-  /**
-   * Video section container
-   */
+
   videoSection: {
     flex: 1,
-    minWidth: 0, // Allow container to shrink
-    // Ensure content fits inside its container
+    minWidth: 0,
     '& > *': {
       maxWidth: '100%',
     },
   },
-  
-  /**
-   * Video element styling
-   */
+
   video: {
     width: '100%',
     maxHeight: '400px',
@@ -553,9 +481,7 @@ export const toolStyles = {
     backgroundColor: '#000',
     borderRadius: 1,
   },
-  /**
-   * Result container with improved overflow handling
-   */
+
   resultContainer: {
     width: '100%',
     maxWidth: '100%',
@@ -567,97 +493,64 @@ export const toolStyles = {
 };
 
 // ===== SETTINGS STYLES =====
-
-/**
- * Styles for settings components
- */
 export const settingsStyles = {
-  /**
-   * Container for settings
-   */
   container: (theme) => ({
-    display: 'flex', 
-    flexDirection: 'column', 
-    gap: 3, 
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 3,
     py: 1,
   }),
-  
-  /**
-   * Form control with label
-   */
+
   formLabel: {
     mb: 0.1,
     fontWeight: 500,
     color: 'text.primary',
   },
-  
-  /**
-   * Header row with optional tooltip
-   */
+
   headerRow: {
-    display: 'flex', 
-    alignItems: 'center',
+    // replaced usage of “flexBetween” if it was identical
+    ...flexBetween,
     mb: 0.75,
   },
-  
-  /**
-   * Settings divider
-   */
+
   divider: {
     my: 1.5,
   },
-  
-  /**
-   * Helper text styling
-   */
+
   helperText: (theme) => ({
     color: 'text.secondary',
     fontSize: '0.75rem',
   }),
-  
-  /**
-   * Row styling
-   */
+
+  // row was originally: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }
+  // so we unify to "flexBetween" and keep width: '100%'
   row: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    ...flexBetween,
     width: '100%',
   },
-  
-  /**
-   * Form control label
-   */
+
   formControlLabel: {
     m: 0,
     '& .MuiFormControlLabel-label': {
-      ml: 1
-    }
+      ml: 1,
+    },
   },
-  
-  /**
-   * Tooltip icon
-   */
+
   tooltipIcon: {
-    ml: 1.5
+    ml: 1.5,
   },
-  
-  /**
-   * Checkbox group
-   */
+
   checkboxGroup: {
     ml: 1,
     mt: -1,
     '& .MuiFormControlLabel-root': {
       marginLeft: 0,
-      marginRight: 0
-    }
+      marginRight: 0,
+    },
   },
-  /**
-   * Checkbox group container
-   */
+
   checkboxGroupContainer: {
-    display: 'flex', 
+    display: 'flex',
     flexDirection: 'column',
   },
 };
@@ -668,7 +561,7 @@ export const toolSettingsCommonStyles = {
   },
   formRow: {
     justifyContent: 'flex-start',
-    '& .MuiFormControlLabel-label': { ml: 2 }
+    '& .MuiFormControlLabel-label': { ml: 2 },
   },
   sliderContainer: {
     px: 2,
@@ -677,20 +570,20 @@ export const toolSettingsCommonStyles = {
   },
   slider: {
     '& .MuiSlider-markLabel': {
-      fontSize: '0.75rem'
-    }
+      fontSize: '0.75rem',
+    },
   },
   radioGroup: {
-    ml: 1
+    ml: 1,
   },
   optionRow: {
     display: 'flex',
     alignItems: 'center',
-    mb: 2
+    mb: 2,
   },
   radioTypeRow: {
     display: 'flex',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   colorPicker: {
     appearance: 'none',
@@ -703,37 +596,34 @@ export const toolSettingsCommonStyles = {
     p: 0,
     '&::-webkit-color-swatch': {
       border: 'none',
-      borderRadius: '2px'
+      borderRadius: '2px',
     },
     '&::-webkit-color-swatch-wrapper': {
       border: 'none',
       borderRadius: '2px',
-      padding: 0
-    }
+      padding: 0,
+    },
   },
   fixedWidthContainer: {
     width: 68,
     display: 'flex',
     justifyContent: 'flex-end',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   checkboxGroup: {
-    ml: 1, 
-    mt: -1, 
+    ml: 1,
+    mt: -1,
     '& .MuiFormControlLabel-root': {
       marginLeft: 0,
-      marginRight: 0
-    }
+      marginRight: 0,
+    },
   },
-  flexBetween: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexGrow: 1
-  }
+  // replaced usage of “flexBetween”
+  flexBetween,
 };
 
 export const sensitivityScoreStyles = {
+  // usage below replaced with layoutStyles.flexBetween or the local “flexBetween”
   button: {
     width: '100%',
     my: 1,
@@ -747,12 +637,14 @@ export const sensitivityScoreStyles = {
   weightInput: {
     width: '100%',
     '& .MuiInputBase-root': { height: 28 },
-    '& .MuiInputBase-input': { py: 0.5, px: 1, textAlign: 'center' },
+    '& .MuiInputBase-input': {
+      py: 0.5,
+      px: 1,
+      textAlign: 'center',
+    },
   },
   totalBox: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    ...flexBetween,
     mt: 1,
   },
   totalLabel: {
@@ -764,33 +656,29 @@ export const sensitivityScoreStyles = {
   resetButton: {
     ml: 'auto',
   },
-  flexBetween: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
+  flexBetween, // removed the original duplication
   weightLabelError: {
     color: 'error.main',
-    fontWeight: 500
+    fontWeight: 500,
   },
   weightInputError: {
     '& .MuiInputBase-root': {
       transition: 'background-color 0.3s ease',
       backgroundColor: 'error.lighter',
-    }
+    },
   },
   headerLabelError: {
     color: 'error.main',
-    fontWeight: 600
+    fontWeight: 600,
   },
   totalBoxError: {
-    p: 1, 
+    p: 1,
     borderRadius: 1,
     backgroundColor: 'error.light',
     transition: 'background-color 0.3s ease',
-  }
+    ...flexBetween,
+  },
 };
-
 
 export const govHeaderStyles = {
   outerContainer: {
@@ -800,26 +688,31 @@ export const govHeaderStyles = {
     right: '50%',
     marginLeft: '-50vw',
     marginRight: '-50vw',
-    background: theme => theme.palette.mode === 'light'
-      ? `linear-gradient(to left, ${alpha(theme.palette.primary.light, 0.15)} 0%, 
-         ${alpha(theme.palette.primary.light, 0.1)} 30%, 
-         rgba(255,255,255,1) 80%)`
-      // Dark mode gradient
-      : `linear-gradient(to left, hsl(210, 100%, 12%) 0%, 
-         hsl(210, 100%, 8%) 70%, 
-         rgba(0,0,0,1) 85%)`,
-    // color: theme.palette.mode === 'dark' ? theme.palette.text.primary : '#333333',
+    background: (theme) =>
+      theme.palette.mode === 'light'
+        ? `linear-gradient(to left, ${alpha(
+            theme.palette.primary.light,
+            0.15
+          )} 0%, 
+           ${alpha(theme.palette.primary.light, 0.1)} 30%, 
+           rgba(255,255,255,1) 80%)`
+        : `linear-gradient(to left, hsl(210, 100%, 12%) 0%, 
+           hsl(210, 100%, 8%) 70%, 
+           rgba(0,0,0,1) 85%)`,
     borderBottom: '1px solid',
     borderColor: '#DC4D01',
     py: 2,
-    boxShadow: theme => theme.palette.mode === 'light'
-      ? '0 2px 4px rgba(0,0,0,0.03)'
-      : '0 2px 6px rgba(0,0,0,0.2)',
+    boxShadow: (theme) =>
+      theme.palette.mode === 'light'
+        ? '0 2px 4px rgba(0,0,0,0.03)'
+        : '0 2px 6px rgba(0,0,0,0.2)',
   },
   container: {
     width: '100%',
-    color: theme => theme.palette.mode === 'dark' ? theme.palette.text.primary : '#333333',
-    // py: 2,
+    color: (theme) =>
+      theme.palette.mode === 'dark'
+        ? theme.palette.text.primary
+        : '#333333',
   },
   content: {
     maxWidth: 1800,
@@ -848,7 +741,10 @@ export const govHeaderStyles = {
   departmentTitle: (theme) => ({
     display: { xs: 'none', md: 'block' },
     ml: 2,
-    color: theme.palette.mode === 'dark' ? theme.palette.text.primary : dfoColors.darkBlue,
+    color:
+      theme.palette.mode === 'dark'
+        ? theme.palette.text.primary
+        : dfoColors.darkBlue,
     fontWeight: 500,
     fontSize: '1rem',
     letterSpacing: '0.01em',
@@ -861,44 +757,33 @@ export const govHeaderStyles = {
     minWidth: '100px',
     border: '1px solid',
     borderColor: theme.palette.divider,
-    backgroundColor: theme.palette.mode === 'light'
-      ? 'rgba(255, 255, 255, 0.8)'
-      : 'rgba(0, 0, 0, 0.3)',
+    backgroundColor:
+      theme.palette.mode === 'light'
+        ? 'rgba(255, 255, 255, 0.8)'
+        : 'rgba(0, 0, 0, 0.3)',
     transition: 'all 0.2s ease',
     textTransform: 'none',
-    '&:hover': { 
-      backgroundColor: theme.palette.mode === 'light'
-        ? 'rgba(255, 255, 255, 0.9)'
-        : 'rgba(0, 0, 0, 0.5)',
+    '&:hover': {
+      backgroundColor:
+        theme.palette.mode === 'light'
+          ? 'rgba(255, 255, 255, 0.9)'
+          : 'rgba(0, 0, 0, 0.5)',
       borderColor: theme.palette.text.primary,
       transform: 'translateY(-1px)',
       boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
     },
     '&:active': {
       transform: 'translateY(0)',
-    }
+    },
   }),
 };
 
 // ===== CUSTOM SWITCH STYLES =====
-
 export const customSwitchStyles = {
-  // The switchBase style function now accepts theme and a props object.
   switchBase: (theme, { isSmall }) => {
-    // Define size parameters based on the size prop
     const sizes = isSmall
-      ? {
-          width: 32,
-          height: 18,
-          thumbSize: 14,
-          translateX: 14,
-        }
-      : {
-          width: 42,
-          height: 26,
-          thumbSize: 22,
-          translateX: 16,
-        };
+      ? { width: 32, height: 18, thumbSize: 14, translateX: 14 }
+      : { width: 42, height: 26, thumbSize: 22, translateX: 16 };
 
     return {
       width: sizes.width,
@@ -941,19 +826,18 @@ export const customSwitchStyles = {
     };
   },
 };
-// ===== MENU BUTTON STYLES =====
 
+// ===== MENU BUTTON STYLES =====
 export const menuButtonStyles = {
   badge: (theme) => ({
-    '& .MuiBadge-badge': { 
-      right: 2, 
-      top: 2 
+    '& .MuiBadge-badge': {
+      right: 2,
+      top: 2,
     },
   }),
 };
 
 // ===== OPTIONS MENU STYLES =====
-
 export const optionsMenuStyles = {
   menuButton: {
     borderColor: 'transparent',
@@ -976,8 +860,8 @@ export const optionsMenuStyles = {
     },
   },
 };
-// ===== COLOR MODE ICON DROPDOWN STYLES =====
 
+// ===== COLOR MODE ICON DROPDOWN STYLES =====
 export const colorModeIconDropdownStyles = {
   iconButton: (theme) => ({
     border: '1px solid',
@@ -985,20 +869,21 @@ export const colorModeIconDropdownStyles = {
     borderRadius: '8px',
     padding: '8px',
     color: theme.palette.text.primary,
-    backgroundColor: theme.palette.mode === 'light'
-      ? 'rgba(255, 255, 255, 0.8)'
-      : 'rgba(0, 0, 0, 0.3)',
+    backgroundColor:
+      theme.palette.mode === 'light'
+        ? 'rgba(255, 255, 255, 0.8)'
+        : 'rgba(0, 0, 0, 0.3)',
     '&:hover': {
-      backgroundColor: theme.palette.mode === 'light'
-        ? 'rgba(255, 255, 255, 0.9)'
-        : 'rgba(0, 0, 0, 0.5)',
+      backgroundColor:
+        theme.palette.mode === 'light'
+          ? 'rgba(255, 255, 255, 0.9)'
+          : 'rgba(0, 0, 0, 0.5)',
       borderColor: theme.palette.text.primary,
       transform: 'translateY(-1px)',
       boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
     },
     transition: 'all 0.2s ease',
   }),
-  // Wrap the menu styles in a function so the hook processes them:
   menu: (theme) => ({
     paper: {
       elevation: 0,
@@ -1015,14 +900,13 @@ export const colorModeIconDropdownStyles = {
 };
 
 // ===== AI TOOLS DROPDOWN STYLES =====
-
 export const aiToolsDropdownStyles = {
   select: (theme) => ({
     bgcolor: 'background.default',
     border: '1px solid',
     borderColor: 'divider',
     boxShadow: 1,
-    py: 4, // AI TOOLS HOME button height
+    py: 4,
     '&:hover': {
       borderColor: 'primary.main',
       bgcolor: 'background.paper',
@@ -1036,13 +920,13 @@ export const aiToolsDropdownStyles = {
       bgcolor: 'background.paper',
     },
     '& .MuiMenuItem-root': {
-      py: 2,        // Match StaticToolList py value
-      px: 2,        // Match StaticToolList px value
-      minHeight: '48px', // Match StaticToolList minHeight
+      py: 2,
+      px: 2,
+      minHeight: '48px',
       display: 'flex',
-      alignItems: 'center',  // Ensures items are vertically centered
-      justifyContent: 'center', // Centers text horizontally
-      textAlign: 'center', // Aligns text inside the menu
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: 'center',
       '&:hover': {
         bgcolor: 'action.hover',
       },
@@ -1060,7 +944,7 @@ export const aiToolsDropdownStyles = {
       alignItems: 'center',
       padding: '20px',
       minHeight: '60px',
-      whiteSpace: 'normal', // Allow text wrapping
+      whiteSpace: 'normal',
       fontSize: '0.97rem',
     },
   }),
@@ -1086,12 +970,14 @@ export const aiToolsDropdownStyles = {
     py: 1,
     px: 2,
     fontWeight: 700,
-    bgcolor: theme.palette.mode === 'dark'
-      ? theme.palette.background.paper
-      : theme.palette.common.white,
-    color: theme.palette.mode === 'dark'
-      ? theme.palette.text.primary
-      : '#26374A',
+    bgcolor:
+      theme.palette.mode === 'dark'
+        ? theme.palette.background.paper
+        : theme.palette.common.white,
+    color:
+      theme.palette.mode === 'dark'
+        ? theme.palette.text.primary
+        : '#26374A',
   }),
 };
 
@@ -1109,42 +995,41 @@ export const staticToolListStyles = {
     boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
   }),
   header: (theme) => ({
-    p: 2, 
-    borderBottom: '1px solid', 
+    p: 2,
+    borderBottom: '1px solid',
     borderColor: 'divider',
-    backgroundColor: theme.palette.mode === 'dark'
-      ? alpha(theme.palette.primary.dark, 0.25) 
-      : alpha(theme.palette.primary.light, 0.15),
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? alpha(theme.palette.primary.dark, 0.25)
+        : alpha(theme.palette.primary.light, 0.15),
   }),
   headerContent: (theme) => ({
     display: 'flex',
     flexDirection: 'column',
     '& .MuiTypography-root': {
-      color: theme.palette.mode === 'dark' 
-        ? 'text.primary' 
-        : '#26374A'
-    }
+      color:
+        theme.palette.mode === 'dark' ? 'text.primary' : '#26374A',
+    },
   }),
   titleContainer: {
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: 1
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
   },
   title: (theme) => ({
     fontWeight: 600,
-    color: theme.palette.mode === 'dark'
-      ? 'text.primary'
-      : '#26374A',
-    mb: 0
+    color:
+      theme.palette.mode === 'dark' ? 'text.primary' : '#26374A',
+    mb: 0,
   }),
   subtitle: {
     color: 'text.secondary',
     fontWeight: 400,
-    ml: '28px'
+    ml: '28px',
   },
   listItem: {
-    py: 2,     
-    px: 2,             
+    py: 2,
+    px: 2,
     minHeight: '48px',
     borderLeft: '3px solid transparent',
     transition: 'all 0.2s ease-in-out',
@@ -1162,15 +1047,14 @@ export const staticToolListStyles = {
     bgcolor: 'background.paper',
     color: 'text.primary',
     fontWeight: 600,
-  })
-  
+  }),
 };
 
 export const homePageStyles = (theme) => ({
   container: {
     maxWidth: 800,
     mt: 4,
-    mx: 'left', // centers the container horizontally
+    mx: 'left',
   },
   paper: {
     p: 3,
@@ -1191,12 +1075,8 @@ export const homePageStyles = (theme) => ({
 });
 
 export const frenchTranslationStyles = (theme) => ({
-  container: {
-    // your container styling here
-  },
-  resultContainer: {
-    // your result container styling here
-  },
+  container: {},
+  resultContainer: {},
   translationPaper: {
     padding: theme.spacing(3),
     backgroundColor: theme.palette.background.paper,
@@ -1204,38 +1084,43 @@ export const frenchTranslationStyles = (theme) => ({
     border: `1px solid ${theme.palette.divider}`,
     marginTop: theme.spacing(2),
     maxHeight: '400px',
-    overflow: 'auto'
+    overflow: 'auto',
   },
   translationText: {
     whiteSpace: 'pre-wrap',
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    lineHeight: 1.6
+    lineHeight: 1.6,
   },
 });
 
 export const scaleAgeingStyles = {
   container: {
-    // The main container styling for your tool
     width: '100%',
     maxWidth: '800px',
-    margin: '0 auto',            // center it horizontally
-    padding: '1rem',            // some padding inside
-    backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.8)' : '#f9f9f9',  // Responsive background
-    border: (theme) => `1px solid ${theme.palette.divider}`,   // Use theme divider color
-    borderRadius: '8px',        // rounded corners
+    margin: '0 auto',
+    padding: '1rem',
+    backgroundColor: (theme) =>
+      theme.palette.mode === 'dark'
+        ? 'rgba(18, 18, 18, 0.8)'
+        : '#f9f9f9',
+    border: (theme) => `1px solid ${theme.palette.divider}`,
+    borderRadius: '8px',
   },
   resultCard: {
     marginTop: '1rem',
     padding: '1rem',
-    backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.9)' : '#fff',
+    backgroundColor: (theme) =>
+      theme.palette.mode === 'dark'
+        ? 'rgba(30, 30, 30, 0.9)'
+        : '#fff',
     border: (theme) => `1px solid ${theme.palette.divider}`,
     borderRadius: '8px',
-    boxShadow: (theme) => theme.palette.mode === 'dark' 
-      ? '0 2px 8px rgba(0, 0, 0, 0.3)' 
-      : '0 2px 4px rgba(0, 0, 0, 0.1)',
+    boxShadow: (theme) =>
+      theme.palette.mode === 'dark'
+        ? '0 2px 8px rgba(0, 0, 0, 0.3)'
+        : '0 2px 4px rgba(0, 0, 0, 0.1)',
   },
   resultContainer: {
-    // A container to hold text lines in a column
     marginTop: '1rem',
     display: 'flex',
     flexDirection: 'column',
@@ -1243,29 +1128,25 @@ export const scaleAgeingStyles = {
     textAlign: 'left',
   },
   infoLine: {
-    // A small style for each line of info
     margin: '0.25rem 0',
     fontSize: '1rem',
-    color: (theme) => theme.palette.text.primary, // Use theme color to ensure readability
+    color: (theme) => theme.palette.text.primary,
   },
   resultImage: {
-    // Controls how the scale image is displayed
     width: '100%',
-    maxWidth: '600px',        
+    maxWidth: '600px',
     height: 'auto',
     marginTop: '1rem',
-    border: (theme) => `1px solid ${theme.palette.divider}`,  // Use theme divider color
-    borderRadius: '4px',       // slightly rounded corners
+    border: (theme) => `1px solid ${theme.palette.divider}`,
+    borderRadius: '4px',
   },
 };
 
 export const piiRedactorStyles = (theme) => ({
-  // If you need a container style, for example:
   container: {
     width: '100%',
     maxWidth: 800,
   },
-  // Style for the result container if used in PIIRedactor
   resultContainer: {
     marginTop: theme.spacing(3),
     display: 'flex',
@@ -1277,8 +1158,6 @@ export const piiRedactorStyles = (theme) => ({
   },
 });
 
-// Updated signInStyles for componentStyles.js
-
 export const signInStyles = (theme) => ({
   signInContainer: {
     minHeight: '100vh',
@@ -1288,9 +1167,10 @@ export const signInStyles = (theme) => ({
     alignItems: 'center',
     position: 'relative',
     overflow: 'auto',
-    background: theme.palette.mode === 'dark'
-      ? 'linear-gradient(135deg, #0a2351 0%, #1a3a6a 50%, #2c4975 100%)'
-      : 'linear-gradient(135deg, #1a3a6a 0%, #7392c0 50%, #ffffff 100%)',
+    background:
+      theme.palette.mode === 'dark'
+        ? 'linear-gradient(135deg, #0a2351 0%, #1a3a6a 50%, #2c4975 100%)'
+        : 'linear-gradient(135deg, #1a3a6a 0%, #7392c0 50%, #ffffff 100%)',
     backgroundSize: 'cover',
     padding: theme.spacing(2),
   },
@@ -1302,9 +1182,8 @@ export const signInStyles = (theme) => ({
     gap: theme.spacing(2),
     margin: 'auto',
     maxWidth: { xs: '100%', sm: '450px' },
-    // Ensure it doesn't grow too big with zoom
     maxHeight: { xs: '100%', sm: '90vh' },
-    overflow: 'auto', // Add overflow auto to allow scrolling within the card
+    overflow: 'auto',
     boxShadow:
       theme.palette.mode === 'dark'
         ? 'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px'
@@ -1335,18 +1214,18 @@ export const signInStyles = (theme) => ({
 
 export const forgotPasswordStyles = (theme) => ({
   dialogContent: {
-    display: 'flex', 
-    flexDirection: 'column', 
-    gap: 2, 
-    width: '100%'
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+    width: '100%',
   },
   dialogActions: {
-    pb: 3, 
-    px: 3
+    pb: 3,
+    px: 3,
   },
   dialog: {
-    backgroundImage: 'none'
-  }
+    backgroundImage: 'none',
+  },
 });
 
 export const iconStyles = {
@@ -1360,13 +1239,12 @@ export const termsAndConditionsStyles = {
   container: (theme) => ({
     padding: theme.spacing(2),
     width: '100%',
-    maxHeight: 'someValue', // This might be causing issues
-    overflow: 'auto',   
+    overflow: 'auto',
   }),
   mainTitle: {
     mb: 4,
     fontWeight: 700,
-    color: theme => theme.palette.primary.main,
+    color: (theme) => theme.palette.primary.main,
     textAlign: 'center',
   },
   section: {
@@ -1377,69 +1255,69 @@ export const termsAndConditionsStyles = {
   sectionTitle: {
     mb: 1,
     fontWeight: 600,
-    color: theme => theme.palette.primary.dark,
+    color: (theme) => theme.palette.primary.dark,
   },
   sectionText: {
     lineHeight: 1.6,
     mb: 2,
     pl: 1,
-    color: theme => theme.palette.text.primary
+    color: (theme) => theme.palette.text.primary,
   },
   divider: {
     my: 2,
-  }
+  },
 };
 
 export const termsModalStyles = {
   dialogPaper: (theme) => ({
     maxWidth: '800px',
-    maxHeight: '90vh', // Slightly increased to give more room
+    maxHeight: '90vh',
     borderRadius: theme.shape.borderRadius,
     backgroundColor: theme.palette.background.paper,
-    boxShadow: theme.palette.mode === 'dark'
-      ? '0 8px 32px rgba(0, 0, 0, 0.5)'
-      : '0 8px 32px rgba(0, 0, 0, 0.1)',
-    overflow: 'hidden', // Keep this
+    boxShadow:
+      theme.palette.mode === 'dark'
+        ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+        : '0 8px 32px rgba(0, 0, 0, 0.1)',
+    overflow: 'hidden',
     border: `1px solid ${theme.palette.divider}`,
   }),
   dialogContent: {
     p: 0,
-    overflow: 'hidden', // Prevent DialogContent's default scroll
+    overflow: 'hidden',
   },
   dialogTitle: (theme) => ({
     borderBottom: '1px solid',
     borderColor: 'divider',
     py: 2,
     px: 3,
-    backgroundColor: theme.palette.mode === 'dark'
-      ? alpha(theme.palette.primary.dark, 0.25)
-      : alpha(theme.palette.primary.light, 0.15),
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? alpha(theme.palette.primary.dark, 0.25)
+        : alpha(theme.palette.primary.light, 0.15),
     '& .MuiTypography-root': {
-      color: theme.palette.mode === 'dark'
-        ? theme.palette.text.primary
-        : dfoColors.darkBlue,
+      color:
+        theme.palette.mode === 'dark'
+          ? theme.palette.text.primary
+          : dfoColors.darkBlue,
       fontWeight: 600,
     },
   }),
-  dialogContent: {
-    p: 0,
-    overflow: 'hidden', // Prevent DialogContent's default scroll
-  },
   contentContainer: (theme) => ({
     width: '100%',
     maxWidth: '100%',
     maxHeight: '60vh',
     overflow: 'auto',
     p: 3,
-    bgcolor: theme.palette.background.paper
+    bgcolor: theme.palette.background.paper,
   }),
   dialogActions: (theme) => ({
     px: 3,
     py: 2,
     borderTop: `1px solid ${theme.palette.divider}`,
-    backgroundColor: theme.palette.mode === 'dark'
-      ? alpha(theme.palette.background.paper, 0.8)
-      : theme.palette.grey[50],
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? alpha(theme.palette.background.paper, 0.8)
+        : theme.palette.grey[50],
   }),
   declineButton: {
     mr: 'auto',
@@ -1450,40 +1328,45 @@ export const termsModalStyles = {
   },
   acceptButton: (theme) => ({
     minWidth: 120,
-    backgroundColor: theme.palette.mode === 'dark'
-      ? theme.palette.primary.dark
-      : theme.palette.primary.main,
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? theme.palette.primary.dark
+        : theme.palette.primary.main,
     color: 'white',
     '&:hover': {
-      backgroundColor: theme.palette.mode === 'dark'
-        ? alpha(theme.palette.primary.dark, 0.9)
-        : alpha(theme.palette.primary.main, 0.9),
+      backgroundColor:
+        theme.palette.mode === 'dark'
+          ? alpha(theme.palette.primary.dark, 0.9)
+          : alpha(theme.palette.primary.main, 0.9),
     },
   }),
   closeButton: {
     minWidth: 100,
-  }
+  },
 };
 
 export const footerStyles = {
   container: (theme) => ({
     width: '100%',
-    background: theme.palette.mode === 'light'
-      ? `linear-gradient(to right, ${alpha(theme.palette.primary.light, 0.15)} 0%, 
-         ${alpha(theme.palette.primary.light, 0.1)} 30%, 
-         rgba(255,255,255,1) 80%)`
-      // Dark mode gradient
-      : `linear-gradient(to right, hsl(210, 100%, 12%) 0%, 
-         hsl(210, 100%, 8%) 30%, 
-         rgba(0,0,0,1) 85%)`,
-    borderTop: `1px solid ${alpha(dfoColors.orange, theme.palette.mode === 'light' ? 0.75 : 0.75)}`,
+    background:
+      theme.palette.mode === 'light'
+        ? `linear-gradient(to right, ${alpha(
+            theme.palette.primary.light,
+            0.15
+          )} 0%, 
+           ${alpha(theme.palette.primary.light, 0.1)} 30%, 
+           rgba(255,255,255,1) 80%)`
+        : `linear-gradient(to right, hsl(210, 100%, 12%) 0%, 
+           hsl(210, 100%, 8%) 30%, 
+           rgba(0,0,0,1) 85%)`,
+    borderTop: `1px solid ${alpha(dfoColors.orange, 0.75)}`,
     py: 2,
     px: 3,
     marginTop: 'auto',
     position: 'relative',
     paddingBottom: '20px',
   }),
-  
+
   content: {
     maxWidth: '1645px',
     width: '100%',
@@ -1505,16 +1388,18 @@ export const footerStyles = {
     fontFamily: "'Lato', sans-serif",
     fontWeight: 500,
     fontSize: '0.85rem',
-    color: theme.palette.mode === 'light' 
-      ? dfoColors.darkBlue
-      : theme.palette.text.primary,
+    color:
+      theme.palette.mode === 'light'
+        ? dfoColors.darkBlue
+        : theme.palette.text.primary,
   }),
   updatedText: (theme) => ({
     fontFamily: "'Lato', sans-serif",
     fontSize: '0.8rem',
-    color: theme.palette.mode === 'light'
-      ? alpha(dfoColors.darkBlue, 0.8)
-      : alpha(theme.palette.text.primary, 0.8),
+    color:
+      theme.palette.mode === 'light'
+        ? alpha(dfoColors.darkBlue, 0.8)
+        : alpha(theme.palette.text.primary, 0.8),
     display: 'flex',
     alignItems: 'center',
     '&::before': {
@@ -1523,19 +1408,19 @@ export const footerStyles = {
       width: '4px',
       height: '4px',
       borderRadius: '50%',
-      backgroundColor: theme.palette.mode === 'light'
-        ? alpha(dfoColors.darkBlue, 0.5)
-        : alpha(theme.palette.text.primary, 0.5),
+      backgroundColor:
+        theme.palette.mode === 'light'
+          ? alpha(dfoColors.darkBlue, 0.5)
+          : alpha(theme.palette.text.primary, 0.5),
       marginRight: '8px',
-    }
+    },
   }),
   logoContainer: {
     display: 'flex',
     alignItems: 'center',
-    // Create a subtle "background" for the logo
     position: 'relative',
     zIndex: 1,
-    pr: 1, // Add padding on the right
+    pr: 1,
   },
   logo: {
     height: '40px',
@@ -1543,22 +1428,24 @@ export const footerStyles = {
     objectFit: 'contain',
     objectPosition: 'center',
     display: 'block',
-    // Add a subtle shadow to help logo stand out
-    filter: theme => theme.palette.mode === 'light' 
-      ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.05))' 
-      : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+    filter: (theme) =>
+      theme.palette.mode === 'light'
+        ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.05))'
+        : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
   },
   termsButton: (theme) => ({
     textTransform: 'none',
     fontSize: '0.85rem',
     fontWeight: 500,
-    color: theme.palette.mode === 'light'
-      ? theme.palette.primary.main
-      : theme.palette.primary.light,
+    color:
+      theme.palette.mode === 'light'
+        ? theme.palette.primary.main
+        : theme.palette.primary.light,
     '&:hover': {
-      backgroundColor: theme.palette.mode === 'light' 
-        ? alpha(dfoColors.darkBlue, 0.08)
-        : alpha(theme.palette.primary.main, 0.15),
+      backgroundColor:
+        theme.palette.mode === 'light'
+          ? alpha(dfoColors.darkBlue, 0.08)
+          : alpha(theme.palette.primary.main, 0.15),
     },
     border: 'none',
     py: 0.5,
@@ -1573,11 +1460,12 @@ export const footerStyles = {
       width: '4px',
       height: '4px',
       borderRadius: '50%',
-      backgroundColor: theme.palette.mode === 'light'
-        ? alpha(dfoColors.darkBlue, 0.5)
-        : alpha(theme.palette.text.primary, 0.5),
+      backgroundColor:
+        theme.palette.mode === 'light'
+          ? alpha(dfoColors.darkBlue, 0.5)
+          : alpha(theme.palette.text.primary, 0.5),
       marginRight: '8px',
-    }
+    },
   }),
 };
 
@@ -1595,7 +1483,10 @@ export const fileUploadModalStyles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.05)',
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(0,0,0,0.4)'
+        : 'rgba(0,0,0,0.05)',
     borderRadius: '4px',
   }),
   gif: {
@@ -1666,18 +1557,18 @@ export const fileUploadModalStyles = {
 // CSV Analyzer demo styles
 export const csvAnalyzerStyles = {
   container: {
-    mt: 2, 
-    mb: 4, 
-    width: '100%'
+    mt: 2,
+    mb: 4,
+    width: '100%',
   },
   demoCard: {
-    p: 3, 
-    borderRadius: 2
+    p: 3,
+    borderRadius: 2,
   },
   headerContainer: {
-    mb: 2, 
-    display: 'flex', 
-    alignItems: 'center'
+    mb: 2,
+    display: 'flex',
+    alignItems: 'center',
   },
   demoStepsContainer: (theme) => ({
     display: 'flex',
@@ -1686,54 +1577,50 @@ export const csvAnalyzerStyles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     p: 2,
-    bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)',
-    borderRadius: 1
+    bgcolor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(0,0,0,0.2)'
+        : 'rgba(0,0,0,0.02)',
+    borderRadius: 1,
   }),
   stepContainer: {
-    flex: 1, 
-    textAlign: 'center'
+    flex: 1,
+    textAlign: 'center',
   },
   gifContainer: {
     height: 120,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    mb: 1
+    mb: 1,
   },
   actionContainer: {
-    mt: 3, 
-    display: 'flex', 
-    justifyContent: 'center'
+    mt: 3,
+    display: 'flex',
+    justifyContent: 'center',
   },
   resultCard: {
-    mt: 4, 
-    p: 3, 
-    borderRadius: 2
+    mt: 4,
+    p: 3,
+    borderRadius: 2,
   },
   resultTitle: {
-    mb: 2, 
-    fontWeight: 600
+    mb: 2,
+    fontWeight: 600,
   },
   alertSuccess: {
-    mb: 3
+    mb: 3,
   },
   resultFooter: {
-    mt: 3, 
-    pt: 2, 
-    borderTop: '1px solid', 
-    borderColor: 'divider'
-  }
+    mt: 3,
+    pt: 2,
+    borderTop: '1px solid',
+    borderColor: 'divider',
+  },
 };
 
 // ===== PDF CHATBOT STYLES =====
-
-/**
- * Styles for the PDF Chatbot tool
- */
 export const pdfChatbotStyles = {
-  /**
-   * Chat container
-   */
   chatContainer: {
     mt: 3,
     display: 'flex',
@@ -1747,9 +1634,6 @@ export const pdfChatbotStyles = {
     boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
     overflow: 'hidden',
   },
-  /**
-   * Container for chat messages
-   */
   messagesContainer: {
     p: 2,
     flexGrow: 1,
@@ -1758,9 +1642,6 @@ export const pdfChatbotStyles = {
     flexDirection: 'column',
     gap: 2,
   },
-  /**
-   * User message bubble
-   */
   userMessage: {
     alignSelf: 'flex-end',
     p: 2,
@@ -1770,22 +1651,17 @@ export const pdfChatbotStyles = {
     maxWidth: '80%',
     boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
   },
-  /**
-   * Bot message bubble
-   */
   botMessage: {
     alignSelf: 'flex-start',
     p: 2,
-    bgcolor: theme => theme.palette.mode === 'dark' 
-      ? 'rgba(255,255,255,0.05)' 
-      : 'rgba(0,0,0,0.05)',
+    bgcolor: (theme) =>
+      theme.palette.mode === 'dark'
+        ? 'rgba(255,255,255,0.05)'
+        : 'rgba(0,0,0,0.05)',
     borderRadius: 2,
     maxWidth: '80%',
     boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
   },
-  /**
-   * Message input container
-   */
   inputContainer: {
     p: 2,
     borderTop: '1px solid',
@@ -1793,41 +1669,34 @@ export const pdfChatbotStyles = {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
-    bgcolor: theme => theme.palette.mode === 'dark' 
-      ? 'rgba(0,0,0,0.2)' 
-      : 'rgba(0,0,0,0.02)',
+    bgcolor: (theme) =>
+      theme.palette.mode === 'dark'
+        ? 'rgba(0,0,0,0.2)'
+        : 'rgba(0,0,0,0.02)',
   },
-  /**
-   * Message input field
-   */
   messageInput: {
     flexGrow: 1,
     '& .MuiOutlinedInput-root': {
-      bgcolor: theme => theme.palette.mode === 'dark' 
-        ? 'rgba(255,255,255,0.05)' 
-        : 'rgba(255,255,255,0.9)',
-    }
+      bgcolor: (theme) =>
+        theme.palette.mode === 'dark'
+          ? 'rgba(255,255,255,0.05)'
+          : 'rgba(255,255,255,0.9)',
+    },
   },
-  /**
-   * Token usage progress bar
-   */
   tokenProgressBar: {
     height: 4,
     width: '100%',
     '& .MuiLinearProgress-bar': {
       bgcolor: (theme, props) => {
         const percentage = props?.percentage || 0;
-        return percentage > 90 
-          ? theme.palette.error.main 
-          : percentage > 70 
-            ? theme.palette.warning.main 
-            : theme.palette.success.main;
-      }
-    }
+        return percentage > 90
+          ? theme.palette.error.main
+          : percentage > 70
+          ? theme.palette.warning.main
+          : theme.palette.success.main;
+      },
+    },
   },
-  /**
-   * Chat header
-   */
   chatHeader: {
     p: 2,
     borderBottom: '1px solid',
@@ -1835,52 +1704,39 @@ export const pdfChatbotStyles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    bgcolor: theme => theme.palette.mode === 'dark' 
-      ? 'rgba(0,0,0,0.2)' 
-      : 'rgba(0,0,0,0.02)',
+    bgcolor: (theme) =>
+      theme.palette.mode === 'dark'
+        ? 'rgba(0,0,0,0.2)'
+        : 'rgba(0,0,0,0.02)',
   },
-  /**
-   * PDF info container
-   */
   pdfInfo: {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
   },
-  /**
-   * Token status container with info and buttons
-   */
   tokenStatusContainer: {
     display: 'flex',
     alignItems: 'center',
     gap: 1.5,
   },
-  /**
-   * Token counter display
-   */
   tokenCounter: {
     display: 'flex',
     alignItems: 'center',
     padding: '4px 8px',
     borderRadius: '4px',
-    bgcolor: theme => theme.palette.mode === 'dark' 
-      ? 'rgba(255,255,255,0.05)' 
-      : 'rgba(0,0,0,0.05)',
+    bgcolor: (theme) =>
+      theme.palette.mode === 'dark'
+        ? 'rgba(255,255,255,0.05)'
+        : 'rgba(0,0,0,0.05)',
     border: '1px solid',
     borderColor: 'divider',
   },
-  /**
-   * Token text styling
-   */
   tokenText: {
     fontWeight: 500,
     color: 'text.secondary',
     fontSize: '0.75rem',
     letterSpacing: '0.03em',
   },
-  /**
-   * Temperature chip styling
-   */
   temperatureChip: {
     height: '24px',
     borderColor: 'divider',
@@ -1892,27 +1748,23 @@ export const pdfChatbotStyles = {
       ml: 0.5,
     },
   },
-  /**
-   * Reset button styling
-   */
   resetButton: {
     width: '28px',
     height: '28px',
     color: 'text.secondary',
     border: '1px solid',
     borderColor: 'divider',
-    bgcolor: theme => theme.palette.mode === 'dark' 
-      ? 'rgba(255,255,255,0.05)' 
-      : 'rgba(255,255,255,0.9)',
+    bgcolor: (theme) =>
+      theme.palette.mode === 'dark'
+        ? 'rgba(255,255,255,0.05)'
+        : 'rgba(255,255,255,0.9)',
     '&:hover': {
-      bgcolor: theme => theme.palette.mode === 'dark' 
-        ? 'rgba(255,255,255,0.1)' 
-        : 'rgba(0,0,0,0.05)',
-    }
+      bgcolor: (theme) =>
+        theme.palette.mode === 'dark'
+          ? 'rgba(255,255,255,0.1)'
+          : 'rgba(0,0,0,0.05)',
+    },
   },
-  /**
-   * Follow-up question suggestion
-   */
   followupQuestion: {
     p: 1,
     borderRadius: 1,
@@ -1920,20 +1772,19 @@ export const pdfChatbotStyles = {
     cursor: 'pointer',
     fontSize: '0.85rem',
     color: 'primary.main',
-    bgcolor: theme => theme.palette.mode === 'dark' 
-      ? 'rgba(255,255,255,0.05)' 
-      : 'rgba(0,0,0,0.05)',
+    bgcolor: (theme) =>
+      theme.palette.mode === 'dark'
+        ? 'rgba(255,255,255,0.05)'
+        : 'rgba(0,0,0,0.05)',
     '&:hover': {
-      bgcolor: theme => theme.palette.mode === 'dark'
-        ? 'rgba(255,255,255,0.1)'
-        : 'rgba(0,0,0,0.1)',
+      bgcolor: (theme) =>
+        theme.palette.mode === 'dark'
+          ? 'rgba(255,255,255,0.1)'
+          : 'rgba(0,0,0,0.1)',
     },
     border: '1px solid',
     borderColor: 'divider',
   },
-  /**
-   * Container for remaining tokens display
-   */
   remainingTokensContainer: {
     display: 'flex',
     justifyContent: 'flex-end',
@@ -1941,26 +1792,25 @@ export const pdfChatbotStyles = {
     py: 0.5,
     borderBottom: '1px solid',
     borderColor: 'divider',
-    bgcolor: theme => theme.palette.mode === 'dark' 
-      ? 'rgba(0,0,0,0.2)' 
-      : 'rgba(0,0,0,0.02)',
+    bgcolor: (theme) =>
+      theme.palette.mode === 'dark'
+        ? 'rgba(0,0,0,0.2)'
+        : 'rgba(0,0,0,0.02)',
   },
-  /**
-   * Remaining tokens text styling
-   */
   remainingTokensText: {
     fontSize: '0.75rem',
     fontWeight: 500,
     color: 'text.secondary',
-  }
+  },
 };
 
+// ===== EXAMPLE “FENCE COUNTING” STYLES =====
 export const fenceCountingStyles = {
   container: {
     width: '100%',
   },
   speciesSection: {
-    mt: 0, 
+    mt: 0,
   },
   checkboxGroup: {
     mt: 0.5,
@@ -1970,47 +1820,48 @@ export const fenceCountingStyles = {
       marginRight: 0,
       marginBottom: 1,
       height: 30,
-    }
+    },
   },
   divider: {
     my: 0,
   },
   sectionHeader: {
     mb: 0.5,
-  }
+  },
 };
 
+// export all together (optional convenience)
 export default {
-    container: containerStyles,
-    layout: layoutStyles,
-    banner: bannerStyles,
-    form: formStyles,
-    dashboard: dashboardStyles,
-    dropdown: dropdownStyles,
-    tool: toolStyles,
-    settings: settingsStyles,
-    govHeader: govHeaderStyles,
-    customSwitch: customSwitchStyles,
-    menuButton: menuButtonStyles,
-    optionsMenu: optionsMenuStyles,
-    colorModeIconDropdown: colorModeIconDropdownStyles,
-    aiToolsDropdown: aiToolsDropdownStyles,
-    staticToolList: staticToolListStyles,
-    toolSettingsCommon: toolSettingsCommonStyles,
-    sensitivityScore: sensitivityScoreStyles,
-    icons: iconStyles,
-    homePage: homePageStyles,
-    scaleAgeing: scaleAgeingStyles,
-    piiRedactor: piiRedactorStyles,
-    signIn: signInStyles,
-    forgotPassword: forgotPasswordStyles,
-    termsAndConditions: termsAndConditionsStyles,
-    termsModal: termsModalStyles,
-    footer: footerStyles,
-    fileUploadModal: fileUploadModalStyles,
-    csvAnalyzer: csvAnalyzerStyles,
-    frenchTranslation: frenchTranslationStyles,
-    pdfChatbot: pdfChatbotStyles,
-    toolContentWrapper: toolContentWrapperStyles,
-    fenceCounting: fenceCountingStyles,
-  };
+  container: containerStyles,
+  layout: layoutStyles,
+  banner: bannerStyles,
+  form: formStyles,
+  dashboard: dashboardStyles,
+  dropdown: dropdownStyles,
+  tool: toolStyles,
+  settings: settingsStyles,
+  govHeader: govHeaderStyles,
+  customSwitch: customSwitchStyles,
+  menuButton: menuButtonStyles,
+  optionsMenu: optionsMenuStyles,
+  colorModeIconDropdown: colorModeIconDropdownStyles,
+  aiToolsDropdown: aiToolsDropdownStyles,
+  staticToolList: staticToolListStyles,
+  toolSettingsCommon: toolSettingsCommonStyles,
+  sensitivityScore: sensitivityScoreStyles,
+  icons: iconStyles,
+  homePage: homePageStyles,
+  scaleAgeing: scaleAgeingStyles,
+  piiRedactor: piiRedactorStyles,
+  signIn: signInStyles,
+  forgotPassword: forgotPasswordStyles,
+  termsAndConditions: termsAndConditionsStyles,
+  termsModal: termsModalStyles,
+  footer: footerStyles,
+  fileUploadModal: fileUploadModalStyles,
+  csvAnalyzer: csvAnalyzerStyles,
+  frenchTranslation: frenchTranslationStyles,
+  pdfChatbot: pdfChatbotStyles,
+  toolContentWrapper: toolContentWrapperStyles,
+  fenceCounting: fenceCountingStyles,
+};

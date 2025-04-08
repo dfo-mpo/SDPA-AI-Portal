@@ -21,7 +21,7 @@ export function ScaleAgeing() {
   
   // read the settings from the context
   const { scaleAgeingSettings } = useToolSettings();
-  const { fishType, enhance } = scaleAgeingSettings;
+  const { species, enhance } = scaleAgeingSettings;
 
   const [scaleOutput, setScaleOutput] = useState({ age: null, imageUrl: null });
   const [isProcessing, setIsProcessing] = useState(false);
@@ -33,12 +33,16 @@ export function ScaleAgeing() {
    * @param {File} inputFile - The file selected by the user
    */
   const handleFileSelected = async (inputFile) => {
-    setIsProcessing(true);
+    setIsProcessing(true); 
     setError(null);
     
     try {
       // pass the user's picks from context (enhance & species) to backend
       const ageData = await processScaleAge(inputFile, scaleAgeingSettings);
+      // Debug the response
+      console.log("Full API Response:", ageData);
+      console.log("Properties:", Object.keys(ageData));
+      console.log("species value:", ageData.species);
       const pngBlob = await convertToPng(inputFile);
       const pngUrl = URL.createObjectURL(new Blob([pngBlob]));
       
@@ -49,7 +53,7 @@ export function ScaleAgeing() {
       
       setScaleOutput({ 
         age: ageData.age,
-        fishType: ageData.fishType || fishType,
+        species: ageData.species || species,
         enhanced: ageData.enhanced || enhance,
         placeholder: ageData.placeholder || false,
         imageUrl: pngUrl 
@@ -90,7 +94,7 @@ export function ScaleAgeing() {
             </Typography>
             
             <Typography sx={scaleAgeingStyles.infoLine}>
-              Fish Type: {scaleOutput.fishType}
+              Fish Species: {scaleOutput.species}
             </Typography>
             <Typography sx={scaleAgeingStyles.infoLine}>
               Enhanced?: {scaleOutput.enhanced ? "Yes" : "No"}
