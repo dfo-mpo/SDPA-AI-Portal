@@ -1,5 +1,8 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+# Deprecated Branch!
+This code is currently kept for reference for next js framework and tools used in this branch. It is not used or part of any development in our team right now.
+
 ## Getting Started
 
 First, run the development server:
