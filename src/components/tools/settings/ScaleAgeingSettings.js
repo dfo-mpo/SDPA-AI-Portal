@@ -20,7 +20,7 @@ export default function ScaleAgeingSettings() {
   // access the tool settings context
   const { scaleAgeingSettings, setScaleAgeingSettings } = useToolSettings();
   // Destructure the relevant fields
-  const { fishType, enhance } = scaleAgeingSettings;
+  const {species, enhance } = scaleAgeingSettings;
 
   /**
    * Handle settings change
@@ -44,8 +44,8 @@ export default function ScaleAgeingSettings() {
       {/* Salmon Species Selection */}
       <SettingFormControl label={translations.speciesLabel}>
         <Select
-          value={fishType}
-          onChange={handleChange('fishType')}
+          value={species}
+          onChange={handleChange('species')}
         >
           <MenuItem value="chum">{translations.chum}</MenuItem>
           <MenuItem value="coho" disabled >{translations.coho}</MenuItem>

@@ -2,7 +2,6 @@ export { default as Banner } from './Banner';
 export { default as ColorModeIconDropdown } from './ColorModeIconDropdown';
 export { GoogleIcon, FacebookIcon, SitemarkIcon } from './CustomIcons';
 export { default as CustomSwitch } from './CustomSwitch';
-export { default as EnhancedVideoPlayer } from './EnhancedVideoPlayer';
 export { default as MenuButton } from './MenuButton';
 export { default as OptionsMenu } from './OptionsMenu';
 export { default as TermsAndConditions } from './TermsAndConditions';

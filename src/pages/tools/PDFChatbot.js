@@ -51,74 +51,6 @@ export function PDFChatbot() {
   const { language } = useLanguage();
   const toolData = getToolTranslations("pdfChatbot", language);
   
-  // Translations based on selected language
-  const translations = {
-    en: {
-      chatSessionEnded: "Chat session ended.",
-      chatSummary: "Chat Summary",
-      document: "Document",
-      duration: "Duration",
-      messages: "Messages",
-      user: "user",
-      assistant: "assistant",
-      tokensUsed: "Tokens used",
-      endedAt: "Ended at",
-      newChat: "New Chat",
-      uploadNewDocument: "Upload New Document",
-      downloadChat: "Download Chat",
-      thinking: "Thinking...",
-      send: "Send",
-      askQuestion: "Ask a question about the document...",
-      endChatTitle: "End Chat Session",
-      endChatMessage: "Are you sure you want to end this chat session? You won't be able to ask any more questions in this session.",
-      cancel: "Cancel",
-      endChat: "End Chat",
-      suggestedQuestions: "Suggested questions:",
-      tokensRemaining: "tokens remaining",
-      // Tooltips
-      temperatureTooltip: "Current temperature setting",
-      tokenUsageTooltip: "Token usage",
-      resetChatTooltip: "Reset chat",
-      endChatTooltip: "End chat session",
-      // Temperature labels
-      precise: "Precise",
-      balanced: "Balanced",
-      creative: "Creative"
-    },
-    fr: {
-      chatSessionEnded: "Session de chat terminée.",
-      chatSummary: "Résumé du chat",
-      document: "Document",
-      duration: "Durée",
-      messages: "Messages",
-      user: "utilisateur",
-      assistant: "assistant",
-      tokensUsed: "Jetons utilisés",
-      endedAt: "Terminé à",
-      newChat: "Nouveau chat",
-      uploadNewDocument: "Téléverser un nouveau document",
-      downloadChat: "Télécharger le chat",
-      thinking: "Réflexion en cours...",
-      send: "Envoyer",
-      askQuestion: "Posez une question sur le document...",
-      endChatTitle: "Terminer la session de chat",
-      endChatMessage: "Êtes-vous sûr de vouloir terminer cette session de chat? Vous ne pourrez plus poser de questions dans cette session.",
-      cancel: "Annuler",
-      endChat: "Terminer",
-      suggestedQuestions: "Questions suggérées:",
-      tokensRemaining: "jetons restants",
-      // Tooltips
-      temperatureTooltip: "Réglage de température actuel",
-      tokenUsageTooltip: "Utilisation de jetons",
-      resetChatTooltip: "Réinitialiser le chat",
-      endChatTooltip: "Terminer la session de chat",
-      // Temperature labels
-      precise: "Précis",
-      balanced: "Équilibré",
-      creative: "Créatif"
-    }
-  };
-  
   // Get context settings from ToolSettingsContext
   const { pdfChatbotSettings, updatePdfChatbotTokenUsage } = useToolSettings();
   
@@ -180,7 +112,7 @@ export function PDFChatbot() {
       setMessages([
         {
           role: 'bot',
-          content: `I've analyzed "${file.name}". What would you like to know about this document?`,
+          content: toolData.ui.bot.initialGreeting.replace('{fileName}', file.name),
           timestamp: new Date()
         }
       ]);
@@ -373,7 +305,7 @@ export function PDFChatbot() {
     setMessages([
       {
         role: 'bot',
-        content: `I've analyzed "${selectedFile.name}". What would you like to know about this document?`,
+        content: toolData.ui.bot.initialGreeting.replace('{fileName}', selectedFile.name),
         timestamp: new Date()
       }
     ]);
@@ -384,7 +316,7 @@ export function PDFChatbot() {
   /**
    * Open the end chat confirmation dialog
    */
-  const handleOpenEndChatDialog = () => {
+  const handleOpenEndChatDialog = () => { 
     setEndChatDialogOpen(true);
   };
   
@@ -408,7 +340,7 @@ export function PDFChatbot() {
     // Generate chat summary
     setChatSummary({
       fileName: selectedFile.name,
-      fileSize: Math.round(selectedFile.size / 1024) + ' KB',
+      fileSize: toolData.ui.fileInfo.size.replace('{size}', Math.round(selectedFile.size / 1024)),
       duration: `${durationMinutes}m ${durationSeconds}s`,
       messageCount: messages.length,
       userMessages,
@@ -422,7 +354,7 @@ export function PDFChatbot() {
       ...prev, 
       {
         role: 'system',
-        content: translations[language].chatSessionEnded,
+        content: toolData.ui.chatSessionEnded,
         timestamp: new Date()
       }
     ]);
@@ -466,9 +398,9 @@ export function PDFChatbot() {
    * Get temperature label text based on value
    */
   const getTemperatureLabel = (value) => {
-    if (value <= 0.3) return translations[language].precise;
-    if (value <= 0.7) return translations[language].balanced;
-    return translations[language].creative;
+    if (value <= 0.3) return toolData.ui.precise;
+    if (value <= 0.7) return toolData.ui.balanced;
+    return toolData.ui.creative;
   };
 
   return (
@@ -493,14 +425,14 @@ export function PDFChatbot() {
                 <Bot size={18} />
               </Avatar>
               <Typography variant="body2" fontWeight={500}>
-                {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                {selectedFile.name} ({toolData.ui.fileInfo.size.replace('{size}', Math.round(selectedFile.size / 1024))})
               </Typography>
             </Box>
             
                           {/* Token usage display */}
             <Box sx={styles.tokenStatusContainer}>
               {/* Temperature indicator */}
-              <Tooltip title="Current temperature setting">
+              <Tooltip title={toolData.ui.tooltips.temperature}>
                 <Chip
                   icon={<Thermometer size={14} />}
                   label={`${pdfChatbotSettings.temperature.toFixed(1)} - ${getTemperatureLabel(pdfChatbotSettings.temperature)}`}
@@ -511,7 +443,7 @@ export function PDFChatbot() {
               </Tooltip>
               
               {/* Token usage counter */}
-              <Tooltip title="Token usage">
+              <Tooltip title={toolData.ui.tooltips.tokenUsage}>
                 <Box sx={styles.tokenCounter}>
                                         <Typography variant="body2" sx={styles.tokenText}>
                       {pdfChatbotSettings.tokenUsage.used.toLocaleString()} / {pdfChatbotSettings.tokenUsage.total.toLocaleString()}
@@ -522,7 +454,7 @@ export function PDFChatbot() {
               {/* Action buttons */}
               
               {/* Reset button */}
-              <Tooltip title="Reset chat">
+              <Tooltip title={toolData.ui.tooltips.resetChat}>
                 <IconButton 
                   size="small" 
                   onClick={handleResetChat}
@@ -548,7 +480,7 @@ export function PDFChatbot() {
               </Tooltip>
               
               {/* End chat button */}
-              <Tooltip title="End chat session">
+              <Tooltip title={toolData.ui.tooltips.endChat}>
                 <IconButton 
                   size="small" 
                   onClick={handleOpenEndChatDialog}
@@ -593,7 +525,7 @@ export function PDFChatbot() {
           {/* Remaining tokens display */}
           <Box sx={styles.remainingTokensContainer}>
             <Typography variant="caption" sx={styles.remainingTokensText}>
-              {(pdfChatbotSettings.tokenUsage.total - pdfChatbotSettings.tokenUsage.used).toLocaleString()} {translations[language].tokensRemaining}
+              {(pdfChatbotSettings.tokenUsage.total - pdfChatbotSettings.tokenUsage.used).toLocaleString()} {toolData.ui.tokensRemaining}
             </Typography>
           </Box>
           
@@ -609,7 +541,6 @@ export function PDFChatbot() {
             {messages.map((message, index) => (
               <Box key={index} sx={{ mb: 2 }}>
                 {message.role === 'system' ? (
-                  // System message (like "Chat session ended")
                   <Box sx={{
                     textAlign: 'center',
                     py: 1,
@@ -686,7 +617,7 @@ export function PDFChatbot() {
                 {message.role === 'bot' && message.followupQuestions && (
                   <Stack direction="column" spacing={1} sx={{ mt: 1, ml: 1 }}>
                     <Typography variant="caption" color="text.secondary">
-                      {translations[language].suggestedQuestions}
+                      {toolData.ui.suggestedQuestions}
                     </Typography>
                     
                     {message.followupQuestions.map((question, qIndex) => (
@@ -734,7 +665,7 @@ export function PDFChatbot() {
                     fontWeight: 600
                   }}>
                     <MessageCircle size={18} />
-                    {translations[language].chatSummary}
+                    {toolData.ui.chatSummary}
                   </Typography>
                   
                   <Divider sx={{ mb: 2 }} />
@@ -761,7 +692,7 @@ export function PDFChatbot() {
                     }}>
                       <FileText size={16} />
                       <span>
-                        <strong>{translations[language].document}:</strong> {chatSummary.fileName} ({chatSummary.fileSize})
+                        <strong>{toolData.ui.document}:</strong> {chatSummary.fileName} ({chatSummary.fileSize})
                       </span>
                     </Typography>
                     
@@ -774,7 +705,7 @@ export function PDFChatbot() {
                     }}>
                       <Clock size={16} />
                       <span>
-                        <strong>{translations[language].duration}:</strong> {chatSummary.duration}
+                        <strong>{toolData.ui.duration}:</strong> {chatSummary.duration}
                       </span>
                     </Typography>
                     
@@ -783,7 +714,7 @@ export function PDFChatbot() {
                       fontWeight: 500,
                       wordBreak: 'break-word'
                     }}>
-                      <strong>{translations[language].messages}:</strong> {chatSummary.messageCount} ({chatSummary.userMessages} {translations[language].user}, {chatSummary.botMessages} {translations[language].assistant})
+                      <strong>{toolData.ui.messages}:</strong> {chatSummary.messageCount} ({chatSummary.userMessages} {toolData.ui.user}, {chatSummary.botMessages} {toolData.ui.assistant})
                     </Typography>
                     
                     <Typography variant="body2" sx={{ 
@@ -791,7 +722,7 @@ export function PDFChatbot() {
                       fontWeight: 500,
                       wordBreak: 'break-word'
                     }}>
-                      <strong>{translations[language].tokensUsed}:</strong> {chatSummary.tokensUsed.toLocaleString()}
+                      <strong>{toolData.ui.tokensUsed}:</strong> {chatSummary.tokensUsed.toLocaleString()}
                     </Typography>
                     
                     <Typography variant="body2" gridColumn="span 2" sx={{ 
@@ -799,7 +730,7 @@ export function PDFChatbot() {
                       fontWeight: 500,
                       wordBreak: 'break-word'
                     }}>
-                      <strong>{translations[language].endedAt}:</strong> {chatSummary.endTime}
+                      <strong>{toolData.ui.endedAt}:</strong> {chatSummary.endTime}
                     </Typography>
                   </Box>
                 </CardContent>
@@ -821,7 +752,7 @@ export function PDFChatbot() {
                   startIcon={<RefreshCw size={16} />}
                   onClick={handleStartNewChat}
                 >
-                  {translations[language].newChat}
+                  {toolData.ui.newChat}
                 </Button>
                 
                 <Button
@@ -830,7 +761,7 @@ export function PDFChatbot() {
                   startIcon={<Upload size={16} />}
                   onClick={handleUploadNewDocument}
                 >
-                  {translations[language].uploadNewDocument}
+                  {toolData.ui.uploadNewDocument}
                 </Button>
                 
                 <Button
@@ -839,7 +770,7 @@ export function PDFChatbot() {
                   startIcon={<Download size={16} />}
                   disabled
                 >
-                  {translations[language].downloadChat}
+                  {toolData.ui.downloadChat}
                 </Button>
               </Stack>
             ) : (
@@ -847,7 +778,7 @@ export function PDFChatbot() {
               <>
                 <TextField
                   variant="outlined"
-                  placeholder={translations[language].askQuestion}
+                  placeholder={toolData.ui.askQuestion}
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -871,7 +802,7 @@ export function PDFChatbot() {
                     px: { xs: 2, sm: 3 }
                   }}
                 >
-                  {isResponding ? translations[language].thinking : translations[language].send}
+                  {isResponding ? toolData.ui.thinking : toolData.ui.send}
                 </Button>
               </>
             )}
@@ -912,7 +843,7 @@ export function PDFChatbot() {
             ? 'rgba(0, 0, 0, 0.2)' 
             : 'rgba(240, 240, 240, 0.8)'
         }}>
-          {translations[language].endChatTitle}
+          {toolData.ui.endChatTitle}
         </DialogTitle>
         <DialogContent sx={{ 
           mt: 2, 
@@ -924,7 +855,7 @@ export function PDFChatbot() {
             color: 'text.primary',
             fontWeight: 500
           }}>
-            {translations[language].endChatMessage}
+            {toolData.ui.endChatMessage}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ 
@@ -950,7 +881,7 @@ export function PDFChatbot() {
             }}
             variant="outlined"
           >
-            {translations[language].cancel}
+            {toolData.ui.cancel}
           </Button>
           <Button 
             onClick={handleEndChat} 
@@ -961,7 +892,7 @@ export function PDFChatbot() {
               boxShadow: 2
             }}
           >
-            {translations[language].endChat}
+            {toolData.ui.endChat}
           </Button>
         </DialogActions>
       </Dialog>

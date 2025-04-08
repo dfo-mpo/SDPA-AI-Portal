@@ -19,6 +19,7 @@ import { ColorModeIconDropdown } from '../components/common';
 import TranslateIcon from '@mui/icons-material/Translate';
 import { useLanguage } from '../contexts';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
+import { getLayoutTranslations } from '../translations/layout';
 
 /**
  * Government header component
@@ -29,9 +30,9 @@ import { useComponentStyles } from '../styles/hooks/useComponentStyles';
  */
 export default function GovHeader({ setHeaderHeight }) {
   const { language, toggleLanguage } = useLanguage();
+  const headerTranslations = getLayoutTranslations('header', language);
   const headerRef = useRef(null);
   const theme = useTheme();
-//   const styles = getStyles(theme);
 const styles = useComponentStyles('govHeader');
 
 
@@ -64,9 +65,9 @@ const styles = useComponentStyles('govHeader');
             <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', height: '100%' }}>
               <Divider orientation="vertical" sx={{ height: 28, mx: 2 }} />
               <Typography sx={styles.departmentTitle}>
-                {language === 'en' ? 'Fisheries and Oceans Canada' : 'Pêches et Océans Canada'}
+                {headerTranslations.department}
               </Typography>
-            </Box>
+            </Box> 
           </Box>
 
           <Stack direction="row" spacing={1.5} alignItems="center">

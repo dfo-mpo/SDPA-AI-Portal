@@ -27,7 +27,7 @@ const [fenceCountingSettings, setFenceCountingSettings] = useState({
   
   // Scale ageing settings
   const [scaleAgeingSettings, setScaleAgeingSettings] = useState({
-    fishType: 'chum', // default value
+    species: 'chum', // default value
     enhance: false, // default off
   }); 
 
