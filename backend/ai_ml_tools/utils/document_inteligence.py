@@ -6,6 +6,7 @@ from langchain_core.documents import Document
 from fastapi import UploadFile
 from dotenv import load_dotenv
 from typing import List
+from io import BytesIO
 import base64
 import json
 import os
@@ -51,7 +52,7 @@ def get_content(pdf: UploadFile, content: bool, polygon: bool, di_api="3.1"):
     return refined_content
 
 """
-Extracts a document and returns a list of document chunks in markdown. TODO: come up with algorithm to have page number metadata for each chunk
+Extracts a document and returns a list of document chunks in markdown.
 
 Steps:
 - Initialize the client with endpoint and key.
@@ -59,14 +60,14 @@ Steps:
 - Extract the content and refine it using the 'refine_content' function.
 - Handle exceptions and return the refined content.
 """
-def get_vectors(file: UploadFile, filename: str) -> List[Document]:
+def get_vectors(file: BytesIO, filename: str) -> List[Document]:
     # Initiate Azure AI Document Intelligence to load the document.
     content = ''
     document_intelligence_client = DocumentIntelligenceClient(endpoint=endpoint, credential=AzureKeyCredential(key))
     try:
-        # Open the file and analyze it.
-        with open(file, 'rb') as f:
-            base64_encoded_pdf = base64.b64encode(f.read()).decode("utf-8")
+        file.seek(0)
+        base64_encoded_pdf = base64.b64encode(file.read()).decode("utf-8")
+
         analyze_request = {"base64Source": base64_encoded_pdf}
         poller = document_intelligence_client.begin_analyze_document(
             "prebuilt-layout", analyze_request, output_content_format="markdown"
@@ -91,7 +92,7 @@ def get_vectors(file: UploadFile, filename: str) -> List[Document]:
     metadata = []
     for split in splits:
         text_chunks.append(split.page_content)
-        metadata.append({'document_name': filename, 'page_number': 'X'}) # TODO: Add algorithm to get the page number(s) for a given chunk
+        metadata.append({'document_name': filename})
 
     print("Length of splits: " + str(len(splits)))
     return text_chunks, metadata
