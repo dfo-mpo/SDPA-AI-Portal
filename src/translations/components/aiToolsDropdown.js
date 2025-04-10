@@ -16,7 +16,9 @@ export const en = {
       "PDF Chatbot": "PDF Chatbot",
       "PII Redactor": "PII Redactor",
       "Sensitivity Score Calculator": "Sensitivity Score Calculator",
-      "French Translation": "French Translation"
+      "French Translation": "French Translation",
+      "Document OCR": "Document OCR",
+      "Data Analytics, AI and ML Intake Form": "Data Analytics, AI and ML Intake Form"
     }
   };
   
@@ -25,7 +27,9 @@ export const en = {
     selectTool: "Sélectionnez un outil",
     categories: {
       "Computer Vision": "Vision par ordinateur",
-      "Large Language Models": "Modèles de langage avancés"
+      "Large Language Models": "Modèles de langage avancés",
+      "Optical Character Recognition": "Reconnaissance optique de caractères",
+      "": "" // Empty category for standalone form
     },
     tools: {
       "Scale Ageing": "Estimation de l'âge des poissons",
@@ -34,6 +38,8 @@ export const en = {
       "PDF Chatbot": "Chatbot PDF",
       "PII Redactor": "Rédacteur de PII",
       "Sensitivity Score Calculator": "Calculateur de score de sensibilité",
-      "French Translation": "Traduction français"
+      "French Translation": "Traduction français",
+      "Document OCR": "ROC de document",
+      "Data Analytics, AI and ML Intake Form": "Formulaire d'admission pour l'analyse de données, l'IA et le ML"
     }
   };

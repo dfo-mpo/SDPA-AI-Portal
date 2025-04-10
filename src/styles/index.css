@@ -1,4 +1,8 @@
 /* Base styles that complement Material UI */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
   margin: 0;
   padding: 0;

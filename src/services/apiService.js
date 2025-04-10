@@ -298,6 +298,7 @@ export const processPdfDocument = async (file) => {
   formData.append('file', file);
   try {
     const response = await fetch(`${API_BASE_URL}/di_extract_document/`, {
+    const response = await fetch(`${API_BASE_URL}/di_extract_document/`, {
       method: 'POST',
       body: formData
     });
