@@ -27,6 +27,7 @@ import {
   FrenchTranslation,
   DocumentOCR
 } from '../pages/tools';
+import { SurveyForm } from '../pages/SurveyForm';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
 export default function Dashboard({ onLogout }) {
@@ -94,7 +95,8 @@ export default function Dashboard({ onLogout }) {
     'PII Redactor': <PIIRedactor />,
     'Sensitivity Score Calculator': <SensitivityScore />,
     'French Translation': <FrenchTranslation />,
-    'Document OCR': <DocumentOCR />
+    'Document OCR': <DocumentOCR />,
+    'Data Analytics, AI and ML Intake Form': <SurveyForm />
   };
 
   /**

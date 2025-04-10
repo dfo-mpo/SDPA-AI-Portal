@@ -90,18 +90,27 @@ import {
       disabled: true
     },
     // Data Analytics, AI and ML Intake Form
+    // DATA_INTAKE_FORM: {
+    //   id: 'data-intake-form',
+    //   name: 'Data Analytics, AI and ML Intake Form',
+    //   category: 'Standalone Tools', // Using a category for organization but it won't be displayed
+    //   icon: ClipboardList,
+    //   backgroundImage: '/assets/clipboard.jpg',
+    //   // actionText: 'Coming Soon',
+    //   actionText: 'Open Form',
+    //   externalUrl: 'https://ds-use-case-survey-hsb9ffb8htbyh7cd.canadacentral-01.azurewebsites.net/',
+    //   disabled: true, // change to false when form is ready
+    //   showInDropdown: false // Add this flag to indicate it should not appear in dropdown
+    // }
     DATA_INTAKE_FORM: {
       id: 'data-intake-form',
       name: 'Data Analytics, AI and ML Intake Form',
-      category: 'Standalone Tools', // Using a category for organization but it won't be displayed
+      category: 'Standalone Tools',
       icon: ClipboardList,
-      backgroundImage: '/assets/clipboard.jpg',
-      // actionText: 'Coming Soon',
+      backgroundImage: '/assets/clipboard.gif',
       actionText: 'Open Form',
-      externalUrl: 'https://ds-use-case-survey-hsb9ffb8htbyh7cd.canadacentral-01.azurewebsites.net/',
-      disabled: true, // change to false when form is ready
-      showInDropdown: false // Add this flag to indicate it should not appear in dropdown
-    }
+      showInDropdown: false
+    },
   };
   
   /**

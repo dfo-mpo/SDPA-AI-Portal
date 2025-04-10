@@ -43,6 +43,8 @@ import {
   CSVAnalyzerSettings
 } from '../components/tools/settings';
 
+import { getToolByName } from '../utils';
+
 /**
  * Left panel component for navigation and settings
  *
@@ -196,6 +198,11 @@ export default function NewLeftPanel({
     },
   };
 
+  const showToolSettings = () => {
+    const tool = getToolByName(selectedTool);
+    return tool && tool.showInDropdown !== false;
+  };
+
   /**
    * Handle click on Home button
    */
@@ -210,7 +217,7 @@ export default function NewLeftPanel({
     >
       {/* Top Section - Dropdown or Static Tool List */}
       <Box sx={styles.content}>
-        {isHomePage ? (
+        {isHomePage || !showToolSettings() ? (
           <StaticToolList onToolSelect={onSelectTool} selectedTool={selectedTool} />
         ) : (
           <Box sx={styles.toolSelectionContainer}>
@@ -234,7 +241,7 @@ export default function NewLeftPanel({
         )}
 
         {/* Tool-specific settings section */}
-        {selectedTool && !isHomePage && toolSettings[selectedTool] && (
+        {selectedTool && !isHomePage && showToolSettings() && toolSettings[selectedTool] && (
           <Card variant="outlined" sx={styles.settingsCard}>
             <CardContent sx={styles.settingsCardContent}>
               <Box sx={styles.settingsHeader}>

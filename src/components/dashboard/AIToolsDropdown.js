@@ -77,62 +77,55 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
         {Object.entries(TOOL_CATEGORIES).map(([category, tools]) => {
           const visibleTools = tools.filter(tool => tool.showInDropdown !== false);
 
-           // Skip empty categories (after filtering)
-           if (visibleTools.length === 0) {
-            return null;
-          }return (
-            <React.Fragment key={category || 'standalone'}>
-              {/* Only show subheader if category has a name */}
-              {category && (
-                <ListSubheader sx={aiToolsDropdownStyles.subheader}>
-                  {translations.categories[category] || category}
-                </ListSubheader>
-              )}
-              
-              {visibleTools.map((tool) => {
-                const IconComponent = tool.icon;
-                const isDisabled = tool.disabled;
-                return (
-                  <MenuItem
-                    key={tool.name}
-                    value={tool.name}
-                    sx={{
-                      ...aiToolsDropdownStyles.menuItem,
-                      ...(isDisabled && {
+          if (visibleTools.length === 0) return null;
+
+          return [
+            <ListSubheader key={category} sx={aiToolsDropdownStyles.subheader}>
+              {translations.categories[category] || category}
+            </ListSubheader>,
+            ...tools.map((tool) => {
+              const IconComponent = tool.icon;
+              const isDisabled = tool.disabled;
+              return (
+                <MenuItem
+                  key={tool.name}
+                  value={tool.name}
+                  sx={{
+                    ...aiToolsDropdownStyles.menuItem,
+                    ...(isDisabled && {
+                      opacity: 0.7,
+                      '& .MuiListItemText-root': {
                         opacity: 0.7,
-                        '& .MuiListItemText-root': {
-                          opacity: 0.7,
-                        }
-                      })
+                      }
+                    })
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      ...aiToolsDropdownStyles.listItemIcon,
+                      ...(isDisabled && { opacity: 1 }) // override opacity for icon
                     }}
                   >
-                    <ListItemIcon
-                      sx={{
-                        ...aiToolsDropdownStyles.listItemIcon,
-                        ...(isDisabled && { opacity: 1 }) // override opacity for icon
-                      }}
-                    >
-                      {isDisabled ? 
-                        <AlertCircle size={18} color={theme.palette.warning.main} /> : 
-                        <IconComponent size={18} />
+                    {isDisabled ? 
+                      <AlertCircle size={18} color={theme.palette.warning.main} /> : 
+                      <IconComponent size={18} />
+                    }
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={translations.tools[tool.name] || tool.name}
+                    primaryTypographyProps={{ 
+                      noWrap: false,
+                      sx: { 
+                        wordBreak: 'break-word',
+                        whiteSpace: 'normal',
+                        ...(isDisabled && { fontStyle: 'italic' })
                       }
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={translations.tools[tool.name] || tool.name}
-                      primaryTypographyProps={{ 
-                        noWrap: false,
-                        sx: { 
-                          wordBreak: 'break-word',
-                          whiteSpace: 'normal',
-                          ...(isDisabled && { fontStyle: 'italic' })
-                        }
-                      }}
-                    />
-                  </MenuItem>
-                );
-              })}
-            </React.Fragment>
-          );
+                    }}
+                  />
+                </MenuItem>
+              );
+            })
+          ]
         })}
       </Select>
     </FormControl>
