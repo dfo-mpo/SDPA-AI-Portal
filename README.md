@@ -82,7 +82,7 @@ docker push <your_registry_name>.azurecr.io/ai-ml-tools-frontend:v1
     * Make sure 'Source' is set to Container Registry.
     * Make sure 'Container type' is set to Docker Compose.
     * 'Authentication' Needs to be set to Admin Credentials
-    * For 'Config' enter the following compose file (you can replace the term 'latest' with the version you want to use such as v1, v2, ect):
+    * For 'Config' enter the following compose file (Replace the term 'latest' with the version you want to use such as v1, v2, ect):
     ```
     version: '3.8'  
     services:  
