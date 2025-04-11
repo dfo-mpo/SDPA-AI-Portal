@@ -8,11 +8,19 @@ services:
     ports:  
       - "3080:80"  
     depends_on:  
-      - backend  
+      - backend
+      - server  
   
   backend:  
     build:  
       context: ./backend
       dockerfile: Dockerfile  
     ports:  
-      - "8080:8000"  
+      - "8080:8000"
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - "4080:4000"
