@@ -96,7 +96,7 @@ export default function Dashboard({ onLogout }) {
     'Sensitivity Score Calculator': <SensitivityScore />,
     'French Translation': <FrenchTranslation />,
     'Document OCR': <DocumentOCR />,
-    'Data Analytics, AI and ML Intake Form': <SurveyForm />
+    'Form': <SurveyForm />
   };
 
   /**
