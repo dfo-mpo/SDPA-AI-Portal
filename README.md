@@ -1,4 +1,5 @@
 # Deploying the AI/ML Portal Using Docker
+Note: temp measure!  Right now there is a third image for an express server, this is not fully documented as it may be removed and intigrated into the backend or run externally going forward. Only setup needed for it is to copy the .env.example in the server folder to create a .env file with the proper keys. See storage account in the PSSIAIPortal subscription for credentials.
 ## Backend Image Logic
 The backend is implemented using fastapi/uvicorn, the backend folder contains the dockerfile for creating its image. It uses Python 3.10 and imports all packages specified in the requirments.txt file. It is exposed to port 8000 but the port is not used by the frontend due to the reverse proxy.
 ## Frontend Image Logic
