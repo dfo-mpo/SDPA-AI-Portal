@@ -78,7 +78,7 @@ npm install
 #### 3.2 Start React Project
 To run the frontend project use the following command:
 ```bash
-npm start
+npm run dev
 ```
 The terminal will output the local host path that can be pasted into a web brower to use the React frontend.
 
