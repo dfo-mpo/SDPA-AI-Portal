@@ -85,8 +85,9 @@ async def llm_responce_rag(websocket: WebSocket):
             reasoning_effort = data.get('reasoning_effort', 'high') 
 
             # TODO: this needs to be updated to convert stings to lists
-            document_chunks = document_vectors.text_chunks
-            document_metadata = document_vectors.metadata
+            # What is likely needed is a line converting the string input into JSON
+            document_chunks = document_vectors.text_chunks  # This line of code will not work, need to see document_vector structure first
+            document_metadata = document_vectors.metadata  # This line of code will not work, need to see document_vector structure first
             document_content = get_relevent_chunks(chat_history, document_chunks, document_metadata) 
 
             llm_stream = request_openai_chat(chat_history, document_content=document_content, model=model, temperature=temperature, reasoning_effort=reasoning_effort)

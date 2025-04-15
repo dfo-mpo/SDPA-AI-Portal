@@ -22,6 +22,6 @@ else
 fi  
 
 # Run your application  
-PORT="${PORT:-8080}"  
+PORT="${PORT:-8000}"  
 echo "Running application on port $PORT..."  
 exec uvicorn ai_ml_tools.main:app --port $PORT --reload   

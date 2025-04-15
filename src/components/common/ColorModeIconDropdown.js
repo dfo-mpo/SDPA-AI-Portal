@@ -39,7 +39,20 @@ export default function ColorModeIconDropdown(props) {
   
   const handleMode = (targetMode) => () => {
     setMode(targetMode);
+    localStorage.setItem('theme', targetMode); // persist it
     handleClose();
+
+    const root = document.documentElement;
+
+    if (targetMode === 'dark') {
+      root.classList.add('dark');
+    } else if (targetMode === 'light') {
+      root.classList.remove('dark');
+    } else {
+      // system preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.classList.toggle('dark', prefersDark);
+    }
   };
 
   const resolvedMode = systemMode || mode;

@@ -127,12 +127,26 @@ const Questions = [
       ]
     },
     { 
+      name: "dataset_availability", 
+      label: "Is the Dataset available and ready to use?", 
+      type: "radio", 
+      options: ["Yes", "No"], 
+      description: "Specifies whether the dataset required for the project is already accessible and in usable condition."
+    },
+    { 
       name: "data_source", 
       label: "Data Source", 
       type: "multiselect", 
       options: ["SharePoint", "Local HD", "Oracle Database", "AWS", "Azure Storage"], 
       description: "Where the data used in the project is currently stored or accessed from.", 
       includeOtherOptions: true 
+    },
+    { 
+      name: "dataset_annotation", 
+      label: "Is data annotation is needed?", 
+      type: "radio", 
+      options: ["Yes", "No", "I don't know"], 
+      description: "Determines whether the data must be labeled or annotated to be usable for AI/ML tasks."
     },
     { 
       name: "classification", 
@@ -170,20 +184,6 @@ const Questions = [
       type: "radio", 
       options: ["Low", "Medium", "High"], 
       description: "The level of urgency or importance assigned to the project." 
-    },
-    { 
-      name: "dataset_availability", 
-      label: "Is the Dataset available and ready to use?", 
-      type: "radio", 
-      options: ["Yes", "No"], 
-      description: "Specifies whether the dataset required for the project is already accessible and in usable condition."
-    },
-    { 
-      name: "dataset_annotation", 
-      label: "Is data annotation is needed?", 
-      type: "radio", 
-      options: ["Yes", "No", "I don't know"], 
-      description: "Determines whether the data must be labeled or annotated to be usable for AI/ML tasks."
     },
     { 
       name: "approach", 

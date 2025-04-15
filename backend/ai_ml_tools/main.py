@@ -23,7 +23,6 @@ origins = [
     "https://sdpa-ai-tools-frontend.azurewebsites.net",
     "http://ai-ml-tools-frontend",
     "http://frontend",
-
     # Add other origins if needed  
 ]  
 print(origins)
