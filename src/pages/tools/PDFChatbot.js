@@ -112,7 +112,7 @@ export function PDFChatbot() {
       setMessages([
         {
           role: 'bot',
-          content: toolData.ui.bot.initialGreeting.replace('{fileName}', file.name),
+          content: toolData.bot.initialGreeting.replace('{fileName}', file.name),
           timestamp: new Date()
         }
       ]);
@@ -305,7 +305,7 @@ export function PDFChatbot() {
     setMessages([
       {
         role: 'bot',
-        content: toolData.ui.bot.initialGreeting.replace('{fileName}', selectedFile.name),
+        content: toolData.bot.initialGreeting.replace('{fileName}', selectedFile.name),
         timestamp: new Date()
       }
     ]);
@@ -425,14 +425,14 @@ export function PDFChatbot() {
                 <Bot size={18} />
               </Avatar>
               <Typography variant="body2" fontWeight={500}>
-                {selectedFile.name} ({toolData.ui.fileInfo.size.replace('{size}', Math.round(selectedFile.size / 1024))})
+                {selectedFile.name} ({toolData.fileInfo.size.replace('{size}', Math.round(selectedFile.size / 1024))})
               </Typography>
             </Box>
             
                           {/* Token usage display */}
             <Box sx={styles.tokenStatusContainer}>
               {/* Temperature indicator */}
-              <Tooltip title={toolData.ui.tooltips.temperature}>
+              <Tooltip title={toolData.tooltips.temperature}>
                 <Chip
                   icon={<Thermometer size={14} />}
                   label={`${pdfChatbotSettings.temperature.toFixed(1)} - ${getTemperatureLabel(pdfChatbotSettings.temperature)}`}
@@ -443,7 +443,7 @@ export function PDFChatbot() {
               </Tooltip>
               
               {/* Token usage counter */}
-              <Tooltip title={toolData.ui.tooltips.tokenUsage}>
+              <Tooltip title={toolData.tooltips.tokenUsage}>
                 <Box sx={styles.tokenCounter}>
                                         <Typography variant="body2" sx={styles.tokenText}>
                       {pdfChatbotSettings.tokenUsage.used.toLocaleString()} / {pdfChatbotSettings.tokenUsage.total.toLocaleString()}
@@ -454,7 +454,7 @@ export function PDFChatbot() {
               {/* Action buttons */}
               
               {/* Reset button */}
-              <Tooltip title={toolData.ui.tooltips.resetChat}>
+              <Tooltip title={toolData.tooltips.resetChat}>
                 <IconButton 
                   size="small" 
                   onClick={handleResetChat}
@@ -480,7 +480,7 @@ export function PDFChatbot() {
               </Tooltip>
               
               {/* End chat button */}
-              <Tooltip title={toolData.ui.tooltips.endChat}>
+              <Tooltip title={toolData.tooltips.endChat}>
                 <IconButton 
                   size="small" 
                   onClick={handleOpenEndChatDialog}
@@ -792,7 +792,7 @@ export function PDFChatbot() {
                 
                 <Button
                   variant="contained"
-                  color="primary"
+                  // color="primary"
                   endIcon={isResponding ? <CircularProgress size={16} color="inherit" /> : <Send />}
                   onClick={handleSendMessage}
                   disabled={!currentMessage.trim() || isResponding}
