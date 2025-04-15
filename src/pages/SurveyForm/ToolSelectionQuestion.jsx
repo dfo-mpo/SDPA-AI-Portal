@@ -124,6 +124,16 @@ export default function ToolSelectionQuestion({
     if (submitted && error.hasError && errorRef.current) {
       errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
+
+    const stored = localStorage.getItem('theme') || 'system';
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const root = document.documentElement;
+  
+    if (stored === 'dark' || (stored === 'system' && prefersDark)) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
   }, [submitted, error.hasError]);
 
   // useEffect(() => {
@@ -132,8 +142,8 @@ export default function ToolSelectionQuestion({
 
   return (
     <div className="my-6">
-      <label className="block text-black font-bold mb-2">{label}</label>
-      <div className="text-sm text-black mb-4">
+      <label className="block text-black font-bold mb-2 dark:text-white">{label}</label>
+      <div className="text-sm text-black mb-4 dark:text-white">
         Select a category to see available <TooltipWord word="tools" tooltip="Software platforms, infrastructure, or resources that support data-driven work like modeling, visualization, or storage."/>. You can pick individual tools within each category or type in a tool if it's not listed. If no category fits, enter your tool directly in "Other Tools".
       </div>
       {submitted && error.hasError && (
@@ -165,7 +175,7 @@ export default function ToolSelectionQuestion({
                   </label>
                 ))}
                 <div className="mt-2">
-                  <label className="block text-sm text-black">
+                  <label className="block text-sm text-black dark:text-white">
                     <span className="block">Other {category.label}:</span>
                     <input 
                       type="text" 
@@ -180,7 +190,7 @@ export default function ToolSelectionQuestion({
           </div>
         ))}
         <div className="p-4">
-          <label className="block font-medium text-black">
+          <label className="block font-medium text-black dark:text-white">
             Other Tools:
             <input 
               type="text" 

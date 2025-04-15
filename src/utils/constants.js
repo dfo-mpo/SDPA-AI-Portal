@@ -104,8 +104,8 @@ import {
     // }
     DATA_INTAKE_FORM: {
       id: 'data-intake-form',
-      name: 'Data Analytics, AI and ML Intake Form',
-      category: 'Standalone Tools',
+      name: 'Form',
+      category: 'PSSI AI, ML and Data Analytics Use-Case',
       icon: ClipboardList,
       backgroundImage: '/assets/clipboard.gif',
       actionText: 'Open Form',
@@ -132,7 +132,7 @@ import {
     'Optical Character Recognition': [
       TOOLS.DOCUMENT_OCR,
     ],
-    '': [
+    'PSSI AI, ML and Data Analytics Use-Case': [
       TOOLS.DATA_INTAKE_FORM,
     ]
   };
