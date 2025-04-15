@@ -28,8 +28,8 @@ export default function MultiSelect({ name, label, description, value, onChange,
 
   return (
     <div className="mb-4">
-      <label className="block text-black font-bold mb-2">{label}</label>
-      {description && (<div className="text-sm text-black mb-4">{description}</div>)}
+      <label className="block text-black font-bold mb-2 dark:text-white">{label}</label>
+      {description && (<div className="text-sm text-black mb-4 dark:text-white">{description}</div>)}
       <div className="">
         <div className="flex space-x-6">
           {options.map((option, index) => (
@@ -42,13 +42,13 @@ export default function MultiSelect({ name, label, description, value, onChange,
                 onChange={() => handleCheckboxChange(option)}
                 className="form-checkbox h-4 w-4 text-black cursor-pointer flex-shrink-0"
               />
-              <span className="ml-2 text-gray-800">{option}</span>
+              <span className="ml-2 text-gray-800 dark:text-white">{option}</span>
             </label>
           ))}
         </div>
         {includeOtherOptions && (
         <div className="mt-4">
-          <label className="block font-medium text-black">
+          <label className="block font-medium text-black dark:text-white">
             <span className="block">Other {label && label}:</span>
             <input
               type="text"
