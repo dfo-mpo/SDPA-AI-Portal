@@ -20,7 +20,7 @@ import {
  * Base URL for the FastAPI backend.
  * Note: For HTTP requests we use http://, and for WebSocket connections we’ll use ws://.
  */
-const API_BASE_URL = 'localhost:8080';
+const API_BASE_URL = 'localhost:8000';
 
 /**
  * Process a video for fish counting
