@@ -2,7 +2,8 @@
 Note: temp measure!  Right now there is a third image for an express server, this is not fully documented as it may be removed and intigrated into the backend or run externally going forward. Only setup needed for it is to copy the .env.example in the server folder to create a .env file with the proper keys. See storage account in the PSSIAIPortal subscription for credentials. Note that sdpa-ai-computervision-portal resource has the updated Config file (server image added which is not shown in this document).<br>
 <b>Important:</b> src/services/apiService.js is in the gitignore, if you are pulling from a different branch, changes to this file need to be manually pasted in. This is because the routing between the docker images differs due to a proxy.
 ## Backend Image Logic
-The backend is implemented using fastapi/uvicorn, the backend folder contains the dockerfile for creating its image. It uses Python 3.10 and imports all packages specified in the requirments.txt file. It is exposed to port 8000 but the port is not used by the frontend due to the reverse proxy.
+The backend is implemented using fastapi/uvicorn, the backend folder contains the dockerfile for creating its image. It uses Python 3.10 and imports all packages specified in the requirments.txt file. It is exposed to port 8000 but the port is not used by the frontend due to the reverse proxy.<br>
+<b>Important:</b> There are 2 urls for HTTP requests to the VM that need to be manually uncommented (one for Azure and one for Dat's local machine). This is in routers/age_scale.py and routers/french_translations.py
 ## Frontend Image Logic
 The frontend is implemented using Reactjs, the root of this project contains the dockerfile.frontend for creating its image. It uses Node 22.12.0 and for installing depedencies the package and package-lock jsons. The nginx-app.conf file will create a reverse proxy that allows HTTPS and WSS requests from the frontend image to be internally sent to the backend image as HTTP and WS requests. This allows the frontend and backend images communcate with out exposing non secure requests. The nginx-app.conf file also has a max file size limit set for all requests passed through the reverse proxy. It is exposed to port 80.
 ## Building the Docker Container Locally
@@ -59,7 +60,7 @@ Note SSC 163Oxygen tenantID is 8c1a4d93-d828-4d0e-9303-fd3bd611c822. You can fin
 
 11. Log into your Azure Container Registry resource using the following command:
 ```bash
-az acr login --name <acr_resource>
+az acr login --name <acr_resource_name>
 ```
 Where acr_resource is the name of the resource you want to push your docker images too.
 
@@ -69,15 +70,18 @@ Where acr_resource is the name of the resource you want to push your docker imag
 ```bash
 docker-compose up --build
 ```
-3. Once you have built your local docker container you need to tag your frontend and backend images (if v1 exits already it will be overwritten, if you want both to exist then iterate the verion such as v2, v3, ect):<br>
+3. Once you have built your local docker container you need to tag the images that have modifications.<br>
+<b>Important:</b> If you tag and push a version (eg. v1, v2, ...) that already exists in the ACR resource, it will overwrite it.<br>
 ```bash
-docker tag ai-ml-tools-backend <your_registry_name>.azurecr.io/ai-ml-tools-backend:v1
-docker tag ai-ml-tools-frontend <your_registry_name>.azurecr.io/ai-ml-tools-frontend:v1
+docker tag <project-foldername-lowercase>-backend <acr_resource_name>.azurecr.io/ai-ml-tools-backend:v1
+docker tag <project-foldername-lowercase>-frontend <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1
+docker tag <project-foldername-lowercase>-server <acr_resource_name>.azurecr.io/ai-ml-tools-server:v1
 ```
-4. Push your local images to the ACR:
+4. Push your local images with changes to the ACR:
 ```bash
-docker push <your_registry_name>.azurecr.io/ai-ml-tools-backend:v1
-docker push <your_registry_name>.azurecr.io/ai-ml-tools-frontend:v1
+docker push <acr_resource_name>.azurecr.io/ai-ml-tools-backend:v1
+docker push <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1
+docker push <acr_resource_name>.azurecr.io/ai-ml-tools-server:v1
 ```
 5. Go to your Azure Web App resource to the *Deployment Center* page then set up the container:
     * Make sure 'Source' is set to Container Registry.
@@ -93,10 +97,15 @@ docker push <your_registry_name>.azurecr.io/ai-ml-tools-frontend:v1
         - "3080:80"  
         depends_on:  
         - backend  
+        - server
       backend:  
         image: <your_registry_name>.azurecr.io/backend:latest  
         ports:  
         - "8080:8000" 
+      server:  
+        image: <your_registry_name>.azurecr.io/server:latest  
+        ports:  
+        - "4080:4000"
     ```
     * (Optional) Set 'Continuous deployment' to 'On' if you want the website to update if push a new image versions.
     * Press Save, after your web app refreshes it will be running of the frontend and backend containers.
