@@ -12,7 +12,8 @@ import {
   Calculator,
   Languages,
   FileSearch,
-  ClipboardList
+  ClipboardList,
+  Loader
 } from 'lucide-react';
   
 
@@ -111,6 +112,16 @@ import {
       actionText: 'Open Form',
       showInDropdown: false
     },
+    OTHER_TOOLS: {
+      id: 'other-tools',
+      name: 'Use Cases',
+      category: 'Other Tools',
+      icon: Loader,
+      backgroundImage: '/assets/csv-analyzer-banner.jpg',
+      actionText: 'Open Form',
+      showInDropdown: false,
+      disabled: true
+    },
   };
   
   /**
@@ -134,6 +145,9 @@ import {
     ],
     'PSSI AI, ML and Data Analytics Use-Case': [
       TOOLS.DATA_INTAKE_FORM,
+    ],
+    'Other Tools': [
+      TOOLS.OTHER_TOOLS,
     ]
   };
   
