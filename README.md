@@ -1,5 +1,6 @@
 # Deploying the AI/ML Portal Using Docker
-Note: temp measure!  Right now there is a third image for an express server, this is not fully documented as it may be removed and intigrated into the backend or run externally going forward. Only setup needed for it is to copy the .env.example in the server folder to create a .env file with the proper keys. See storage account in the PSSIAIPortal subscription for credentials. Note that sdpa-ai-computervision-portal resource has the updated Config file (server image added which is not shown in this document).
+Note: temp measure!  Right now there is a third image for an express server, this is not fully documented as it may be removed and intigrated into the backend or run externally going forward. Only setup needed for it is to copy the .env.example in the server folder to create a .env file with the proper keys. See storage account in the PSSIAIPortal subscription for credentials. Note that sdpa-ai-computervision-portal resource has the updated Config file (server image added which is not shown in this document).<br>
+<b>Important:</b> src/services/apiService.js is in the gitignore, if you are pulling from a different branch, changes to this file need to be manually pasted in. This is because the routing between the docker images differs due to a proxy.
 ## Backend Image Logic
 The backend is implemented using fastapi/uvicorn, the backend folder contains the dockerfile for creating its image. It uses Python 3.10 and imports all packages specified in the requirments.txt file. It is exposed to port 8000 but the port is not used by the frontend due to the reverse proxy.
 ## Frontend Image Logic
@@ -54,7 +55,7 @@ If the subscription you are looking for is in a tenant that does not appear, the
 ```bash
 az login --tenant <tenantID>
 ```
-Note SSC 163oXygen tenantID is 8c1a4d93-d828-4d0e-9303-fd3bd611c822. You can find it as Directory ID when viewing directories in Azure. 
+Note SSC 163Oxygen tenantID is 8c1a4d93-d828-4d0e-9303-fd3bd611c822. You can find it as Directory ID when viewing directories in Azure. 
 
 11. Log into your Azure Container Registry resource using the following command:
 ```bash
@@ -147,44 +148,15 @@ TODO: add high level overview
 - HTTP"/pii_redact/" - Takes in a PDF, determines sensitive information, redacts sensitive information, then returns the redacted PDF.
 - HTTP"/sensitivity_score/" - Takes in a PDF, determines all sensitive information by type, then returns a calculated sensitivity score.
 
-## Code Overview
-### Backend Framework
-The backend is implemented using Python with a FastAPI and Uvicorn framework. The code can be found in the backend/ai_ml_tools folder and intiated with the main.py file. The backend is structured as so:
-- routers - contains logic for handeling and responding to API requests.
-- models - contains Python classes used by the backend
-- utils - contains Python helper functions for the routers
-- core - contains any configuration files as needed
-- data - contains cached responces for dev use
-
-### Frontend Framework
-TODO: add high level overview
-
-### Frontend/Backend API calls supported
-- HTTP"/age_scale/" - Takes a TIFF image, preprocess it, then calls external VM with HTTP request to get scale age which is returned.
-- HTTP"/to_png" - Takes a TIFF image and returns it converted to PNG.
-- HTTP"/openai_csv_analyze/" - Takes both a CSV and PDF. Reads the CSV and applies those prompts to the PDF using LLM. Returns the model responces.
-- HTTP"/di_extract_document/" - Uses document intelligence to convert a PDF into a stringified JSON and return it.
-- WS"/ws/chat_stream" - Web socket that will ask a question on a document with a LLM, the responce is returned as a stream (in chunks)
-- HTTP"/di_chunk_document/" - Uses document intelligence to convert a PDF into markdown chunks, they are combined into a single string and returned.
-- WS"/ws/rag_stream/" - Web socket that will create chunked objects with documents string, get relvent chunks to the given question, then ask the question on the selected document chunks with a LLM, the responce is returned as a stream (in chunks)
-- HTTP"/fence_counting/" - Preprocess uploaded mp4 video and calls external VM with HTTP request and returns the responce which is an anotated video.
-- HTTP"/pdf_to_french/" - Takes in a PDF, extracts the raw text, then redirects to "/text_to_french/" HTTP request.
-- HTTP"/text_to_french/" - Takes in raw text then calls external VM with HTTP request to convert the text to French, the responce is returned.
-- HTTP"/pii_redact/" - Takes in a PDF, determines sensitive information, redacts sensitive information, then returns the redacted PDF.
-- HTTP"/sensitivity_score/" - Takes in a PDF, determines all sensitive information by type, then returns a calculated sensitivity score.
-
 ## Prerequisites
 Before you begin the setup process, make sure to install the following:
 - Python 3.10
-- Python 3.10
 - pip (Python package installer)
-- Node.js v22
 - Node.js v22
 
 ## Setup Instructions
 
 ### 1. Install Python
-Download and install Python 3.10 from the official website:
 Download and install Python 3.10 from the official website:
 [Python Downloads](https://www.python.org/downloads/)
 During installation, ensure to check the box that says 'Add Python 3.10 to PATH'.
@@ -193,85 +165,42 @@ During installation, ensure to check the box that says 'Add Python 3.10 to PATH'
 Download and install Node.js v22 from the official website:
 [Node Downloads](https://nodejs.org/en/download)
 Note that you will need admin privileges to run the install.
-During installation, ensure to check the box that says 'Add Python 3.10 to PATH'.
 
-### 2. Install Node.js
-Download and install Node.js v22 from the official website:
-[Node Downloads](https://nodejs.org/en/download)
-Note that you will need admin privileges to run the install.
-
-### 2. Clone the Repository
+### 3. Clone the Repository
 Clone the repository to your local machine with the following command:
 ```bash
 git clone https://github.com/dfo-mpo/openAI-Chatbot.git
 cd openAI-Chatbot
 ```
 
-### 3. Run the Frontend
-#### 3.1 Install Dependencies
-
-### 3. Run the Frontend
-#### 3.1 Install Dependencies
+### 4. Run the Frontend
+#### 4.1 Install Dependencies
 Install all required dependencies by running the following command in the project directory:
 ```bash
 npm install
 ```
-#### 3.2 Start React Project
+#### 4.2 Start React Project
 To run the frontend project use the following command:
 ```bash
 npm run dev
 ```
 The terminal will output the local host path that can be pasted into a web brower to use the React frontend.
 
-### 4. Run the Backend
-#### 4.1 Setup .env File
+### 5. Run the Backend
+#### 5.1 Setup .env File
 Go to backend/ai_ml_tools, then copy and rename the '.env.example' file to '.env'. Make sure to add in the keys needed for OpenAI and Document Intelligence.
-#### 4.2 Setup and Run (With Bash Script)
+#### 5.2 Setup and Run (With Bash Script)
 Open a new terminal window at the root of the repository and go the backend, install the requirments into a virtual enviroment, and run the backend with the following commands:
 ```bash
 cd backend
 ./setup_and_run.sh
 ```
-#### 4.3 Running in the Future (With Bash Script)
+#### 5.3 Running in the Future (With Bash Script)
 After intially using the setup_and_run script, you can use the dev script instead to run the backend in the future:
 ```bash
 ./dev.sh
 ```
-#### 4.4 (Optional) Manually Running the backend
-Without the bash scripts, you need to start by going into the backend folder again:
-```bash
-cd backend
-```
-You can then activate your virtual enviroment (if using one) with the command:
-```bash
-./venv/Scripts/activate
-```
-Install required packages if you haven't already:
-```bash
-npm install
-```
-#### 3.2 Start React Project
-To run the frontend project use the following command:
-```bash
-npm start
-```
-The terminal will output the local host path that can be pasted into a web brower to use the React frontend.
-
-### 4. Run the Backend
-#### 4.1 Setup .env File
-Go to backend/ai_ml_tools, then copy and rename the '.env.example' file to '.env'. Make sure to add in the keys needed for OpenAI and Document Intelligence.
-#### 4.2 Setup and Run (With Bash Script)
-Open a new terminal window at the root of the repository and go the backend, install the requirments into a virtual enviroment, and run the backend with the following commands:
-```bash
-cd backend
-./setup_and_run.sh
-```
-#### 4.3 Running in the Future (With Bash Script)
-After intially using the setup_and_run script, you can use the dev script instead to run the backend in the future:
-```bash
-./dev.sh
-```
-#### 4.4 (Optional) Manually Running the backend
+#### 5.4 (Optional) Manually Running the backend
 Without the bash scripts, you need to start by going into the backend folder again:
 ```bash
 cd backend
@@ -283,9 +212,7 @@ You can then activate your virtual enviroment (if using one) with the command:
 Install required packages if you haven't already:
 ```bash
 pip install -r requirements.txt 
-pip install -r requirements.txt 
 ```
-To start the backend use the command:
 To start the backend use the command:
 ```bash
 python -m uvicorn ai_ml_tools.main:app --reload
@@ -293,12 +220,6 @@ python -m uvicorn ai_ml_tools.main:app --reload
 
 ## Using Docker
 If you wish to deploy this using a docker container by creating images for the Frontend and Backend switch to the docker branch and read instructions in the README.md. Run the following command in root of your local repository to switch the branch:
-python -m uvicorn ai_ml_tools.main:app --reload
-```
-
-## Using Docker
-If you wish to deploy this using a docker container by creating images for the Frontend and Backend switch to the docker branch and read instructions in the README.md. Run the following command in root of your local repository to switch the branch:
 ```bash
-git checkout docker
 git checkout docker
 ```
