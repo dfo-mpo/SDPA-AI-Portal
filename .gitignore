@@ -26,3 +26,4 @@ yarn-debug.log*
 yarn-error.log*
 
 src/setupProxy.js
+src/services/apiService.js
