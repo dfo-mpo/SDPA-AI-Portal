@@ -58,8 +58,8 @@ import {
       category: 'Large Language Models',
       icon: Lock,
       backgroundImage: '/assets/pii-redactor-banner.jpg',
-      actionText: 'Upload Document',
-      disabled: true
+      actionText: 'Upload Document'
+      // disabled: true
     },
     SENSITIVITY_CALCULATOR: {
       id: 'sensitivity-calculator',
