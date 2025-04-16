@@ -9,6 +9,8 @@
 # testing
 /coverage
 **/venv
+**/ai_portal_env
+**/ai_portal_venv
 
 # production
 /build
