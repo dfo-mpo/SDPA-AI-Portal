@@ -12,7 +12,8 @@ import {
   Calculator,
   Languages,
   FileSearch,
-  ClipboardList
+  ClipboardList,
+  Loader
 } from 'lucide-react';
   
 
@@ -111,6 +112,16 @@ import {
       actionText: 'Open Form',
       showInDropdown: false
     },
+    ML_MODELS: {
+      id: 'ml-tools',
+      name: 'Repositories',
+      category: 'ML Models',
+      icon: Loader, // placeholder for page; needs to be changed
+      backgroundImage: '/assets/csv-analyzer-banner.jpg', // placeholder for page; needs to be changed
+      actionText: 'Open Form', // placeholder for page; needs to be changed
+      showInDropdown: false,
+      disabled: true
+    },
   };
   
   /**
@@ -134,6 +145,9 @@ import {
     ],
     'PSSI AI, ML and Data Analytics Use-Case': [
       TOOLS.DATA_INTAKE_FORM,
+    ],
+    'ML Models': [
+      TOOLS.ML_MODELS,
     ]
   };
   
