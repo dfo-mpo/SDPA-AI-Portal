@@ -112,13 +112,13 @@ import {
       actionText: 'Open Form',
       showInDropdown: false
     },
-    OTHER_TOOLS: {
-      id: 'other-tools',
-      name: 'Use Cases',
-      category: 'Other Tools',
-      icon: Loader,
-      backgroundImage: '/assets/csv-analyzer-banner.jpg',
-      actionText: 'Open Form',
+    ML_MODELS: {
+      id: 'ml-tools',
+      name: 'Repositories',
+      category: 'ML Models',
+      icon: Loader, // placeholder for page; needs to be changed
+      backgroundImage: '/assets/csv-analyzer-banner.jpg', // placeholder for page; needs to be changed
+      actionText: 'Open Form', // placeholder for page; needs to be changed
       showInDropdown: false,
       disabled: true
     },
@@ -146,8 +146,8 @@ import {
     'PSSI AI, ML and Data Analytics Use-Case': [
       TOOLS.DATA_INTAKE_FORM,
     ],
-    'Other Tools': [
-      TOOLS.OTHER_TOOLS,
+    'ML Models': [
+      TOOLS.ML_MODELS,
     ]
   };
   
