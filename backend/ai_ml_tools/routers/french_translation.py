@@ -18,8 +18,8 @@ async def pdf_to_french(file: UploadFile = File(...)):
 @router.post("/text_to_french/")  
 async def text_to_french(text: str): 
     try:
-        # http_api = "http://20.63.108.34:8000" # VM
-        http_api = "https://ringtail-tops-hopelessly.ngrok-free.app" # Dat's local machine
+        http_api = "http://134.112.16.8:8000/" # VM
+        # http_api = "https://ringtail-tops-hopelessly.ngrok-free.app" # Dat's local machine
 
         r = requests.post(http_api+'/translate', json={"engtext": text})
         
