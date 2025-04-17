@@ -47,7 +47,8 @@ def image_to_array(image_path):
 # Function that calls the model API
 async def scale_model_api(image_array):
     try:
-        http_api = "http://20.63.108.34:8000"
+        http_api = "http://134.112.16.8:8000" # VM
+        # http_api = "https://ringtail-tops-hopelessly.ngrok-free.app" # Dat's local machine
         
         r = requests.post(http_api + '/scale', json={"imagelist": image_array})
         

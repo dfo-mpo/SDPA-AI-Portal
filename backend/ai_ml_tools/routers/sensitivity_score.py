@@ -32,10 +32,10 @@ async def sensitivity_score(file: UploadFile = File(...), settings: str = Form(N
         'NATIONAL_ID': 'personalInfo',
     }
     
-    # for result in analyzer_results:
-    #     print(result.entity_type)
-    # score = sum(weights.get(result.entity_type, 0) * 100 for result in analyzer_results)  # Convert to percentage
-    # return {"sensitivity_score": min(score, 100)}  # Ensure the score does not exceed 100%  
+    for result in analyzer_results:
+        print(result.entity_type)
+    score = sum(entityTypeWeights.get(result.entity_type, 0) * 100 for result in analyzer_results)  # Convert to percentage
+    return {"sensitivity_score": min(score, 100)}  # Ensure the score does not exceed 100%  
     
     # Override with custom weights if provided
     if settings:

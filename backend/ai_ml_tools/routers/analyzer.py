@@ -20,7 +20,7 @@ async def pdf_csv_analyzer(csv_file: UploadFile = File(...), pdf_file: UploadFil
         header_list = extract_col_prompts(csv_file)
         
         # Set a default token threshold
-        token_threshold = 10000
+        token_threshold = 100000
         
         # Create document with PDF and header list
         doc = Document(pdf_file, header_list, token_threshold)

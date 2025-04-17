@@ -23,7 +23,6 @@ async def pdf_to_json_string(file: UploadFile = File(...)):
             content={"error": f"An error occurred: {str(e)}"}
         )
 
-
 # Web socket for asking a LLM a question and streaming the responce
 @router.websocket("/ws/chat_stream")
 async def llm_responce(websocket: WebSocket):

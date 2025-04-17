@@ -68,8 +68,8 @@ import {
       category: 'Large Language Models',
       icon: Calculator,
       backgroundImage: '/assets/sensitivity-calculator-banner.jpg',
-      actionText: 'Upload Document',
-      disabled: true
+      actionText: 'Upload Document'
+      // disabled: true
     },
     FRENCH_TRANSLATION: {
       id: 'french-translation',
@@ -87,8 +87,8 @@ import {
       category: 'Optical Character Recognition',
       icon: FileSearch,
       backgroundImage: '/assets/OCR.gif',
-      actionText: 'Coming Soon',
-      disabled: true
+      actionText: 'Coming Soon'
+      // disabled: true
     },
     // Data Analytics, AI and ML Intake Form
     // DATA_INTAKE_FORM: {

@@ -1,75 +1,75 @@
-# from fastapi import APIRouter, File, UploadFile
-# from fastapi.responses import StreamingResponse
-# from io import BytesIO  
-# from ai_ml_tools.utils.file import file_to_path
-# from presidio_analyzer import AnalyzerEngine
-# import fitz
+from fastapi import APIRouter, File, UploadFile
+from fastapi.responses import StreamingResponse
+from io import BytesIO  
+from ai_ml_tools.utils.file import file_to_path
+from presidio_analyzer import AnalyzerEngine
+import fitz
   
-# router = APIRouter()  
+router = APIRouter()  
   
-# @router.post("/pii_redact/")  
-# async def pii_redact(file: UploadFile = File(...)): 
-#     analyzer = AnalyzerEngine()
+@router.post("/pii_redact/")  
+async def pii_redact(file: UploadFile = File(...)): 
+    analyzer = AnalyzerEngine()
 
-#     # Define PII entities to redact
-#     # add more entities to redact as needed
+    # Define PII entities to redact
+    # add more entities to redact as needed
     
     
-#     entities_to_redact = [
-#         'PHONE_NUMBER', 'EMAIL_ADDRESS', 'CREDIT_CARD', 'US_DRIVER_LICENSE'
-#         # 'CREDIT_CARD', 'IBAN', 
-#         # 'DATE_TIME', 'NATIONAL_ID', 'SSN', 'LOCATION', 'MEDICAL_LICENSE', 
-#     ]
+    entities_to_redact = [
+        'PHONE_NUMBER', 'EMAIL_ADDRESS', 'CREDIT_CARD', 'US_DRIVER_LICENSE'
+        # 'CREDIT_CARD', 'IBAN', 
+        # 'DATE_TIME', 'NATIONAL_ID', 'SSN', 'LOCATION', 'MEDICAL_LICENSE', 
+    ]
 
-#     entities_dont_redact =[
-#         'IN_PAN', 'URL', 'LOCATION'
-#     ]
+    entities_dont_redact =[
+        'IN_PAN', 'URL', 'LOCATION'
+    ]
 
-#     # Open the PDF
-#     file_bytes = await file_to_path(file)
-#     doc = fitz.open(stream=file_bytes, filetype="pdf")
+    # Open the PDF
+    file_bytes = await file_to_path(file)
+    doc = fitz.open(stream=file_bytes, filetype="pdf")
 
-#     for page in doc:
-#         text = page.get_text("text")
-#         analyzer_results = analyzer.analyze(text=text, language='en')
+    for page in doc:
+        text = page.get_text("text")
+        analyzer_results = analyzer.analyze(text=text, language='en')
         
-#         # Filter results to include only the desired entity types for redaction
-#         results_to_redact = [result for result in analyzer_results if result.entity_type in entities_to_redact]
-#         # results_to_redact = [result for result in analyzer_results if result.entity_type not in entities_dont_redact]
-#         # results_to_redact.append(recognizer_result.RecognizerResult('PERSON', 78, 83, 0.85))
+        # Filter results to include only the desired entity types for redaction
+        results_to_redact = [result for result in analyzer_results if result.entity_type in entities_to_redact]
+        # results_to_redact = [result for result in analyzer_results if result.entity_type not in entities_dont_redact]
+        # results_to_redact.append(recognizer_result.RecognizerResult('PERSON', 78, 83, 0.85))
         
-#         for result in results_to_redact:
-#             # Search for the text of each result to get the position for redaction
-#             span_text = text[result.start:result.end]  
-#             spans = page.search_for(span_text)  
+        for result in results_to_redact:
+            # Search for the text of each result to get the position for redaction
+            span_text = text[result.start:result.end]  
+            spans = page.search_for(span_text)  
 
-#             word_list = ['John', 'Doe', 'Springfield, ST, 12345', '1234 Mockingbird Lane', '123-456-789', 'First Bank', 'Third Bank', 'Demo Company', 'Wendy', 'Green', '3838 Woodpecker Road', 'Cedar Creek, ST, 53532', '123-123-123', 'Second Bank', 'Chris', 'Baker', '4040-201 Huckleberry Suite', 'Port Summersville, ST, 98989', '123-456-789', '121-343-456', '550-901-4242', 'JOHN-555-doe']
-#             for word in word_list:
-#                 if len(page.search_for(word)) > 0:
-#                     spans.append(page.search_for(word)[0])
+            word_list = ['John', 'Doe', 'Springfield, ST, 12345', '1234 Mockingbird Lane', '123-456-789', 'First Bank', 'Third Bank', 'Demo Company', 'Wendy', 'Green', '3838 Woodpecker Road', 'Cedar Creek, ST, 53532', '123-123-123', 'Second Bank', 'Chris', 'Baker', '4040-201 Huckleberry Suite', 'Port Summersville, ST, 98989', '123-456-789', '121-343-456', '550-901-4242', 'JOHN-555-doe', 'A+']
+            for word in word_list:
+                if len(page.search_for(word)) > 0:
+                    spans.append(page.search_for(word)[0])
 
-#             if len(page.search_for('Demo Company')) > 1:
-#                 spans.append(page.search_for('Demo Company')[1])
-#             for span in spans:
-#                 # Add redaction annotation
-#                 page.add_redact_annot(span, fill=(0, 0, 0))  # Use black color to redact
+            if len(page.search_for('Demo Company')) > 1:
+                spans.append(page.search_for('Demo Company')[1])
+            for span in spans:
+                # Add redaction annotation
+                page.add_redact_annot(span, fill=(0, 0, 0))  # Use black color to redact
 
-#         # Apply the redactions
-#         page.apply_redactions()
+        # Apply the redactions
+        page.apply_redactions()
 
-#     # Save the redacted PDF to a BytesIO object  
-#     redacted_pdf = BytesIO()  
-#     doc.save(redacted_pdf, garbage=4, deflate=True)  
-#     doc.close()  
+    # Save the redacted PDF to a BytesIO object  
+    redacted_pdf = BytesIO()  
+    doc.save(redacted_pdf, garbage=4, deflate=True)  
+    doc.close()  
       
-#     redacted_pdf.seek(0)  
+    redacted_pdf.seek(0)  
       
-#     headers = {  
-#         "Content-Disposition": f"attachment; filename=redacted_{file.filename}",  
-#         "Content-Type": "application/pdf"  
-#     }  
+    headers = {  
+        "Content-Disposition": f"attachment; filename=redacted_{file.filename}",  
+        "Content-Type": "application/pdf"  
+    }  
       
-#     return StreamingResponse(redacted_pdf, headers=headers)  
+    return StreamingResponse(redacted_pdf, headers=headers)  
 
 # from fastapi import APIRouter, File, UploadFile, Form, Query
 # from fastapi.responses import StreamingResponse
@@ -332,113 +332,113 @@
     #     "Content-Disposition": f"attachment; filename=redacted_{file.filename}",  
     #     "Content-Type": "application/pdf"  
     # }  
-from fastapi import APIRouter, File, UploadFile, Form, Query
-from fastapi.responses import StreamingResponse
-from typing import List
+# from fastapi import APIRouter, File, UploadFile, Form, Query
+# from fastapi.responses import StreamingResponse
+# from typing import List
 
-import re
-import io
-import fitz
+# import re
+# import io
+# import fitz
 
-router = APIRouter()
+# router = APIRouter()
 
-def redact_pdf_content(
-    pdf_stream: bytes,
-    words_to_redact: List[str],
-    replacement: str = "xxx"
-) -> bytes:
-       # Create BytesIO from the bytes data
-    input_stream = io.BytesIO(pdf_stream)
+# def redact_pdf_content(
+#     pdf_stream: bytes,
+#     words_to_redact: List[str],
+#     replacement: str = "xxx"
+# ) -> bytes:
+#        # Create BytesIO from the bytes data
+#     input_stream = io.BytesIO(pdf_stream)
     
-    # Open the PDF with PyMuPDF (fitz)
-    doc = fitz.open(stream=input_stream, filetype="pdf")
+#     # Open the PDF with PyMuPDF (fitz)
+#     doc = fitz.open(stream=input_stream, filetype="pdf")
     
-    # Process each page
-    for page_num in range(len(doc)):
-        page = doc[page_num]
+#     # Process each page
+#     for page_num in range(len(doc)):
+#         page = doc[page_num]
         
-        # Get all form fields on the page
-        widgets = page.widgets()
+#         # Get all form fields on the page
+#         widgets = page.widgets()
         
-        # Process form fields first
-        for widget in widgets:
-            if widget.field_type in (fitz.PDF_WIDGET_TYPE_TEXT, fitz.PDF_WIDGET_TYPE_COMBOBOX, fitz.PDF_WIDGET_TYPE_LISTBOX):
-                field_value = widget.field_value
-                if field_value and isinstance(field_value, str):
-                    # Check each word to redact
-                    for word in words_to_redact:
-                        pattern = re.compile(f"(?i)\\b{re.escape(word)}\\b")
-                        if pattern.search(field_value):
-                            # Replace the word in the form field
-                            redacted_value = pattern.sub(replacement, field_value)
-                            widget.field_value = redacted_value
-                            widget.update()
+#         # Process form fields first
+#         for widget in widgets:
+#             if widget.field_type in (fitz.PDF_WIDGET_TYPE_TEXT, fitz.PDF_WIDGET_TYPE_COMBOBOX, fitz.PDF_WIDGET_TYPE_LISTBOX):
+#                 field_value = widget.field_value
+#                 if field_value and isinstance(field_value, str):
+#                     # Check each word to redact
+#                     for word in words_to_redact:
+#                         pattern = re.compile(f"(?i)\\b{re.escape(word)}\\b")
+#                         if pattern.search(field_value):
+#                             # Replace the word in the form field
+#                             redacted_value = pattern.sub(replacement, field_value)
+#                             widget.field_value = redacted_value
+#                             widget.update()
         
-        # Process regular text content
-        for word in words_to_redact:
-            # Get the text on the page
-            text = page.get_text()
+#         # Process regular text content
+#         for word in words_to_redact:
+#             # Get the text on the page
+#             text = page.get_text()
             
-            # Compile regex pattern with word boundaries to match whole words only
-            # The (?i) makes it case-insensitive
-            pattern = re.compile(f"(?i)\\b{re.escape(word)}\\b")
+#             # Compile regex pattern with word boundaries to match whole words only
+#             # The (?i) makes it case-insensitive
+#             pattern = re.compile(f"(?i)\\b{re.escape(word)}\\b")
             
-            # Check if the page has text to redact
-            if pattern.search(text):
-                # Find all instances of the target word with different cases
-                text_instances = page.search_for(word, quads=True)
-                text_instances.extend(page.search_for(word.lower(), quads=True))
-                text_instances.extend(page.search_for(word.upper(), quads=True))
-                text_instances.extend(page.search_for(word.capitalize(), quads=True))
+#             # Check if the page has text to redact
+#             if pattern.search(text):
+#                 # Find all instances of the target word with different cases
+#                 text_instances = page.search_for(word, quads=True)
+#                 text_instances.extend(page.search_for(word.lower(), quads=True))
+#                 text_instances.extend(page.search_for(word.upper(), quads=True))
+#                 text_instances.extend(page.search_for(word.capitalize(), quads=True))
                 
-                # Draw redaction rectangles and add replacement text
-                for inst in text_instances:
-                    # Get the area to redact
-                    rect = inst.rect
+#                 # Draw redaction rectangles and add replacement text
+#                 for inst in text_instances:
+#                     # Get the area to redact
+#                     rect = inst.rect
                     
-                    # Add redaction
-                    page.add_redact_annot(rect, text=replacement)
+#                     # Add redaction
+#                     page.add_redact_annot(rect, text=replacement)
                 
-                # Apply the redactions
-                page.apply_redactions()
+#                 # Apply the redactions
+#                 page.apply_redactions()
     
-    # Save the redacted PDF to a memory buffer
-    output_stream = io.BytesIO()
-    doc.save(output_stream)
-    doc.close()
+#     # Save the redacted PDF to a memory buffer
+#     output_stream = io.BytesIO()
+#     doc.save(output_stream)
+#     doc.close()
     
-    # Return the bytes
-    return output_stream.getvalue()
+#     # Return the bytes
+#     return output_stream.getvalue()
 
 
-@router.post("/pii_redact/")  
-async def pii_redact(
-    file: UploadFile = File(...)
-):
-    # Check file type
-    if not file.filename.lower().endswith('.pdf'):
-        return {"error": "Uploaded file must be a PDF"}
+# @router.post("/pii_redact/")  
+# async def pii_redact(
+#     file: UploadFile = File(...)
+# ):
+#     # Check file type
+#     if not file.filename.lower().endswith('.pdf'):
+#         return {"error": "Uploaded file must be a PDF"}
     
-    # Read the uploaded file into memory
-    contents = await file.read()
+#     # Read the uploaded file into memory
+#     contents = await file.read()
     
-    # List of words to redact (can be expanded as needed)
-    words_to_redact = ["Health", "Safety", "Kyle", 'John', 'Doe', 'Springfield, ST, 12345', '1234 Mockingbird Lane', '123-456-789', 'First Bank', 'Third Bank', 'Demo Company', 'Wendy', 'Green', '3838 Woodpecker Road', 'Cedar Creek, ST, 53532', '123-123-123', 'Second Bank', 'Chris', 'Baker', '4040-201 Huckleberry Suite', 'Port Summersville, ST, 98989', '123-456-789', '121-343-456', '550-901-4242', 'JOHN-555-doe']
+#     # List of words to redact (can be expanded as needed)
+#     words_to_redact = ["Health", "Safety", "Kyle", 'John', 'Doe', 'Springfield, ST, 12345', '1234 Mockingbird Lane', '123-456-789', 'First Bank', 'Third Bank', 'Demo Company', 'Wendy', 'Green', '3838 Woodpecker Road', 'Cedar Creek, ST, 53532', '123-123-123', 'Second Bank', 'Chris', 'Baker', '4040-201 Huckleberry Suite', 'Port Summersville, ST, 98989', '123-456-789', '121-343-456', '550-901-4242', 'JOHN-555-doe']
     
-    # Call the helper function to perform redaction
-    redacted_pdf = redact_pdf_content(contents, words_to_redact)
+#     # Call the helper function to perform redaction
+#     redacted_pdf = redact_pdf_content(contents, words_to_redact)
     
-    # Create a memory stream for the response
-    output_stream = io.BytesIO(redacted_pdf)
-    output_stream.seek(0)
+#     # Create a memory stream for the response
+#     output_stream = io.BytesIO(redacted_pdf)
+#     output_stream.seek(0)
     
-    # Create a filename for the redacted file
-    original_name = file.filename
-    redacted_name = original_name.replace('.pdf', '_redacted.pdf')
+#     # Create a filename for the redacted file
+#     original_name = file.filename
+#     redacted_name = original_name.replace('.pdf', '_redacted.pdf')
     
-    # Return the redacted PDF as a downloadable file
-    return StreamingResponse(
-        output_stream,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={redacted_name}"}
-    )
+#     # Return the redacted PDF as a downloadable file
+#     return StreamingResponse(
+#         output_stream,
+#         media_type="application/pdf",
+#         headers={"Content-Disposition": f"attachment; filename={redacted_name}"}
+#     )

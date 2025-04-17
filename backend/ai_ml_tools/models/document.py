@@ -28,10 +28,9 @@ class Document:
     '''
     def _get_content(self, document) -> str:
         # Use DI to get document content
-        json_data = get_content(pdf=document, content=True, polygon=False, di_api="3.1")
+        refined_content = get_content(pdf=document, content=True, polygon=False, di_api="3.1")
         
         # If JSON data is too large, use string for raw content instead
-        refined_content = json.dumps(json_data, indent=4)
         encoding = tiktoken.get_encoding("cl100k_base")
         num_tokens = len(encoding.encode(refined_content))
         print('Using json data' if num_tokens < self.token_threshold else 'Using content string')
@@ -39,7 +38,8 @@ class Document:
         if num_tokens < self.token_threshold:
             return refined_content
         else:
-            data_object = json.loads(refined_content)  
+            data_object = json.loads(refined_content) 
+            print(list(data_object.keys()))
             num_tokens = len(encoding.encode(data_object["Content"]))
             if num_tokens > self.token_threshold:
                 raise Exception(f"Document is too long for OpenAI, at {num_tokens} tokens. Please shorten the document and try again.")

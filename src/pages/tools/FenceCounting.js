@@ -131,7 +131,7 @@ export function FenceCounting() {
           cursor: 'not-allowed',
           position: 'relative'
         }}>
-          <Button
+          {/* <Button
             variant="contained"
             color="primary"
             startIcon={<Upload size={16} />}
@@ -142,7 +142,7 @@ export function FenceCounting() {
             }}
           >
             {toolData.ui.uploadVideo}
-          </Button>
+          </Button> */}
           {/* Tooltip-like element that appears on hover */}
           <Box
             sx={{
