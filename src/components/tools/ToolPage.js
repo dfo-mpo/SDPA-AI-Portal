@@ -17,6 +17,7 @@ import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
  * @param {string} [props.actionButtonText='Upload File'] - Text for the action button
  * @param {Function} props.onFileSelected - Callback when a file is selected
  * @param {boolean} [props.isProcessing=false] - Whether the tool is currently processing
+ * @param {boolean} [props.inProgress=false] - Whether the tool is currently in progress of development
  * @param {boolean} [props.isFormValid=true] - Whether the form is valid for submission (e.g., weights add up to 100%)
  * @param {string} [props.validationMessage=''] - Message to show when form is invalid
  * @param {boolean} [props.hideActionButton=false] - Whether to hide the default action button
@@ -36,6 +37,7 @@ export default function ToolPage({
   isFormValid = true,
   validationMessage = '',
   hideActionButton = false,
+  inProgress = false,
   uploadKey = Date.now(), // Default key for reset support
   children,
 }) {
@@ -137,6 +139,22 @@ export default function ToolPage({
                   </Typography>
                 )}
               </Box>
+            )}
+
+            {inProgress && (
+              <Box sx={styles.actionContainer}>
+                <Button 
+                  variant="contained"
+                  onClick={() => {}}
+                  startIcon={<Upload size={16} />}
+                  sx={{
+                    ...toolStyles.actionButton,
+                    whiteSpace: 'nowrap' // Prevent button text from wrapping
+                  }}
+                >
+                  Upload
+                </Button>
+              </Box> 
             )}
             
             {/* Tool-specific content (results, additional UI) */}

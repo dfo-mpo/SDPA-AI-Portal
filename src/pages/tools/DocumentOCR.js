@@ -35,10 +35,11 @@ export function DocumentOCR() {
       shortDescription={toolData.shortDescription}
       longDescription={toolData.longDescription}
       backgroundImage="/assets/OCR.gif"
-      actionButtonText={toolData.actionButtonText}
+      actionButtonText={toolData.actionButtonText || "Upload"}
       onFileSelected={() => {/* Will be implemented in the future */}}
       isProcessing={false}
       hideActionButton={true}
+      inProgress={true}
       containerSx={styles.container}
     >
       <Paper 
