@@ -19,6 +19,7 @@ import { MenuButton } from '.';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { useLanguage } from '../../contexts';
 import { getLayoutTranslations } from '../../translations/layout';
+import { trackEvent } from '../../utils/analytics';
 
 
 // Styled menu item with consistent margin
@@ -59,7 +60,10 @@ export default function OptionsMenu({ onLogout }) {
     <React.Fragment>
       <MenuButton
         aria-label="Open menu"
-        onClick={handleClick}
+        onClick={() => {
+          trackEvent('UI', 'Click', 'Opened Menu');
+          handleClick();                
+        }}
         sx={styles.menuButton}
       >
         <MoreVertRoundedIcon />

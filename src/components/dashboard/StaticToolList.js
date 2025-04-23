@@ -25,6 +25,7 @@ import { TOOL_CATEGORIES } from '../../utils';
 import { useLanguage } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+import { trackEvent } from '../../utils/analytics';
 
 /**
  * Static tool list for the portal home page
@@ -123,6 +124,7 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
                           window.open(tool.externalUrl, '_blank', 'noopener,noreferrer');
                         } else {
                           // Normal tool selection
+                          trackEvent('Tool Access', `Selected ${tool.name}`, tool.name);
                           onToolSelect(tool.name);
                         }
                       }

@@ -20,6 +20,7 @@ import {
   SettingDivider
 } from '../../../layouts';
 import { useComponentStyles } from '../../../styles/hooks/useComponentStyles';
+import { trackEvent } from '../../../utils/analytics';
 
 export default function SensitivityScoreSettings() {
   const { language } = useLanguage();
@@ -181,7 +182,14 @@ export default function SensitivityScoreSettings() {
       <Button 
         variant="outlined" 
         size="small" 
-        onClick={toggleSensitivityAdvanced} // Use the shared toggle function
+        onClick={() => {
+          trackEvent(
+            'Sensitivity Settings', 
+            showAdvanced ? 'Hide Advanced Settings' : 'Show Advanced Settings', 
+            'Sensitivity Panel Toggle'
+          );
+          toggleSensitivityAdvanced();
+        }}
         sx={sensitivityScoreStyles.button}
       >
         {showAdvanced ? translations.hideAdvancedSettings : translations.advancedSettings}
@@ -203,7 +211,10 @@ export default function SensitivityScoreSettings() {
             />
             <IconButton 
               size="small" 
-              onClick={resetWeights}
+              onClick={() => {
+                trackEvent('Sensitivity Settings', 'Reset Weights', 'Reset Button Click');
+                resetWeights();
+              }}
               color="primary"
               aria-label="Reset weights"
               sx={sensitivityScoreStyles.resetButton}

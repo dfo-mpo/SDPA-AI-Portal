@@ -46,6 +46,7 @@ import { useLanguage, useToolSettings } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { processPdfDocument, askOpenAI } from '../../services/apiService';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+import { trackEvent } from '../../utils/analytics';
 
 export function PDFChatbot() {
   const { language } = useLanguage();
@@ -457,7 +458,10 @@ export function PDFChatbot() {
               <Tooltip title={toolData.tooltips.resetChat}>
                 <IconButton 
                   size="small" 
-                  onClick={handleResetChat}
+                  onClick={() => {
+                    trackEvent('PDF Chatbot Interaction', 'Reset Chat', 'Chat Reset Button');
+                    handleResetChat();
+                  }}
                   disabled={isResponding}
                   sx={{
                     width: '28px',
@@ -483,7 +487,10 @@ export function PDFChatbot() {
               <Tooltip title={toolData.tooltips.endChat}>
                 <IconButton 
                   size="small" 
-                  onClick={handleOpenEndChatDialog}
+                  onClick={() => {
+                    trackEvent('PDF Chatbot Interaction', 'Open End Chat Dialog', 'End Chat Dialog Button');
+                    handleOpenEndChatDialog();
+                  }}
                   disabled={isResponding || isChatEnded}
                   sx={{
                     width: '28px',
@@ -624,7 +631,10 @@ export function PDFChatbot() {
                       <Typography 
                         key={qIndex} 
                         variant="body2"
-                        onClick={() => handleUseFollowupQuestion(question)}
+                        onClick={() => {
+                          trackEvent('PDF Chatbot Interaction', 'Use Follow-up Question', 'Add additional question');
+                          handleUseFollowupQuestion(question);
+                        }}
                         sx={styles.followupQuestion}
                       >
                         {question}
@@ -750,7 +760,10 @@ export function PDFChatbot() {
                   variant="outlined"
                   color="primary"
                   startIcon={<RefreshCw size={16} />}
-                  onClick={handleStartNewChat}
+                  onClick={() => {
+                    trackEvent('PDF Chatbot Interaction', 'Start New Chat', 'New Chat Button');
+                    handleStartNewChat();
+                  }}
                 >
                   {toolData.ui.newChat}
                 </Button>
@@ -759,7 +772,10 @@ export function PDFChatbot() {
                   variant="outlined"
                   color="primary"
                   startIcon={<Upload size={16} />}
-                  onClick={handleUploadNewDocument}
+                  onClick={() => {
+                    trackEvent('PDF Chatbot Document Interaction', 'Upload New Document', 'Upload Button');
+                    handleUploadNewDocument();
+                  }}
                 >
                   {toolData.ui.uploadNewDocument}
                 </Button>
@@ -794,7 +810,10 @@ export function PDFChatbot() {
                   variant="contained"
                   // color="primary"
                   endIcon={isResponding ? <CircularProgress size={16} color="inherit" /> : <Send />}
-                  onClick={handleSendMessage}
+                  onClick={() => {
+                    trackEvent('Chat Interaction', 'Send Message', 'Send Message Button');
+                    handleSendMessage();
+                  }}
                   disabled={!currentMessage.trim() || isResponding}
                   sx={{
                     minWidth: { xs: '80px', sm: '100px' },

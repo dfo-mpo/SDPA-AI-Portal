@@ -24,6 +24,7 @@ import { getToolTranslations } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { processFenceCounting } from '../../services/apiService';
 import { useLanguage, useToolSettings } from '../../contexts';
+import { trackEvent } from '../../utils/analytics';
 
 export function FenceCounting() {
   const { language } = useLanguage();
@@ -236,7 +237,10 @@ export function FenceCounting() {
                     <Button
                       variant="contained"
                       color="primary"
-                      onClick={() => handleUseSample(video.filename, video.label)}
+                      onClick={() => {
+                        trackEvent('Fence Counting', `Process Results for ${video.label}`, 'Run Sample');
+                        handleUseSample(video.filename, video.label);
+                      }}
                       startIcon={<Play size={16} />}
                       fullWidth
                       sx={{
@@ -315,6 +319,7 @@ export function FenceCounting() {
             <Button 
               variant="outlined" 
               onClick={() => {
+                trackEvent('Fence Counting', `Change Input`, 'Run Different Video');
                 setOriginalVideo(null);
                 setProcessedVideo(null);
                 setSelectedVideo(null);

@@ -15,6 +15,7 @@ import { getToolTranslations } from '../../../utils';
 import { useComponentStyles } from '../../../styles/hooks/useComponentStyles';
 import FileUploadModal from './FileUploadModal';
 import { analyzeCsvPdf } from '../../../services/apiService';
+import { trackEvent } from '../../../utils/analytics';
 
 export function CSVAnalyzer() {
   const { language } = useLanguage();
@@ -182,6 +183,7 @@ export function CSVAnalyzer() {
             variant="outlined" 
             color="primary"
             onClick={() => {
+              trackEvent('CSV Analyzer File Interaction', 'Process New Files', 'Process New Files Button');
               setAnalysisResult(null);
               setResultBlobs({});
               setIsModalOpen(true);
@@ -197,7 +199,10 @@ export function CSVAnalyzer() {
                 key={format}
                 variant={format === analysisResult.primaryFormat ? "contained" : "outlined"}
                 color="primary"
-                onClick={() => handleDownload(format)}
+                onClick={() => {
+                  trackEvent('CSV Analyzer File Interaction', 'Download File', `Download ${format} Format`);
+                  handleDownload(format);
+                }}
                 startIcon={<Download size={16} />}
                 disabled={!resultBlobs[format]?.blob}
               >
@@ -350,7 +355,10 @@ export function CSVAnalyzer() {
                 <Button 
                   variant="contained" 
                   color="primary"
-                  onClick={handleUploadClick}
+                  onClick={() => {
+                    trackEvent('CSV Analyzer File Interaction', 'Trigger Upload', 'Upload Button Click');
+                    handleUploadClick();
+                  }}                  
                   startIcon={isProcessing ? <CircularProgress size={16} /> : <Upload size={16} />}
                   disabled={isProcessing}
                   sx={toolStyles.actionButton}

@@ -28,6 +28,7 @@ import { AIToolsDropdown, StaticToolList } from '../components/dashboard';
 import { OptionsMenu } from '../components/common';
 import { getLayoutTranslations } from '../translations/layout';
 import { useLanguage } from '../contexts';
+import { trackEvent } from '../utils/analytics';
 
 // Import our custom hooks and styles
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
@@ -223,7 +224,10 @@ export default function NewLeftPanel({
           <Box sx={styles.toolSelectionContainer}>
             {/* Home Button */}
             <IconButton 
-              onClick={handleHomeClick}
+              onClick={() => {
+                trackEvent('Left Panel Navigation', 'Go to Home', 'Home Button');
+                handleHomeClick();
+              }}
               sx={styles.homeButton}
               aria-label="Return to home"
             >

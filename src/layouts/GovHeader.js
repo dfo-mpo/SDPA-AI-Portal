@@ -20,6 +20,7 @@ import TranslateIcon from '@mui/icons-material/Translate';
 import { useLanguage } from '../contexts';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 import { getLayoutTranslations } from '../translations/layout';
+import { trackEvent } from '../utils/analytics';
 
 /**
  * Government header component
@@ -73,7 +74,11 @@ const styles = useComponentStyles('govHeader');
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Button 
               size="small" 
-              onClick={toggleLanguage} 
+              onClick={() => {
+                const nextLang = language === 'en' ? 'fr' : 'en';
+                trackEvent('Language Switch', `Switched to ${nextLang.toUpperCase()}`, 'Language Toggle');
+                toggleLanguage();
+              }}
               startIcon={<TranslateIcon />} 
               sx={styles.languageButton}
             >
