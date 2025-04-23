@@ -7,6 +7,7 @@ import { CssBaseline, Box } from '@mui/material';
 import { Dashboard } from './layouts';
 import { useTerms, useLanguage } from './contexts';
 import { getLayoutTranslations } from './translations/layout'
+import { initGA, trackPageview } from './utils/analytics';
 
 
 /**
@@ -18,6 +19,12 @@ function AppContent() {
   const { handleLogout: termsLogout } = useTerms();
   const { language } = useLanguage();
   const appTranslations = getLayoutTranslations('app', language)
+  
+   // Initialize Google Analytics once on mount
+   useEffect(() => {
+    initGA();
+    trackPageview(window.location.pathname + window.location.search);
+  }, []);
   
   // Set HTML lang attribute
   useEffect(() => {
