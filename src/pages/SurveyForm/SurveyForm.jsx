@@ -9,6 +9,7 @@ import RadioGroup from "./RadioGroup";
 import SubmitButton from "./SubmitButton";
 import ToolSelectionQuestion from "./ToolSelectionQuestion";
 import TooltipWord from "./TooltipWord";
+import { trackEvent } from "../../utils/analytics";
 
 export function SurveyForm() {
 
@@ -100,7 +101,10 @@ export function SurveyForm() {
             <div className="bg-white p-6 rounded-lg shadow-lg text-center">
               <p className="text-lg font-semibold mb-4">{popupMessage}</p>
               <button 
-                onClick={handlePopupConfirm} 
+                  onClick={() => {
+                    trackEvent('PSSI AI, ML and Data Analytics Use-Case', 'Click OK', 'Popup Confirm');
+                    handlePopupConfirm();
+                  }} 
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
               >
                 OK

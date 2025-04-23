@@ -27,6 +27,7 @@ import { ForgotPassword } from '.';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../common/CustomIcons';
 import { signInStyles } from '../../styles/componentStyles';
 import { getAuthTranslations } from '../../translations/auth';
+import { trackEvent } from '../../utils/analytics';
 
 export default function SignIn({ onLogin }) {
     const { language } = useLanguage();
@@ -236,7 +237,9 @@ export default function SignIn({ onLogin }) {
                     <Button
                         fullWidth
                         variant="outlined"
-                        onClick={() => handleSocialLogin('Google')}
+                        onClick={() => {handleSocialLogin('Google');
+                            trackEvent('Login Method', 'Selected Login Method', 'Google');
+                        }}
                         startIcon={<GoogleIcon />}
                     >
                         {t.signInWithGoogle}
@@ -244,7 +247,9 @@ export default function SignIn({ onLogin }) {
                     <Button
                         fullWidth
                         variant="outlined"
-                        onClick={() => handleSocialLogin('Facebook')}
+                        onClick={() => {handleSocialLogin('Facebook');
+                            trackEvent('Login Method', 'Selected Login Method', 'Facebook');
+                        }}
                         startIcon={<FacebookIcon />}
                     >
                         {t.signInWithFacebook}

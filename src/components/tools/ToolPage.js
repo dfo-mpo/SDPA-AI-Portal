@@ -5,6 +5,7 @@ import { Upload } from 'lucide-react';
 import ToolContentWrapper from './ToolContentWrapper';
 import Banner from '../common/Banner';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+import { trackEvent } from '../../utils/analytics';
 
 /**
  * Tool page component that provides consistent layout for all tools
@@ -118,7 +119,10 @@ export default function ToolPage({
               <Box sx={styles.actionContainer}>
                 <Button 
                   variant="contained"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    trackEvent('File Upload', 'Click', ToolPage.title);
+                    fileInputRef.current?.click();
+                  }}
                   disabled={isProcessing || !isFormValid}
                   startIcon={<Upload size={16} />}
                   sx={{
@@ -140,7 +144,7 @@ export default function ToolPage({
                 )}
               </Box>
             )}
-
+            
             {inProgress && (
               <Box sx={styles.actionContainer}>
                 <Button 

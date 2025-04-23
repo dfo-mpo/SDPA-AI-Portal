@@ -31,6 +31,7 @@ import { useLanguage } from '../../../contexts';
 import { getToolTranslations } from '../../../utils';
 import { useComponentStyles } from '../../../styles/hooks/useComponentStyles';
 import { useFileUpload } from '../../../hooks/useFileUpload';
+import { trackEvent } from '../../../utils/analytics';
 
 /**
  * File upload modal for CSV Analyzer tool
@@ -359,7 +360,10 @@ function FileUploadModal({ open, onClose, onSubmit }) {
           Cancel
         </Button>
         <Button 
-          onClick={handleSubmit} 
+          onClick={() => {
+            trackEvent('CSV Analyzer File Submission', 'Submit', 'Submit Button Click');
+            handleSubmit();
+          }}           
           variant="contained" 
           color="primary"
           disabled={!csvFile || !pdfFile || isSubmitting}
