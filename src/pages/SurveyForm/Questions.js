@@ -2,6 +2,32 @@ import TooltipWord from "./TooltipWord";
 
 const Questions = [
     { 
+      name: "inefficiencies_bottlenecks", 
+      label: "Current Efficiencies and Bottlenecks", 
+      type: "textarea", 
+      description: "Where are the current inefficiencies or bottlenecks in your operations?" 
+    },
+    { 
+      name: "average_time", 
+      label: "Time and Cost", 
+      type: "textarea", 
+      description: "What is the average time and cost to complete key business processes?" 
+    },
+    { 
+      name: "area_cost_savings", 
+      label: "Area of Cost Savings", 
+      type: "multiselect", 
+      options: ["Labour", "Time", "Administrative", "Error reduction"], 
+      description: "What areas of cost savings would it help?", 
+      includeOtherOptions: true 
+    },
+    { 
+      name: "long_term_vision", 
+      label: "Long Term Vision", 
+      type: "textarea", 
+      description: "What's your long-term vision for ML/AI in the organization?" 
+    },
+    { 
       name: "project_name", 
       label: "Project Name", 
       type: "text" 
