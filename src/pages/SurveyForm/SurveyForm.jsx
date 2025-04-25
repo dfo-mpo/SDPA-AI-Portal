@@ -5,6 +5,7 @@ import InputField from "./InputField";
 import TextArea from "./TextArea";
 import SelectBox from "./SelectBox";
 import MultiSelect from "./MultiSelect";
+import MultiSelectText from "./MultiSelectText";
 import RadioGroup from "./RadioGroup";
 import SubmitButton from "./SubmitButton";
 import ToolSelectionQuestion from "./ToolSelectionQuestion";
@@ -75,15 +76,15 @@ export function SurveyForm() {
     setShowPopup(false);
     window.location.reload();
   };
-
+  // this is used to keep track of the questions we want to render for each section
   const sectionGroups = {
-    operationalPriorities: ["inefficiencies_bottlenecks", "average_time", "area_cost_savings", "long_term_vision"],
+    operationalPriorities: ["average_time", "area_cost_savings", "long_term_vision"],
     projectDetails: ["project_name", "product_owner", "project_description", "objective"],
     dataDetails: ["tools_needed_for_work", "dataset_availability", "data_source", "dataset_annotation", "classification"],
     aiMlQuestions: ["problem_statement", "project_area", "status", "priority_level", "approach"],
     security: ["statement_of_sensitivity_exist"],
   };
-
+  // this helper function is used to render each question type with their respective fields
   const renderQuestion = (question) => {
     switch (question.type) {
       case "text":
@@ -130,6 +131,16 @@ export function SurveyForm() {
         options={question.options}
         includeOtherOptions={question.includeOtherOptions}
       />;
+      case "textmultiselect":
+      return (
+        <MultiSelectText
+          name={question.name}
+          label={question.label}
+          description={question.description}
+          value={answers[question.name]}
+          onChange={handleChange}
+        />
+      );
       case "toolSelection":
         return <ToolSelectionQuestion 
         name={question.name} 
@@ -153,7 +164,7 @@ export function SurveyForm() {
   // useEffect(() => {
   //   console.log("tool validation error state:", toolValidationError);
   // }, [toolValidationError]);
-
+  // this is added to keep track of light and dark mode
   useEffect(() => {
     const stored = localStorage.getItem('theme') || 'system';
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -199,7 +210,7 @@ export function SurveyForm() {
           <div className="border rounded-2xl shadow-md overflow-hidden mb-6">
             <button
               type="button"
-              onClick={() => handleSectionToggle("operationalPriorities")}
+              onClick={() => handleSectionToggle("operationalPriorities")} // this part checks if this section is open or not
               className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 dark:bg-gray-800 text-lg font-bold text-left"
             >
               Operational Priorities
@@ -216,7 +227,7 @@ export function SurveyForm() {
           <div className="border rounded-2xl shadow-md overflow-hidden mb-6">
             <button
               type="button"
-              onClick={() => handleSectionToggle("projectDetails")}
+              onClick={() => handleSectionToggle("projectDetails")} // this part checks if this section is open or not
               className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 dark:bg-gray-800 text-lg font-bold text-left"
             >
               Project Details
@@ -233,7 +244,7 @@ export function SurveyForm() {
           <div className="border rounded-2xl shadow-md overflow-hidden mb-6">
             <button
               type="button"
-              onClick={() => handleSectionToggle("dataDetails")}
+              onClick={() => handleSectionToggle("dataDetails")} // this part checks if this section is open or not
               className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 dark:bg-gray-800 text-lg font-bold text-left"
             >
               Data Details
@@ -250,7 +261,7 @@ export function SurveyForm() {
           <div className="border rounded-2xl shadow-md overflow-hidden mb-6">
             <button
               type="button"
-              onClick={() => handleSectionToggle("aiMlQuestions")}
+              onClick={() => handleSectionToggle("aiMlQuestions")} // this part checks if this section is open or not
               className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 dark:bg-gray-800 text-lg font-bold text-left"
             >
               Data Science, ML and AI questions
@@ -267,7 +278,7 @@ export function SurveyForm() {
           <div className="border rounded-2xl shadow-md overflow-hidden mb-6">
             <button
               type="button"
-              onClick={() => handleSectionToggle("security")}
+              onClick={() => handleSectionToggle("security")} // this part checks if this section is open or not
               className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 dark:bg-gray-800 text-lg font-bold text-left"
             >
               Security
