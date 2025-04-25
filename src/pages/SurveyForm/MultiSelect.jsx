@@ -49,7 +49,7 @@ export default function MultiSelect({ name, label, description, value, onChange,
         {includeOtherOptions && (
         <div className="mt-4">
           <label className="block font-medium text-black dark:text-white">
-            <span className="block">Other {label && label}:</span>
+            <span className="block">Other:</span>
             <input
               type="text"
               value={other}

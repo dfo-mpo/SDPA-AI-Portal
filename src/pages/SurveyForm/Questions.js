@@ -2,23 +2,17 @@ import TooltipWord from "./TooltipWord";
 
 const Questions = [
     { 
-      name: "inefficiencies_bottlenecks", 
-      label: "Current Efficiencies and Bottlenecks", 
-      type: "textarea", 
-      description: "Where are the current inefficiencies or bottlenecks in your operations?" 
-    },
-    { 
       name: "average_time", 
       label: "Time and Cost", 
-      type: "textarea", 
-      description: "What is the average time and cost to complete key business processes?" 
+      type: "textmultiselect", 
+      description: "For the business process that will be supported by the AI solution, what is the current average time and cost (e.g., FTEs and annual budget) required for the process?" 
     },
     { 
       name: "area_cost_savings", 
       label: "Area of Cost Savings", 
       type: "multiselect", 
-      options: ["Labour", "Time", "Administrative", "Error reduction"], 
-      description: "What areas of cost savings would it help?", 
+      options: ["Labour", "Time", "Automation of processes", "Resource usage"], 
+      description: "What areas can AI/ML help reduce costs?", 
       includeOtherOptions: true 
     },
     { 
