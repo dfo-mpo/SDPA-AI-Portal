@@ -60,10 +60,9 @@ export default function OptionsMenu({ onLogout }) {
     <React.Fragment>
       <MenuButton
         aria-label="Open menu"
-        onClick={() => {
-          trackEvent('UI', 'Click', 'Opened Menu');
-          handleClick();                
-        }}
+        onClick={
+          handleClick                
+        }
         sx={styles.menuButton}
       >
         <MoreVertRoundedIcon />
