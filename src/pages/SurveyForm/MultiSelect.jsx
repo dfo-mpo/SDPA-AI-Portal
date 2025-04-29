@@ -1,7 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
+/**
+ * MultiSelect Component
+ * 
+ * A controlled checkbox group that allows multiple selections from a given list of options.
+ * Optionally includes an "Other" input for custom user-defined entries.
+ * 
+ * To use this component, add an entry to the Questions config:
+ * 
+ * {
+ *   name: "example_question_name",
+ *   label: "Your Question Label",
+ *   type: "multiselect",
+ *   options: ["Option A", "Option B", "Option C"],
+ *   description: "Optional helper text shown below the label.",
+ *   includeOtherOptions: true // Optional: Adds a 'Other' input
+ * }
+ * 
+ * Notes:
+ * - If `includeOtherOptions` is true, any free-text value entered will be added as: "Other: your text".
+ */
 export default function MultiSelect({ name, label, description, value, onChange, options, includeOtherOptions = false }) {
-  const [other, setOther] = useState("");
+  const parseValue = (value) => {
+    return Array.isArray(value)
+      ? value.find((v) => v.startsWith("Other: "))?.replace("Other: ", "") || ""
+      : "";
+  };
+
+  const [other, setOther] = useState(() => parseValue(value));
+
+  useEffect(() => {
+    setOther(parseValue(value));
+  }, [value]);
 
   const handleCheckboxChange = (option) => {
     let newSelection = new Set(value || []);
