@@ -19,7 +19,7 @@ const Questions = [
       name: "long_term_vision", 
       label: "Long Term Vision", 
       type: "textarea", 
-      description: "What's your long-term vision for ML/AI in the organization?" 
+      description: "What's your long-term vision for how to make your processes more efficient?" 
     },
     { 
       name: "project_name", 
@@ -154,6 +154,13 @@ const Questions = [
       description: "Specifies whether the dataset required for the project is already accessible and in usable condition."
     },
     { 
+      name: "data_verified", 
+      label: "Has the data been verified?", 
+      type: "radio", 
+      options: ["Yes", "No"], 
+      description: ""
+    },
+    { 
       name: "data_source", 
       label: "Data Source", 
       type: "multiselect", 
@@ -166,7 +173,7 @@ const Questions = [
       label: "Is data annotation is needed?", 
       type: "radio", 
       options: ["Yes", "No", "I don't know"], 
-      description: "Determines whether the data must be labeled or annotated to be usable for AI/ML tasks."
+      description: "Does your team have capacity to support data procurement?"
     },
     { 
       name: "classification", 
@@ -205,12 +212,12 @@ const Questions = [
       options: ["Low", "Medium", "High"], 
       description: "The level of urgency or importance assigned to the project." 
     },
-    { 
-      name: "approach", 
-      label: "Approach - How Data Analytics, A.I, M.L can help", 
-      type: "textarea", 
-      description: "Describe how data analytics, artificial intelligence, or machine learning will contribute to addressing the problem or achieving the objective." 
-    },
+    // { 
+    //   name: "approach", 
+    //   label: "Approach - How Data Analytics, A.I, M.L can help", 
+    //   type: "textarea", 
+    //   description: "Describe how data analytics, artificial intelligence, or machine learning will contribute to addressing the problem or achieving the objective." 
+    // },
     { 
       name: "statement_of_sensitivity_exist", 
       label: "Does a Statement of Sensitivity (SOS) exist?", 

@@ -79,9 +79,9 @@ export function SurveyForm() {
   // this is used to keep track of the questions we want to render for each section
   const sectionGroups = {
     operationalPriorities: ["average_time", "area_cost_savings", "long_term_vision"],
-    projectDetails: ["project_name", "product_owner", "project_description", "objective"],
-    dataDetails: ["tools_needed_for_work", "dataset_availability", "data_source", "dataset_annotation", "classification"],
-    aiMlQuestions: ["problem_statement", "project_area", "status", "priority_level", "approach"],
+    projectDetails: ["project_name", "product_owner", "project_description", "objective", "tools_needed_for_work"],
+    dataDetails: ["dataset_availability", "data_verified", "data_source", "dataset_annotation", "classification"],
+    aiMlQuestions: ["problem_statement", "project_area", "status", "priority_level"],
     security: ["statement_of_sensitivity_exist"],
   };
   // this helper function is used to render each question type with their respective fields
@@ -213,7 +213,7 @@ export function SurveyForm() {
               onClick={() => handleSectionToggle("operationalPriorities")} // this part checks if this section is open or not
               className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 dark:bg-gray-800 text-lg font-bold text-left"
             >
-              Operational Priorities
+              Operational Priorities and Productivity
               {openSections.operationalPriorities ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </button>
             {openSections["operationalPriorities"] && (

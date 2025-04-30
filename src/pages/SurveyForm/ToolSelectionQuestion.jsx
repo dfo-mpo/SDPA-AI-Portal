@@ -212,7 +212,7 @@ export default function ToolSelectionQuestion({
     <div className="my-6">
       <label className="block text-black font-bold mb-2 dark:text-white">{label}</label>
       <div className="text-sm text-black mb-4 dark:text-white">
-        Select a category to see available <TooltipWord word="tools" tooltip="Software platforms, infrastructure, or resources that support data-driven work like modeling, visualization, or storage."/>. You can pick individual tools within each category or type in a tool if it's not listed. If no category fits, enter your tool directly in "Other Tools".
+        Select a category to see available <TooltipWord word="tools and services" tooltip="Software platforms, infrastructure, or resources that support data-driven work like modeling, visualization, or storage."/> if you can. You can pick individual tools within each category or type in a tool if it's not listed. If no category fits, enter your tool directly in "Other Tools".
       </div>
       {submitted && error.hasError && (
         <p ref={errorRef} className="text-sm text-red-600 mb-4">{error.message}</p> 
