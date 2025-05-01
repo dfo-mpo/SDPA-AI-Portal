@@ -33,16 +33,16 @@ const Questions = [
     },
     { 
       name: "project_description", 
-      label: "Project Description", 
+      label: "Project Description and Objective", 
       type: "textarea", 
-      description:"A brief overview of the project's purpose, scope, and intended outcome." 
+      description:"A brief overview of the project's purpose, objective, and intended outcome." 
     },
-    { 
-      name: "objective", 
-      label: "Objective", 
-      type: "textarea", 
-      description: "What the project aims to achieve or solve." 
-    },
+    // { 
+    //   name: "objective", 
+    //   label: "Objective", 
+    //   type: "textarea", 
+    //   description: "What the project aims to achieve or solve." 
+    // },
     { 
       name: "tools_needed_for_work", 
       label: "What tools/services do you currently use to fulfil this project", 
@@ -179,7 +179,7 @@ const Questions = [
       name: "classification", 
       label: "Classification", 
       type: "radio", 
-      options: ["Unclassified", "Protected A", "Protected B", "Protected C", "Classified"], 
+      options: ["Unclassified", "Protected A", "Protected B", "Protected C", "Secret"], 
       description: (
         <>
           The <TooltipWord word="security or sensitivity level" tooltip="Indicates how confidential or restricted the data is, based on organizational or governmental classification."/> of the data being used in the project.
@@ -190,7 +190,7 @@ const Questions = [
       name: "problem_statement", 
       label: "Problem Statement", 
       type: "textarea", 
-      description: "Explains the current issues that need to be addressed and can be resolved through data analytics, A.I or M.L." 
+      description: "Describe how data analytics, artificial intelligence, or machine learning will contribute to addressing the problem or achieving the objective." 
     },
     { 
       name: "project_area", 
