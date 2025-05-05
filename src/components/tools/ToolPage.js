@@ -33,6 +33,7 @@ export default function ToolPage({
   backgroundImage = '/assets/default-banner.jpg',
   actionButtonText = 'Upload File',
   onFileSelected,
+  mutliUpload = false,
   isProcessing = false,
   isFormValid = true,
   validationMessage = '',
@@ -75,10 +76,10 @@ export default function ToolPage({
    * @param {Event} event - The change event
    */
   const onFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      console.log("File selected in ToolPage onFileChange:", file.name);
-      onFileSelected(file);
+    const files = Array.from(event.target.files); // Convert FileList to an array 
+    if (files.length > 0) {
+      console.log("File selected in ToolPage onFileChange:", files.map(file => file.name));
+      onFileSelected(files);
     }
   };
 
@@ -110,6 +111,7 @@ export default function ToolPage({
               style={{ display: 'none' }}
               onChange={onFileChange}
               accept=".pdf,.docx,.doc,.xlsx,.csv,.txt"
+              multiple={mutliUpload}
             />
 
             {/* Upload button with loading indicator - only shown if not hidden */}
@@ -131,7 +133,6 @@ export default function ToolPage({
                   {actionButtonText}
                 </Button>
 
-                
                 {isProcessing && (
                   <CircularProgress size={24} sx={{ ml: 2 }} />
                 )}
@@ -187,6 +188,8 @@ ToolPage.propTypes = {
   
   /** Callback function when a file is selected */
   onFileSelected: PropTypes.func.isRequired,
+
+  mutliUpload: PropTypes.bool,
   
   /** Whether the tool is currently processing data */
   isProcessing: PropTypes.bool,

@@ -293,11 +293,14 @@ export const calculateSensitivityScore = async (file, settings = {}) => {
   }
 };
 
-export const processPdfDocument = async (file) => {
+export const processPdfDocument = async (files) => {
   const formData = new FormData();
-  formData.append('file', file);
+  console.log(files)
+  for(let i = 0; i < files.length; i ++) {
+    formData.append(files.length > 1? 'files' : 'file', files[i]);
+  }
   try {
-    const response = await fetch(`${API_BASE_URL}/di_extract_document/`, {
+    const response = await fetch(files.length > 1? `${API_BASE_URL}/di_chunk_multi_document/` : `${API_BASE_URL}/di_chunk_single_document/`, {
       method: 'POST',
       body: formData
     });
@@ -337,7 +340,7 @@ export async function* askOpenAI(chatHistory, currentMessage, documentContent, s
 
   const payload = {
     chat_history: [...chatHistory, { role: 'user', content: currentMessage }],
-    document: documentContent,
+    document_vectors: documentContent,
     model: adaptedSettings.model,
     temperature: adaptedSettings.temperature,
     reasoning_effort: adaptedSettings.reasoning_effort
