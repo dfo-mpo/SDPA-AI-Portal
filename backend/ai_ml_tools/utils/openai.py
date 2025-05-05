@@ -54,7 +54,7 @@ async def request_openai_chat(chat_history: list, document_content: str, type="c
         # Only generate system message if it does not already exist
         if chat_history[0] == '' or chat_history[0]['role'] != "system":
             messages = [{
-                "role": "system","content": "You are a helpful assistant that ALWAYS responds in consistent and pleasing HTML formatted text. Also, make sure to use borders ONLY IF you use a table in your response. Only answer the LAST QUESTION based on the document provided. Do not answer any questions not related to the document or PDF. Also, at the end of the entire total response tell me what pages you found the information on separated by commas. For example, at the end include: Source_page: <page-number1, page-number2, etc>." + document_content
+                "role": "system","content": "You are a helpful assistant that ALWAYS responds in consistent and pleasing HTML formatted text. Also, make sure to use borders ONLY IF you use a table in your response. Only answer the LAST QUESTION based on the document provided. Do not answer any questions not related to the document or PDF. Also, at the end of the entire total response tell me what documents and pages you found the information on separated by commas ONLY. For example, at the end include: Source_page: <document-name1.pdf, 1, 4, etc, document-name2.pdf, 2, 5, etc,>." + document_content
             }]
         else:
             messages = []
@@ -108,21 +108,25 @@ def get_relevent_chunks(chat_history: list[dict], document_chunks: list[str], do
     chromadb.api.client.SharedSystemClient.clear_system_cache()
 
     document_content = ''
+    try:
+        # Convert the list of dictionaries back to Document objects  
+        # document_objects = [Document(id=index,page_content=chunk,metadata={"document_name": document_metadata[index]['document_name']}) for index, chunk in enumerate(document_chunks)]
+        document_objects = [Document(id=index,page_content=chunk,metadata={"document_name": document_metadata[index]['document_name'], "page_numbers": document_metadata[index]["page_numbers"]},) for index, chunk in enumerate(document_chunks)]
 
-    # Convert the list of dictionaries back to Document objects  
-    document_objects = [Document(id=index,page_content=chunk,metadata={"document_name": document_metadata[index]['document_name'], "page_number": document_metadata[index]["page_number"]},) for index, chunk in enumerate(document_chunks)]
+        # Create vector store
+        vector_store = Chroma("example_collection", embedding_function=embeddings)
+        uuids = [str(uuid4()) for _ in range(len(document_objects))]
 
-    # Create vector store
-    vector_store = Chroma("example_collection", embedding_function=embeddings)
-    uuids = [str(uuid4()) for _ in range(len(document_objects))]
-    vector_store.add_documents(documents=document_objects, ids=uuids)
-    results = vector_store.similarity_search(chat_history[-1]['content'])
+        vector_store.add_documents(documents=document_objects, ids=uuids)
+        results = vector_store.similarity_search(chat_history[-1]['content'])
+        print("Number of chunks used: "+str(len(results)))
 
-    for result in results:
-        print(result)
-        document_content += json.dumps(result.metadata, indent=4) 
-        document_content += result.page_content
-    
+        for result in results:
+            document_content += json.dumps(result.metadata, indent=4) 
+            document_content += result.page_content
+    except Exception as e:
+        print(e)
+
     return document_content
 
 '''

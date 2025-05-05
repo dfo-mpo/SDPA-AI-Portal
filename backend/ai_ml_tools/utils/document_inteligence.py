@@ -5,11 +5,13 @@ from langchain.text_splitter import MarkdownHeaderTextSplitter
 from langchain_core.documents import Document
 from fastapi import UploadFile
 from dotenv import load_dotenv
+from fuzzywuzzy import fuzz
 from typing import List
-from io import BytesIO
+from io import BytesIO 
 import base64
 import json
 import os
+import re
 
 # Load enviroment variables
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
@@ -61,41 +63,78 @@ Steps:
 - Handle exceptions and return the refined content.
 """
 def get_vectors(file: BytesIO, filename: str) -> List[Document]:
-    # Initiate Azure AI Document Intelligence to load the document.
+    # Initiate Azure AI Document Intelligence to load the document.  
     content = ''
-    document_intelligence_client = DocumentIntelligenceClient(endpoint=endpoint, credential=AzureKeyCredential(key))
-    try:
-        file.seek(0)
-        base64_encoded_pdf = base64.b64encode(file.read()).decode("utf-8")
-
-        analyze_request = {"base64Source": base64_encoded_pdf}
-        poller = document_intelligence_client.begin_analyze_document(
-            "prebuilt-layout", analyze_request, output_content_format="markdown"
-        )
-        result = poller.result()
-        content = result.content
-    except Exception as e:
-        print(f"Error processing document: {e}")
-
-
-    # Split the document into chunks base on markdown headers.
-    headers_to_split_on = [
-        ("#", "Header 1"),
-        ("##", "Header 2"),
-        ("###", "Header 3"),
-    ]
-    text_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
-    splits = text_splitter.split_text(content)
-
-    # Create list of text chunks and list of metadata containing document name and page number for a given chunk
-    text_chunks = []
-    metadata = []
+    page_map = [] 
+    document_intelligence_client = DocumentIntelligenceClient(endpoint=endpoint, credential=AzureKeyCredential(key))  
+      
+    try:  
+        file.seek(0)  
+        base64_encoded_pdf = base64.b64encode(file.read()).decode("utf-8")  
+        analyze_request = {"base64Source": base64_encoded_pdf}  
+        poller = document_intelligence_client.begin_analyze_document(  
+            "prebuilt-layout", analyze_request, output_content_format="markdown"  
+        )  
+        result = poller.result()  
+          
+        # Extract content and page layout information  
+        content = result.content  
+        for page in result.pages:  
+            for line in page.lines:  
+                page_map.append({  
+                    "text": line.content,  
+                    "page_number": page.page_number  
+                })   
+    except Exception as e:  
+        print(f"Error processing document: {e}")  
+        return [], []  
+      
+    # Split the document into chunks based on markdown headers.  
+    headers_to_split_on = [  
+        ("#", "Header 1"),  
+        ("##", "Header 2"),  
+        ("###", "Header 3"),  
+    ]  
+    text_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)  
+    splits = text_splitter.split_text(content)  
+      
+    # Create list of text chunks and metadata containing document name and page number for a given chunk  
+    text_chunks = []  
+    metadata = [] 
+    print("Length of intial page map: " + str(len(page_map)))  
+      
     for split in splits:
-        text_chunks.append(split.page_content)
-        metadata.append({'document_name': filename})
+        normalized_split_content = normalize_text(split.page_content)
 
-    print("Length of splits: " + str(len(splits)))
-    return text_chunks, metadata
+        # Find the page number(s) for the split, remove from map so douplicate paragraphs later in the document get the right page number 
+        pages_for_split = set() 
+        for mapping in page_map:
+            normalized_mapping_text = normalize_text(mapping["text"])
+            # similarity = fuzz.ratio(normalized_split_content, normalized_mapping_text)
+            # print(similarity)
+            if normalized_mapping_text in normalized_split_content:
+                # print(normalized_mapping_text)
+                # print(normalized_split_content)
+                pages_for_split.add(mapping["page_number"])
+                page_map.remove(mapping)
+          
+        # Add the text chunk and metadata with page numbers  
+        text_chunks.append(split.page_content)  
+        metadata.append({  
+            'document_name': filename,  
+            'page_numbers': ", ".join(map(str, sorted(pages_for_split)))  
+        })  
+    print("Length of final page map: " + str(len(page_map)))  
+    print("Length of splits: " + str(len(splits)))  
+    return text_chunks, metadata  
+
+"""  
+Normalize text by removing extra spaces, line breaks, and special characters.  
+""" 
+def normalize_text(text: str) -> str:  
+    # Remove extra whitespace  
+    text = re.sub(r'\s+', ' ', text).strip()  
+    return text 
 
 """
 Refines the content extracted from a document into a structured JSON format.

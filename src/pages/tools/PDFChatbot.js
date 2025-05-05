@@ -93,26 +93,28 @@ export function PDFChatbot() {
   /**
    * Handle document upload
    * 
-   * @param {File} file - The selected file
+   * @param {File} files - The selected files
    */
-  const handleFileSelected = async (file) => {
-    if (!file) return;
+  const handleFileSelected = async (files) => {
+    if (!files) return;
     
-    setSelectedFile(file);
+    setSelectedFile(files);
     setIsFileProcessing(true);
     setIsChatEnded(false);
     setChatSummary(null);
     setChatStartTime(new Date());
     
     try {
-      const response = await processPdfDocument(file);
-      setFileContent(response.extracted_document);
+      const response = await processPdfDocument(files);
+      // console.log(response.text_chunks)
+      // console.log(response.metadata)
+      setFileContent({text_chunks: response.text_chunks, metadata: response.metadata});
       
       // Reset messages when new file is uploaded
       setMessages([
         {
           role: 'bot',
-          content: toolData.bot.initialGreeting.replace('{fileName}', file.name),
+          content: toolData.bot.initialGreeting.replace('{fileName}', files.map(file => file.name)),
           timestamp: new Date()
         }
       ]);
@@ -410,6 +412,7 @@ export function PDFChatbot() {
       longDescription={toolData.longDescription}
       backgroundImage="/assets/robot.png"
       actionButtonText={isFileUploaded ? "Upload New Document" : toolData.actionButtonText}
+      mutliUpload={true}
       onFileSelected={handleFileSelected}
       isProcessing={isFileProcessing}
       hideActionButton={isFileUploaded}
