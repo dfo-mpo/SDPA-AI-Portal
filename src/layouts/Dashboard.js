@@ -30,7 +30,7 @@ import {
 import { SurveyForm } from '../pages/SurveyForm';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
-export default function Dashboard({ onLogout }) {
+export default function Dashboard({ onLogout, isDemoMode }) {
   // Store the selected tool name
   const [selectedTool, setSelectedTool] = useState('');
   const [headerHeight, setHeaderHeight] = useState(80); // Default to 80px, dynamically updated
@@ -186,6 +186,7 @@ export default function Dashboard({ onLogout }) {
               headerHeight={headerHeight}
               isHomePage={isHomePage}
               onLogout={onLogout}
+              isDemoMode={isDemoMode}
             />
           </Box>
 
@@ -246,5 +247,8 @@ export default function Dashboard({ onLogout }) {
 
 Dashboard.propTypes = {
   /** Callback function for logout action */
-  onLogout: PropTypes.func
+  onLogout: PropTypes.func,
+
+  /** Whether in demo mode */
+  isDemoMode: PropTypes.bool.isRequired,
 };

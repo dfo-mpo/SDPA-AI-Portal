@@ -14,8 +14,10 @@ import { initGA, trackPageview } from './utils/analytics';
  * Main Application Component that handles authentication state
  */
 function AppContent() {
+  const isDemoMode = process.env.REACT_APP_MODE === 'demo';
   // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(isDemoMode);
+  const [authChecked, setAuthChecked] = useState(isDemoMode);
   const { handleLogout: termsLogout } = useTerms();
   const { language } = useLanguage();
   const appTranslations = getLayoutTranslations('app', language)
@@ -38,25 +40,33 @@ function AppContent() {
   
   // Check for existing auth on mount
   useEffect(() => {
-    const authStatus = localStorage.getItem('dfo-auth-status');
-    if (authStatus === 'authenticated') {
-      setIsAuthenticated(true);
+    if (!isDemoMode) {
+      const authStatus = localStorage.getItem('dfo-auth-status');
+      if (authStatus === 'authenticated') {
+        setIsAuthenticated(true);
+      }
+      setAuthChecked(true);
+    } else {
+      console.log("Running in demonstration mode.");
+      setAuthChecked(true);
     }
-  }, []);
+  }, [isDemoMode]);
 
   // Handle successful login
   const handleLogin = () => {
-    localStorage.setItem('dfo-auth-status', 'authenticated');
+    if (!isDemoMode) localStorage.setItem('dfo-auth-status', 'authenticated');
     setIsAuthenticated(true);
   };
 
   // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem('dfo-auth-status');
+    if (!isDemoMode) localStorage.removeItem('dfo-auth-status');
     setIsAuthenticated(false);
     // Also reset the terms state
     termsLogout();
   };
+
+  if (!authChecked) return null;
 
   return (
     <>
@@ -71,7 +81,7 @@ function AppContent() {
             bgcolor: 'background.default',
           }}
         >
-          <Dashboard onLogout={handleLogout} />
+          <Dashboard onLogout={handleLogout} isDemoMode={isDemoMode} />
           {/* Terms Modal for authenticated users - pass isAuth=true */}
           <TermsModalContainer variant="full" isAuth={true} />
         </Box>

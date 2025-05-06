@@ -55,13 +55,15 @@ import { getToolByName } from '../utils';
  * @param {number} props.headerHeight - Height of the application header
  * @param {boolean} props.isHomePage - Whether currently on home page
  * @param {Function} [props.onLogout] - Callback for logout action
+ * @param {boolean} props.isDemoMode - Whether in demo mode
  * @returns {JSX.Element} The rendered component
  */
 export default function NewLeftPanel({ 
   selectedTool, 
   onSelectTool, 
   isHomePage, 
-  onLogout 
+  onLogout,
+  isDemoMode 
 }) {
   const theme = useTheme();
   const { language } = useLanguage();
@@ -263,24 +265,26 @@ export default function NewLeftPanel({
       </Box>
 
       {/* Bottom Profile Section */}
-      <Box sx={styles.profileSection}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Avatar
-            alt="John Doe"
-            src="/static/images/avatar/7.jpg"
-            sx={styles.avatar}
-          />
-          <Box sx={styles.userInfo}>
-            <Typography variant="body2" sx={styles.userName}>
-              John Doe
-            </Typography>
-            <Typography variant="caption" sx={styles.userEmail}>
-              John@email.com
-            </Typography>
-          </Box>
-          <OptionsMenu onLogout={onLogout} />
-        </Stack>
-      </Box>
+      {!isDemoMode && (
+        <Box sx={styles.profileSection}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Avatar
+              alt="John Doe"
+              src="/static/images/avatar/7.jpg"
+              sx={styles.avatar}
+            />
+            <Box sx={styles.userInfo}>
+              <Typography variant="body2" sx={styles.userName}>
+                John Doe
+              </Typography>
+              <Typography variant="caption" sx={styles.userEmail}>
+                John@email.com
+              </Typography>
+            </Box>
+            <OptionsMenu onLogout={onLogout} />
+          </Stack>
+        </Box>
+      )}
     </Paper>
   );
 }
@@ -300,4 +304,7 @@ NewLeftPanel.propTypes = {
   
   /** Callback function for logout action */
   onLogout: PropTypes.func,
+
+  /** Whether in demo mode */
+  isDemoMode: PropTypes.bool.isRequired,
 };
