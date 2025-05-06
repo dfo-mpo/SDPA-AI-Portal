@@ -1,6 +1,6 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import api_router
+from ai_ml_tools.routers import api_router
 from dotenv import load_dotenv
 import os
 
@@ -17,10 +17,15 @@ app = FastAPI()
 # Configure CORS  
 origins = [  
     "http://localhost:3000",  # React frontend  
-    "http://localhost:3001",  # React frontend
-    "http://localhost:4000",  
+    "http://localhost:3001",  # React frontend  
+    "http://localhost:3080",  # React frontend  
+    "https://sdpa-ai-computervision-portal.azurewebsites.net",
+    "https://sdpa-ai-tools-frontend.azurewebsites.net",
+    "http://ai-ml-tools-frontend",
+    "http://frontend",
     # Add other origins if needed  
 ]  
+print(origins)
 
 app.add_middleware(  
     CORSMiddleware,  

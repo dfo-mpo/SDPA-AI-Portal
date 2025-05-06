@@ -65,7 +65,7 @@ async def scale_model_api(image_array):
     except Exception as e:
         return {"value": "Age 4", "error": f"Unexpected error: {str(e)}"}
 
-@router.post("/to_png")
+@router.post("/to_png/")
 async def to_png(file:UploadFile = File(...)):
     # Read inputted document
     tiff_file = await file_to_path(file)
