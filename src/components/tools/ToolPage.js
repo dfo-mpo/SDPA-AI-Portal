@@ -72,14 +72,22 @@ export default function ToolPage({
   const fileInputRef = useRef();
 
   /**
-   * Handle file input change
+   * Handle file input change. If multiUpload is true, will be saved as an array of Files. Otherwise a single file is saved into onFileSelected
    * @param {Event} event - The change event
    */
   const onFileChange = (event) => {
-    const files = Array.from(event.target.files); // Convert FileList to an array 
-    if (files.length > 0) {
-      console.log("File selected in ToolPage onFileChange:", files.map(file => file.name));
-      onFileSelected(files);
+    if (mutliUpload) {
+      const files = Array.from(event.target.files); // Convert FileList to an array 
+      if (files.length > 0) {
+        console.log("File selected in ToolPage onFileChange:", files.map(file => file.name));
+        onFileSelected(files);
+      }
+    } else {
+      const file = event.target.files[0];
+      if (file) {
+        console.log("File selected in ToolPage onFileChange:", file.name);
+        onFileSelected(file);
+      }
     }
   };
 
