@@ -14,6 +14,19 @@ The docker-compose.yml file will allow for a docker container be created using t
 docker-compose up --build
 ```
 You can now use the web app locally from, http://127.0.0.1:3080
+
+#### (Optional) Building the Demonstration Version Locally
+* To build and run a demonstration version, use:
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.demo.yml up --build
+```
+* This command uses `docker-compose.demo.yml` as an override to the base `docker-compose.yml`.
+* The demonstration frontend image is built with the tag:
+```bash
+<project-foldername-lowercase>-frontend:demo
+```
+* The demonstration build injects a `REACT_APP_MODE=demo` flag, enabling demo-specific behavior.
+
 ## Deploying the Docker Container on Azure Webapps
 This approach will use Azure Container Registry to host the docker images and the Azure Web App will use a docker-compose file to build the container. This will require an already existing ACR resource, Azure Web App resource (with runtime set to container on creation), and both Docker and Azure CLI installed locally on your machine. 
 
@@ -109,6 +122,30 @@ docker push <acr_resource_name>.azurecr.io/ai-ml-tools-server:v1
     ```
     * (Optional) Set 'Continuous deployment' to 'On' if you want the website to update if push a new image versions.
     * Press Save, after your web app refreshes it will be running of the frontend and backend containers.
+
+#### (Optional) Deploying the Demonstration Version
+1. **Build the demonstration version image** using the demo-specific compose override:
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.demo.yml up --build
+```
+2. **Tag the built demonstration image** for ACR. The tag should align with the standard version, with a `-demo` suffix:
+```bash
+docker tag <project-foldername-lowercase>-frontend:demo <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1-demo
+```
+3. **Push the tagged demonstration image** to ACR:
+```bash
+docker push <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1-demo
+```
+4. In the Azure portal, navigate to the **Web App resource for the demonstration version**.
+    * Go to **Deployment Center**, and configure the container settings similarly to the standard version.
+    * Update the frontend image tag to match the demonstration version (with a `-demo` suffix):
+    ```bash
+    services:  
+      frontend:  
+        image: <your_registry_name>.azurecr.io/frontend:v1-demo  
+        ...
+    ```
+    * Save the configuration to trigger deployment.
 
 # DFO PSSI AI Portal
 ## Description
