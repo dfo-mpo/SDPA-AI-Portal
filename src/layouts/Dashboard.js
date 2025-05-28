@@ -88,14 +88,14 @@ export default function Dashboard({ onLogout, isDemoMode }) {
 
   // Tool components mapped by tool name
   const toolComponents = {
-    'Scale Ageing': <ScaleAgeing />,
-    'Fence Counting': <FenceCounting />,
-    'CSV/PDF Analyzer': <CSVAnalyzer />,
-    'PDF Chatbot': <PDFChatbot />,
-    'PII Redactor': <PIIRedactor />,
-    'Sensitivity Score Calculator': <SensitivityScore />,
-    'French Translation': <FrenchTranslation />,
-    'Document OCR': <DocumentOCR />,
+    'Scale Ageing': <ScaleAgeing isDemoMode={isDemoMode} />,
+    'Fence Counting': <FenceCounting isDemoMode={isDemoMode} />,
+    'CSV/PDF Analyzer': <CSVAnalyzer isDemoMode={isDemoMode} />,
+    'PDF Chatbot': <PDFChatbot isDemoMode={isDemoMode} />,
+    'PII Redactor': <PIIRedactor isDemoMode={isDemoMode} />,
+    'Sensitivity Score Calculator': <SensitivityScore isDemoMode={isDemoMode} />,
+    'French Translation': <FrenchTranslation isDemoMode={isDemoMode} />,
+    'Document OCR': <DocumentOCR isDemoMode={isDemoMode} />,
     'Form': <SurveyForm />
   };
 

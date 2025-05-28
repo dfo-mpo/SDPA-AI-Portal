@@ -14,7 +14,7 @@ import { getToolTranslations } from '../../utils';
 import { processScaleAge, convertToPng } from '../../services/apiService';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 
-export function ScaleAgeing() {
+export function ScaleAgeing({ isDemoMode }) {
   const { language } = useLanguage();
   const toolData = getToolTranslations("scaleAgeing", language);
   const scaleAgeingStyles = useComponentStyles('scaleAgeing');
@@ -76,6 +76,7 @@ export function ScaleAgeing() {
       onFileSelected={handleFileSelected}
       isProcessing={isProcessing}
       containerSx={scaleAgeingStyles.container}
+      isDemoMode={isDemoMode}
     >
       {/* Show any errors */}
       {error && (

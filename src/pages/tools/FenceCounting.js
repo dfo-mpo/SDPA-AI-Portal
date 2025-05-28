@@ -26,7 +26,7 @@ import { processFenceCounting } from '../../services/apiService';
 import { useLanguage, useToolSettings } from '../../contexts';
 import { trackEvent } from '../../utils/analytics';
 
-export function FenceCounting() {
+export function FenceCounting({ isDemoMode }) {
   const { language } = useLanguage();
   const { fenceCountingSettings } = useToolSettings();
   const toolData = getToolTranslations("fenceCounting", language);
@@ -123,6 +123,7 @@ export function FenceCounting() {
       backgroundImage="/assets/fence-counting.png"
       hideActionButton={true}
       containerSx={toolStyles.container}
+      isDemoMode={isDemoMode}
     >
       {/* Custom Upload Button - Visible but Disabled */}
       <Box sx={{ mb: 3 }}>

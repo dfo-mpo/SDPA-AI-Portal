@@ -14,7 +14,7 @@ import { calculateSensitivityScore } from '../../services/apiService';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 
-export function SensitivityScore() {
+export function SensitivityScore({ isDemoMode }) {
   const { language } = useLanguage();
   const toolData = getToolTranslations("sensitivityScore", language);
   const sensitivityScoreStyles = useComponentStyles('sensitivityScore');
@@ -136,6 +136,7 @@ export function SensitivityScore() {
       isFormValid={isFormValid}
       validationMessage={validationMessage}
       containerSx={sensitivityScoreStyles.container}
+      isDemoMode={isDemoMode}
     >
       {score !== null && (
         <Box sx={sensitivityScoreStyles.resultContainer}>
