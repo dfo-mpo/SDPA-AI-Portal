@@ -9,13 +9,6 @@ import PropTypes from 'prop-types';
 import {
     Box,
     Button,
-    Checkbox,
-    FormControlLabel,
-    Divider,
-    FormLabel,
-    FormControl,
-    Link,
-    TextField,
     Typography,
     Stack,
     Card,
@@ -23,109 +16,89 @@ import {
     Alert
 } from '@mui/material';
 import { useLanguage, useTerms } from '../../contexts';
-import { ForgotPassword } from '.';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from '../common/CustomIcons';
+import { SitemarkIcon } from '../common/CustomIcons';
 import { signInStyles } from '../../styles/componentStyles';
 import { getAuthTranslations } from '../../translations/auth';
-import { trackEvent } from '../../utils/analytics';
+import { useMsal } from '@azure/msal-react';
 
 export default function SignIn({ onLogin }) {
     const { language } = useLanguage();
     const t = getAuthTranslations('signIn', language);
     const theme = useTheme();
     const styles = signInStyles(theme);
-    const [emailError, setEmailError] = useState(false);
-    const [emailErrorMessage, setEmailErrorMessage] = useState('');
-    const [passwordError, setPasswordError] = useState(false);
-    const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
-    const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
-    const { termsAccepted, startLoginFlow, loginPending } = useTerms();
+    const { termsAccepted, startLoginFlow, loginPending, declineTerms } = useTerms();
     const [showTermsRejectedWarning, setShowTermsRejectedWarning] = useState(false);
+    const { instance } = useMsal();
 
-    
-    // Effect to check for login completion after terms acceptance
+    /**
+     * Executes the Microsoft Entra ID (MSAL) login flow.
+     *
+     * Behavior:
+     * - Triggers the MSAL login method to authenticate the user.
+     * - On success: MSAL will update session state internally.
+     *   - Post-login behaviors are handled globally in `App.js`.
+     * 
+     * - On failure: logs the error and resets the login flow
+     *   by calling `declineTerms()` to stop the retry loop and clear pending state.
+     *
+     * This function is intended to be called after the user has accepted the terms of use.
+     * Only called when `termsAccepted` and `loginPending` are both `true`.
+     */
+    const doMsalLogin = async () => {
+        try {
+            const loginResponse = await instance.loginRedirect();
+            console.log('MSAL login response:', loginResponse);
+        } catch (err) {
+            console.error("MSAL login failed:", err);
+            declineTerms();
+        }
+    };
+
+    /**
+     * Effect: Watches for the user's acceptance of terms and a pending login state.
+     *
+     * Trigger Conditions:
+     * - `termsAccepted` becomes `true` (user clicks "Accept" in terms modal).
+     * - `loginPending` is `true` (set when user clicks "Log in" button).
+     *
+     * Behavior:
+     * - When both conditions are met, triggers authentication.
+     * - In production: calls `doMsalLogin()` to initiate Microsoft Entra ID (MSAL) login.
+     * 
+     * Auth Toggle vs Demo Mode Clarification:
+     * - This effect allows **manual toggling** between real MSAL login and bypass mode, even in **production (non-demo)** mode.
+     * - It is different from `isDemoMode`:
+     * - `isDemoMode = true`: the app **completely bypasses the login page** and renders the Dashboard directly.
+     */
     useEffect(() => {
+        // If terms are accepted and we're in the middle of login flow, complete the login
         if (termsAccepted && loginPending) {
-            // If terms are accepted and we're in the middle of login flow
-            // complete the login
+            doMsalLogin();
             onLogin();
         }
-    }, [termsAccepted, loginPending, onLogin]);
+    }, [termsAccepted, loginPending, onLogin, doMsalLogin]);
 
-    const handleForgotPasswordOpen = () => {
-        setForgotPasswordOpen(true);
-    };
-
-    const handleForgotPasswordClose = () => {
-        setForgotPasswordOpen(false);
-    };
-
-    const validateInputs = () => {
-        const email = document.getElementById('email');
-        const password = document.getElementById('password');
-
-        let isValid = true;
-
-        if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-            setEmailError(true);
-            setEmailErrorMessage(language === 'en' 
-                ? 'Please enter a valid email address.' 
-                : 'Veuillez saisir une adresse courriel valide.');
-            isValid = false;
-        } else {
-            setEmailError(false);
-            setEmailErrorMessage('');
-        }
-
-        if (!password.value || password.value.length < 6) {
-            setPasswordError(true);
-            setPasswordErrorMessage(language === 'en'
-                ? 'Password must be at least 6 characters long.'
-                : 'Le mot de passe doit comporter au moins 6 caractères.');
-            isValid = false;
-        } else {
-            setPasswordError(false);
-            setPasswordErrorMessage('');
-        }
-
-        return isValid;
-    };
-
-    const handleSubmit = (event) => {
+    /**
+     * Handles user-initiated login via the MSAL sign-in button.
+     *
+     * Behavior:
+     * - Prevents default form submission behavior.
+     * - Calls `startLoginFlow()` to initiate the terms and login flow.
+     *   - This sets `loginPending = true` and shows the terms modal.
+     * - If the user had already rejected terms (manually or via storage), 
+     *   this function sets a flag to show a warning message.
+     *
+     * Actual login execution using MSAL happens in `doMsalLogin()` once terms are accepted.
+     */
+    const handleSubmitWithMsal = (event) => {
         event.preventDefault();
-        
-        if (!validateInputs()) {
-            return;
-        }
 
         // Start login flow - this will check if terms are accepted
         // and show the modal if needed
         const canProceed = startLoginFlow();
         
-        // If terms already accepted, proceed with login
-        if (canProceed) {
-            onLogin();
-        } else {
-            // Otherwise, terms modal will be shown
-            // Login will be completed when terms are accepted (via useEffect)
-            // If they were previously rejected, show the warning
-            if (showTermsRejectedWarning) {
-                setShowTermsRejectedWarning(true);
-            }
-        }
-    };
-
-    const handleSocialLogin = (provider) => {
-        console.log(`Logging in with ${provider}`);
-        
-        // Same flow as above but for social login
-        const canProceed = startLoginFlow();
-        if (canProceed) {
-            onLogin();
-        } else {
-            if (showTermsRejectedWarning) {
-                setShowTermsRejectedWarning(true);
-            }
+        if (!canProceed && showTermsRejectedWarning) {
+            setShowTermsRejectedWarning(true);
         }
     };
 
@@ -171,106 +144,21 @@ export default function SignIn({ onLogin }) {
                         {t.termsRejectedWarning}
                     </Alert>
                 )}
-                
+
                 <Box
                     component="form"
-                    onSubmit={handleSubmit}
-                    noValidate
-                    sx={styles.form}
+                    onSubmit={handleSubmitWithMsal}
                 >
-                    <FormControl>
-                        <FormLabel htmlFor="email">{t.email}</FormLabel>
-                        <TextField
-                            error={emailError}
-                            helperText={emailErrorMessage}
-                            id="email"
-                            type="email"
-                            name="email"
-                            placeholder={t.emailPlaceholder}
-                            autoComplete="email"
-                            autoFocus
-                            required
-                            fullWidth
-                            variant="outlined"
-                            color={emailError ? 'error' : 'primary'}
-                        />
-                    </FormControl>
-                    <FormControl>
-                        <FormLabel htmlFor="password">{t.password}</FormLabel>
-                        <TextField
-                            error={passwordError}
-                            helperText={passwordErrorMessage}
-                            name="password"
-                            placeholder={t.passwordPlaceholder}
-                            type="password"
-                            id="password"
-                            autoComplete="current-password"
-                            required
-                            fullWidth
-                            variant="outlined"
-                            color={passwordError ? 'error' : 'primary'}
-                        />
-                    </FormControl>
-                    <FormControlLabel
-                        control={<Checkbox value="remember" color="primary" />}
-                        label={t.rememberMe}
-                    />
+                    {/* Sign in with Microsoft Entra ID */}
                     <Button
                         type="submit"
                         fullWidth
                         variant="contained"
                     >
-                        {t.signInButton}
+                        {t.signInWithMsalButton}
                     </Button>
-                    <Link
-                        component="button"
-                        type="button"
-                        onClick={handleForgotPasswordOpen}
-                        variant="body2"
-                        sx={styles.forgotPassword}
-                    >
-                        {t.forgotPassword}
-                    </Link>
-                </Box>
-                <Divider>{t.or}</Divider>
-                <Box sx={styles.socialButtons}>
-                    <Button
-                        fullWidth
-                        variant="outlined"
-                        onClick={() => {handleSocialLogin('Google');
-                            trackEvent('Login Method', 'Selected Login Method', 'Google');
-                        }}
-                        startIcon={<GoogleIcon />}
-                    >
-                        {t.signInWithGoogle}
-                    </Button>
-                    <Button
-                        fullWidth
-                        variant="outlined"
-                        onClick={() => {handleSocialLogin('Facebook');
-                            trackEvent('Login Method', 'Selected Login Method', 'Facebook');
-                        }}
-                        startIcon={<FacebookIcon />}
-                    >
-                        {t.signInWithFacebook}
-                    </Button>
-                    <Typography sx={styles.signupText}>
-                        {t.noAccount}{' '}
-                        <Link
-                            href="#signup"
-                            variant="body2"
-                        >
-                            {t.signUp}
-                        </Link>
-                    </Typography>
                 </Box>
             </Card>
-
-            <ForgotPassword 
-                open={forgotPasswordOpen} 
-                handleClose={handleForgotPasswordClose}
-                language={language}
-            />
         </Stack>
     );
 }

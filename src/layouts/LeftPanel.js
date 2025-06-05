@@ -9,7 +9,7 @@
  */
 
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {
   Box,
@@ -45,6 +45,7 @@ import {
 } from '../components/tools/settings';
 
 import { getToolByName } from '../utils';
+import { useMsal } from '@azure/msal-react';
 
 /**
  * Left panel component for navigation and settings
@@ -68,6 +69,9 @@ export default function NewLeftPanel({
   const theme = useTheme();
   const { language } = useLanguage();
   const panelTranslations = getLayoutTranslations('leftPanel', language);
+
+  const { accounts } = useMsal();
+  const user = accounts[0] ?? null;
 
   // Map tool names to their corresponding settings components
   const toolSettings = {
@@ -269,16 +273,16 @@ export default function NewLeftPanel({
         <Box sx={styles.profileSection}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Avatar
-              alt="John Doe"
+              alt={user ? user.name : 'Guest'}
               src="/static/images/avatar/7.jpg"
               sx={styles.avatar}
             />
             <Box sx={styles.userInfo}>
               <Typography variant="body2" sx={styles.userName}>
-                John Doe
+                {user ? user.name : 'Guest'}
               </Typography>
               <Typography variant="caption" sx={styles.userEmail}>
-                John@email.com
+                {user ? user.username : 'guest@example.com'}
               </Typography>
             </Box>
             <OptionsMenu onLogout={onLogout} />
