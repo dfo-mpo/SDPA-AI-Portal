@@ -88,15 +88,20 @@ export default function Dashboard({ onLogout, isDemoMode }) {
 
   // Tool components mapped by tool name
   const toolComponents = {
-    'Scale Ageing': <ScaleAgeing isDemoMode={isDemoMode} />,
-    'Fence Counting': <FenceCounting />,
-    'CSV/PDF Analyzer': <CSVAnalyzer />,
-    'PDF Chatbot': <PDFChatbot />,
-    'PII Redactor': <PIIRedactor />,
-    'Sensitivity Score Calculator': <SensitivityScore />,
-    'French Translation': <FrenchTranslation />,
-    'Document OCR': <DocumentOCR />,
-    'Form': <SurveyForm />
+    'Scale Ageing': ScaleAgeing,
+    'Fence Counting': FenceCounting,
+    'CSV/PDF Analyzer': CSVAnalyzer,
+    'PDF Chatbot': PDFChatbot,
+    'PII Redactor': PIIRedactor,
+    'Sensitivity Score Calculator': SensitivityScore,
+    'French Translation': FrenchTranslation,
+    'Document OCR': DocumentOCR,
+    'Form': SurveyForm,
+  };
+
+  const getToolComponent = (toolName) => {
+    const ToolComponent = toolComponents[toolName];
+    return ToolComponent ? <ToolComponent isDemoMode={isDemoMode} /> : null;
   };
 
   /**
@@ -127,7 +132,7 @@ export default function Dashboard({ onLogout, isDemoMode }) {
           opacity: isToolDisabled(selectedTool) ? 0.5 : 1,
           pointerEvents: isToolDisabled(selectedTool) ? 'none' : 'auto'
         }}>
-          {toolComponents[selectedTool] || <HomePage />}
+          {getToolComponent(selectedTool) || <HomePage />}
         </Box>
       </>
     );

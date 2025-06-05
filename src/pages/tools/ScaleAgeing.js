@@ -14,7 +14,7 @@ import { getToolTranslations } from '../../utils';
 import { processScaleAge, convertToPng } from '../../services/apiService';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 
-export function ScaleAgeing({isDemoMode}) {
+export function ScaleAgeing({ isDemoMode }) {
   const { language } = useLanguage();
   const toolData = getToolTranslations("scaleAgeing", language);
   const scaleAgeingStyles = useComponentStyles('scaleAgeing');
@@ -77,6 +77,7 @@ export function ScaleAgeing({isDemoMode}) {
       isProcessing={isProcessing}
       downloadSamplesBtn={isDemoMode? ['assets/scaleageing/chum_age5.tif', 'assets/scaleageing/chum_age6.tif']: ''}
       containerSx={scaleAgeingStyles.container}
+      isDemoMode={isDemoMode}
     >
       {/* Show any errors */}
       {error && (

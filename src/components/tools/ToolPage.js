@@ -41,6 +41,7 @@ export default function ToolPage({
   hideActionButton = false,
   inProgress = false,
   uploadKey = Date.now(), // Default key for reset support
+  isDemoMode,
   children,
 }) {
   // Get styles from our styling system
@@ -243,6 +244,9 @@ ToolPage.propTypes = {
   
   /** Key to force recreation of the file input */
   uploadKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+
+  /** Whether in demo mode */
+  isDemoMode: PropTypes.bool.isRequired,
   
   /** Additional content to render below the description */
   children: PropTypes.node,

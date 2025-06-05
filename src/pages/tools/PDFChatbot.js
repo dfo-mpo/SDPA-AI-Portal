@@ -48,7 +48,7 @@ import { processPdfDocument, askOpenAI } from '../../services/apiService';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { trackEvent } from '../../utils/analytics';
 
-export function PDFChatbot() {
+export function PDFChatbot({ isDemoMode }) {
   const { language } = useLanguage();
   const toolData = getToolTranslations("pdfChatbot", language);
   
@@ -418,6 +418,7 @@ export function PDFChatbot() {
       isProcessing={isFileProcessing}
       hideActionButton={isFileUploaded}
       uploadKey={Date.now()} // Ensure input is refreshed
+      isDemoMode={isDemoMode}
     >
       {/* Chat interface appears only when a file is uploaded */}
       {isFileUploaded && (

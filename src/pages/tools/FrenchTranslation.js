@@ -16,7 +16,7 @@ import { frenchTranslationStyles } from '../../styles/componentStyles';
 import { translateToFrench } from '../../services/apiService';
 
 
-export function FrenchTranslation() { 
+export function FrenchTranslation({ isDemoMode }) { 
   const { language } = useLanguage();
   const toolData = getToolTranslations("frenchTranslator", language);
   // const frenchStyles = frenchTranslationStyles; // centralized styles for French Translation
@@ -57,6 +57,7 @@ export function FrenchTranslation() {
       onFileSelected={handleFileSelected}
       isProcessing={isProcessing}
       containerSx={frenchStyles.container} // if defined
+      isDemoMode={isDemoMode}
     >
       {error && (
         <Box sx={{ mt: 2, color: 'error.main' }}>
