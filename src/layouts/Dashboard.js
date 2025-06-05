@@ -88,7 +88,7 @@ export default function Dashboard({ onLogout, isDemoMode }) {
 
   // Tool components mapped by tool name
   const toolComponents = {
-    'Scale Ageing': <ScaleAgeing />,
+    'Scale Ageing': <ScaleAgeing isDemoMode={isDemoMode} />,
     'Fence Counting': <FenceCounting />,
     'CSV/PDF Analyzer': <CSVAnalyzer />,
     'PDF Chatbot': <PDFChatbot />,
