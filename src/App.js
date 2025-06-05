@@ -65,20 +65,6 @@ function AppContent() {
   }, [isDemoMode]);
 
   /**
-   * Watches MSAL `accounts` state to detect login/logout transitions.
-   * 
-   * On login:
-   * - Sets `dfo-auth-status` in localStorage
-   * 
-   * On logout:
-   * - Removes `dfo-auth-status` from localStorage
-   * - Clears app-level term acceptance state
-   * 
-   * This hook ensures that side effects run *after* MSAL has completed its own session update,
-   * and avoids flicker or premature UI changes before session is valid.
-   */
-
-  /**
    * Watches MSAL `accounts` array to detect login/logout transitions.
    *
    * When `accounts` becomes non-empty and no prior account was recorded:
@@ -86,8 +72,6 @@ function AppContent() {
    *
    * When `accounts` becomes empty after a user had been logged in:
    * - Calls `onMsalLogoutSuccess()` for post-logout cleanup.
-   *
-   * This approach cleanly decouples authentication state monitoring from UI rendering.
    */
   useEffect(() => {
     if (accounts.length > 0 && !previousAccount) {
