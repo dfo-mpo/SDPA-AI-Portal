@@ -3,7 +3,7 @@
  */
 
 export const en = {
-    title: "Terms of Use for PSSI-AI Portal",
+    title: "Terms of Use for DFO AI Portal",
     compliance: {
       title: "Compliance with Guidelines",
       text: "All users must adhere to the Treasury Board Secretariat's (TBS) Guidelines on the use of Generative AI within the Public Service."
@@ -38,7 +38,7 @@ export const en = {
   };
   
   export const fr = {
-    title: "Conditions d'utilisation du portail d'I.A de l'ISSP",
+    title: "Conditions d'utilisation du portail IA du MPO",
     compliance: {
       title: "Conformité aux directives",
       text: "Tous les utilisateurs doivent se conformer aux directives du Secrétariat du Conseil du Trésor (SCT) sur l'utilisation de l'IA générative dans la fonction publique."
