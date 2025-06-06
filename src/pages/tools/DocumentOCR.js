@@ -13,7 +13,7 @@ import { useLanguage } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 
-export function DocumentOCR() {
+export function DocumentOCR({ isDemoMode }) {
   const { language } = useLanguage();
   // This will need translations added when implementing
   const toolData = {
@@ -41,6 +41,7 @@ export function DocumentOCR() {
       hideActionButton={true}
       inProgress={true}
       containerSx={styles.container}
+      isDemoMode={isDemoMode}
     >
       <Paper 
         elevation={0} 

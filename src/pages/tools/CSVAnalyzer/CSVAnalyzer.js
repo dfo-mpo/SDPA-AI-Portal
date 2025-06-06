@@ -17,7 +17,7 @@ import FileUploadModal from './FileUploadModal';
 import { analyzeCsvPdf } from '../../../services/apiService';
 import { trackEvent } from '../../../utils/analytics';
 
-export function CSVAnalyzer() {
+export function CSVAnalyzer({ isDemoMode }) {
   const { language } = useLanguage();
   const toolData = getToolTranslations("csvAnalyzer", language);
   
@@ -276,6 +276,7 @@ export function CSVAnalyzer() {
         onFileSelected={handleUploadClick}
         isProcessing={isProcessing}
         hideActionButton={true} // Hide the default action button
+        isDemoMode={isDemoMode}
       >
         {/* Loading indicator */}
         {isProcessing && (

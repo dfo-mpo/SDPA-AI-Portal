@@ -81,16 +81,16 @@ export default function OptionsMenu({ onLogout }) {
           [`& .${dividerClasses.root}`]: styles.menu.divider,
         }}
       >
-        <MenuItem onClick={handleClose} disabled>{menuTranslations.profile}</MenuItem>
+        {/* <MenuItem onClick={handleClose} disabled>{menuTranslations.profile}</MenuItem>
         <MenuItem onClick={handleClose} disabled>{menuTranslations.account}</MenuItem>
         <Divider />
         <MenuItem onClick={handleClose} disabled>{menuTranslations.addAccount}</MenuItem>
         <MenuItem onClick={handleClose} disabled>{menuTranslations.settings}</MenuItem>
-        <Divider />
+        <Divider /> */}
         <MenuItem onClick={handleLogout} sx={styles.logoutMenuItem}>
           <ListItemText>{menuTranslations.logout}</ListItemText>
           <ListItemIcon>
-            <LogoutRoundedIcon fontSize="small" />
+            <LogoutRoundedIcon fontSize="small" sx={{ ml: 1 }} />
           </ListItemIcon>
         </MenuItem>
       </Menu>

@@ -27,5 +27,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# auth config
+src/components/auth/authConfig.js
+
 src/setupProxy.js
 src/services/apiService.js

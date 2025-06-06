@@ -37,9 +37,11 @@ export default function ToolPage({
   isProcessing = false,
   isFormValid = true,
   validationMessage = '',
+  downloadSamplesBtn = '',
   hideActionButton = false,
   inProgress = false,
   uploadKey = Date.now(), // Default key for reset support
+  isDemoMode,
   children,
 }) {
   // Get styles from our styling system
@@ -124,34 +126,63 @@ export default function ToolPage({
 
             {/* Upload button with loading indicator - only shown if not hidden */}
             {!hideActionButton && (
-              <Box sx={styles.actionContainer}>
-                <Button 
-                  variant="contained"
-                  onClick={() => {
-                    trackEvent('File Upload', 'Click', ToolPage.title);
-                    fileInputRef.current?.click();
-                  }}
-                  disabled={isProcessing || !isFormValid}
-                  startIcon={<Upload size={16} />}
-                  sx={{
-                    ...toolStyles.actionButton,
-                    whiteSpace: 'nowrap' // Prevent button text from wrapping
-                  }}
-                >
-                  {actionButtonText}
-                </Button>
+              <div styles={{display: 'flex', justifyContent: 'space-around', flexDirection: 'row'}}>
+                <Box sx={styles.actionContainer}>
+                  <Button 
+                    variant="contained"
+                    onClick={() => {
+                      trackEvent('File Upload', 'Click', ToolPage.title);
+                      fileInputRef.current?.click();
+                    }}
+                    disabled={isProcessing || !isFormValid}
+                    startIcon={<Upload size={16} />}
+                    sx={{
+                      ...toolStyles.actionButton,
+                      whiteSpace: 'nowrap' // Prevent button text from wrapping
+                    }}
+                  >
+                    {actionButtonText}
+                  </Button>
 
-                {isProcessing && (
-                  <CircularProgress size={24} sx={{ ml: 2 }} />
-                )}
-                
-                {!isFormValid && validationMessage && (
-                  <Typography sx={styles.validationWarning}>
-                    {validationMessage}
-                  </Typography>
-                )}
-              </Box>
+                  {isProcessing && (
+                    <CircularProgress size={24} sx={{ ml: 2 }} />
+                  )}
+                  
+                  {!isFormValid && validationMessage && (
+                    <Typography sx={styles.validationWarning}>
+                      {validationMessage}
+                    </Typography>
+                  )}
+                </Box>
+                {/* {downloadSamplesBtn && downloadSamplesBtn.length > 0 ? (  
+                  downloadSamplesBtn.map((sample, index) => {  
+                    return (  
+                      <Box key={index} sx={styles.actionContainer}>  
+                        <Button  
+                          variant="contained"  
+                          onClick={() => {  
+                            trackEvent('File Upload', 'Click', ToolPage.title);  
+                            fileInputRef.current?.click();  
+                          }}  
+                          disabled={isProcessing || !isFormValid}  
+                          startIcon={<Upload size={16} />}  
+                          sx={{  
+                            ...toolStyles.actionButton,  
+                            whiteSpace: 'nowrap' // Prevent button text from wrapping  
+                          }}  
+                        >  
+                          {actionButtonText}  
+                        </Button>  
+                      </Box>  
+                    );  
+                  })  
+                ) : (  
+                  <p>No samples available</p> // Render a message if no samples are available  
+                )}   */}
+              </div>
             )}
+
+            
             
             {inProgress && (
               <Box sx={styles.actionContainer}>
@@ -213,6 +244,9 @@ ToolPage.propTypes = {
   
   /** Key to force recreation of the file input */
   uploadKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+
+  /** Whether in demo mode */
+  isDemoMode: PropTypes.bool.isRequired,
   
   /** Additional content to render below the description */
   children: PropTypes.node,

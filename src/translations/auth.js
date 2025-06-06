@@ -21,7 +21,8 @@ export const en = {
       validation: {
         emailRequired: "Please enter a valid email address.",
         passwordRequired: "Password must be at least 6 characters long."
-      }
+      },
+      signInWithMsalButton: "Login with Microsoft Entra ID",
     },
     forgotPassword: {
       title: "Reset password",
@@ -51,7 +52,8 @@ export const en = {
       validation: {
         emailRequired: "Veuillez saisir une adresse courriel valide.",
         passwordRequired: "Le mot de passe doit comporter au moins 6 caractères."
-      }
+      },
+      signInWithMsalButton: "Se connecter avec Microsoft Entra ID",
     },
     forgotPassword: {
       title: "Réinitialiser le mot de passe",

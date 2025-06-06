@@ -9,7 +9,7 @@ import { useFileUpload } from '../../hooks/useFileUpload';
 import { redactPII } from '../../services/apiService';
 import { PIIRedactorSettings } from '../../components/tools/settings';
 
-export function PIIRedactor() {
+export function PIIRedactor({ isDemoMode }) {
   const { language } = useLanguage();
   const toolData = getToolTranslations("piiRedactor", language);
   const translations = toolData?.settings; // Get settings translations from toolData
@@ -144,6 +144,7 @@ export function PIIRedactor() {
       settingsComponent={<PIIRedactorSettings />}
       hideActionButton={!!downloadURL} // Hide the button when we have results
       uploadKey={uploadKey} // Pass the key to ensure ToolPage resets too
+      isDemoMode={isDemoMode}
     >
       {/* Error Display */}
       {error && (
