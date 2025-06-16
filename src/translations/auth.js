@@ -4,7 +4,7 @@
 
 export const en = {
     signIn: {
-      title: "Sign in to DFO AI Portal",
+      title: "Sign in to DFO Pacific AI Portal",
       email: "Email",
       emailPlaceholder: "your@email.com",
       password: "Password",
@@ -22,7 +22,8 @@ export const en = {
         emailRequired: "Please enter a valid email address.",
         passwordRequired: "Password must be at least 6 characters long."
       },
-      signInWithMsalButton: "Login with Microsoft Entra ID",
+      signInWithMsalButton: "Login With Microsoft Entra ID",
+      demoAccessButton: "Access Demo Portal Without Signing In",
     },
     forgotPassword: {
       title: "Reset password",
@@ -54,6 +55,7 @@ export const en = {
         passwordRequired: "Le mot de passe doit comporter au moins 6 caractères."
       },
       signInWithMsalButton: "Se connecter avec Microsoft Entra ID",
+      demoAccessButton: "Accéder au portail de démonstration sans se connecter",
     },
     forgotPassword: {
       title: "Réinitialiser le mot de passe",

@@ -45,14 +45,14 @@ export const en = {
       disabledToolAlert: "This tool is temporarily unavailable while we make improvements. Please check back later."
     },
     homePage: {
-      title: "DFO AI Portal",
+      title: "DFO Pacific AI Portal",
       description: "Harnessing AI to enhance research, decision-making, and operational efficiency in fisheries and oceans science.",
-      heading: "Welcome to the DFO AI Portal",
-      body: "Welcome to the DFO AI Portal, a platform designed to explore the potential of artificial intelligence in fisheries and oceans research. This portal features tools powered by computer vision and large language models, helping scientists analyze data, automate tasks, and uncover new insights.\n\nUse the Tools menu on the left to discover AI-driven solutions that support DFO's mission.",
+      heading: "Welcome to the DFO Pacific AI Portal",
+      body: "Welcome to the DFO Pacific AI Portal, a platform designed to explore the potential of artificial intelligence in fisheries and oceans research. This portal features tools powered by computer vision and large language models, helping scientists analyze data, automate tasks, and uncover new insights.\n\nUse the Tools menu on the left to discover AI-driven solutions that support DFO's mission.",
       alert: "Demonstration Use Only: These tools are prototypes designed to illustrate possible AI applications for DFO scientists. Please avoid uploading any sensitive or operational data."
     },
     app: {
-      title: "DFO AI Portal"
+      title: "DFO Pacific AI Portal"
     },
     userMenu: {
       profile: "Profile",
