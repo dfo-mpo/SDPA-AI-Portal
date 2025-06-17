@@ -16,16 +16,24 @@ docker-compose up --build
 You can now use the web app locally from, http://127.0.0.1:3080
 
 #### (Optional) Building the Demonstration Version Locally
-* To build and run a demonstration version, use:
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.demo.yml up --build
-```
+* Build the demonstration version image use:
+  ```bash
+  docker-compose -f docker-compose.yml -f docker-compose.demo.yml build
+  ```
 * This command uses `docker-compose.demo.yml` as an override to the base `docker-compose.yml`.
-* The demonstration frontend image is built with the tag:
-```bash
-<project-foldername-lowercase>-frontend:demo
-```
+* To run the demonstration manually after finished building the image, run
+    ```bash
+    docker-compose -f docker-compose.yml -f docker-compose.demo.yml up
+    ```
+* The demonstration frontend image is built with specific name and tag:
+    ```bash
+    sdpa-ai-portal-frontend:demo
+    ```
 * The demonstration build injects a `REACT_APP_MODE=demo` flag, enabling demo-specific behavior.
+* Alternatively, if you prefer to build and run the demonstration image at the same time, use: 
+  ```bash
+  docker-compose -f docker-compose.yml -f docker-compose.demo.yml up --build
+  ```
 
 ## Deploying the Docker Container on Azure Webapps
 This approach will use Azure Container Registry to host the docker images and the Azure Web App will use a docker-compose file to build the container. This will require an already existing ACR resource, Azure Web App resource (with runtime set to container on creation), and both Docker and Azure CLI installed locally on your machine. 
@@ -125,12 +133,24 @@ docker push <acr_resource_name>.azurecr.io/ai-ml-tools-server:v1
 
 #### (Optional) Deploying the Demonstration Version
 1. **Build the demonstration version image** using the demo-specific compose override:
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.demo.yml up --build
-```
+    ```bash
+    docker-compose -f docker-compose.yml -f docker-compose.demo.yml build
+    ```
+    * The demonstration frontend image is built with specific name and tag:
+    ```bash
+    sdpa-ai-portal-frontend:demo
+    ```
+    * To **run the demonstration** manually after finished building the image:
+    ```bash
+    docker-compose -f docker-compose.yml -f docker-compose.demo.yml up
+    ```
+    * Alternatively, to **build and run the demonstration** at the same time: 
+    ```bash
+    docker-compose -f docker-compose.yml -f docker-compose.demo.yml up --build
+    ```
 2. **Tag the built demonstration image** for ACR. The tag should align with the standard version, with a `-demo` suffix:
 ```bash
-docker tag <project-foldername-lowercase>-frontend:demo <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1-demo
+docker tag sdpa-ai-portal-frontend:demo <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1-demo
 ```
 3. **Push the tagged demonstration image** to ACR:
 ```bash
