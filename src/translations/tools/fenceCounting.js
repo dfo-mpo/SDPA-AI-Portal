@@ -42,7 +42,9 @@ export const en = {
     },
     sample: {
       chinook: "Sample showing Chinook salmon passing through a counting fence",
-      sockeye: "Sample showing Sockeye salmon migration"
+      sockeye: "Sample showing Sockeye salmon migration",
+      co_cn: "Sample showing two Coho and two Chinook passing through a counting fence",
+      smolt: "Sample showing a group of smolt passing through a counting fence"
     }
   };
   
@@ -85,6 +87,8 @@ export const en = {
     },
     sample: {
       chinook: "Exemple montrant des saumons chinook passant par une barrière de comptage",
-      sockeye: "Exemple montrant la migration du saumon rouge"
+      sockeye: "Exemple montrant la migration du saumon rouge",
+      co_cn: "Exemple montrant deux saumons coho et deux saumons chinook passant à travers une barrière de comptage.",
+      smolt: "Exemple montrant un groupe de smolts passant à travers une barrière de comptage"
     }
   };
