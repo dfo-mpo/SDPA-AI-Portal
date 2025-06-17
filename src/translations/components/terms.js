@@ -3,7 +3,7 @@
  */
 
 export const en = {
-    title: "Terms of Use for DFO AI Portal",
+    title: "Terms of Use for DFO Pacific AI Portal",
     compliance: {
       title: "Compliance with Guidelines",
       text: "All users must adhere to the Treasury Board Secretariat's (TBS) Guidelines on the use of Generative AI within the Public Service."

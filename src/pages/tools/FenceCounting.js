@@ -103,15 +103,25 @@ export function FenceCounting({ isDemoMode }) {
 
   // Sample video data
   const sampleVideos = [
-    { 
-      filename: "Chinook-9s.mp4", 
-      label: "Chinook (9s)", 
-      description: toolData.sample.chinook
-    },
+    // { 
+    //   filename: "Chinook-9s.mp4", 
+    //   label: "Chinook (9s)", 
+    //   description: toolData.sample.chinook
+    // },
     { 
       filename: "Sockeye-2s.mp4", 
       label: "Sockeye (2s)",
       description: toolData.sample.sockeye
+    },
+    { 
+      filename: "COx2-CNx2-14s.mp4", 
+      label: "Coho/Chinook (14s)",
+      description: toolData.sample.co_cn
+    },
+    { 
+      filename: "smolt-17s.mp4", 
+      label: "Smolt (17s)",
+      description: toolData.sample.smolt
     },
   ];
 

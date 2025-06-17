@@ -29,7 +29,7 @@ function AppContent() {
   // In demo mode, authentication is bypassed entirely.
   const isDemoMode = process.env.REACT_APP_MODE === 'demo';
 
-  const { handleLogout: termsLogout } = useTerms();
+  const { handleLogout: termsLogout, declineTerms } = useTerms();
   const { language } = useLanguage();
   const appTranslations = getLayoutTranslations('app', language);
   const { instance, accounts } = useMsal();
@@ -83,19 +83,31 @@ function AppContent() {
       onMsalLogoutSuccess();
       setPreviousAccount(null);
     }
-  }, [accounts]);
+  }, [accounts, previousAccount]);
 
-  // Handle login
-  const handleLogin = () => {
+  /**
+   * Handle Microsoft Entra ID login.
+   *
+   * - Called from `SignIn.js` once terms are accepted.
+   * - Triggers MSAL login, which navigates the user to the Entra ID login portal.
+   */
+  const handleLogin = async () => {
     console.log('logging in...')
+    try {
+      await instance.loginRedirect();
+      console.log('Redirecting to Entra ID...');
+    } catch (err) {
+      console.error("MSAL login failed:", err);
+      declineTerms();
+    }
   };
 
   // Handle logout
   const handleLogout = () => {
+    console.log('logging out...');
     // Logout MSAL
     if (previousAccount) {
       instance.logoutRedirect({ account: previousAccount });
-      console.log('logging out...');
     } else {
       console.warn('No active account found to log out.');
     }
