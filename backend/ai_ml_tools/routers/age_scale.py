@@ -30,6 +30,7 @@ async def age_scale(
     # Return the result with the additional parameters
     return {
         "age": result["value"],  # Always a string
+        "slice": result["slice"], # Slice image
         "error": result["error"],  # Will be None if no error
         "enhanced": enhance,
         "species": species,
@@ -54,7 +55,11 @@ async def scale_model_api(image_array):
         
         # Get the output from the response
         if r.status_code == 200 and "output" in r.json():
-            return {"value": r.json()["output"], "error": None}
+            return {
+                "value": r.json()["output"], 
+                "slice": r.json()["slice"],
+                "error": None
+                }
         else:
             raise Exception("Invalid response from model service")
             

@@ -6,7 +6,7 @@
  * for the tool, including its description and upload functionality.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 import { ToolPage } from '../../components/tools';
 import { useLanguage, useToolSettings } from '../../contexts';
@@ -53,6 +53,7 @@ export function ScaleAgeing({ isDemoMode }) {
       
       setScaleOutput({ 
         age: ageData.age,
+        slice: ageData.slice?.length ? ageData.slice : null,
         species: ageData.species || species,
         enhanced: ageData.enhanced || enhance,
         placeholder: ageData.placeholder || false,
@@ -65,6 +66,47 @@ export function ScaleAgeing({ isDemoMode }) {
       setIsProcessing(false); 
     }
   };
+
+  // Function to create image using the list of image data
+  function createImageFromPixelArray(pixelArray) {
+    const height = pixelArray.length;
+    const width = pixelArray[0].length;
+
+    console.log('Image height:', height);
+    console.log('Image width:', width);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const index = (y * width + x) * 4;
+        const [r, g, b] = pixelArray[y][x];
+
+        data[index] = r;
+        data[index + 1] = g;
+        data[index + 2] = b;
+        data[index + 3] = 255; // Alpha
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL('image/png'); // returns base64 PNG image
+  }
+
+  // Creating image URL
+  const sliceImageUrl = useMemo(() => {
+    if (scaleOutput.slice) {
+      return createImageFromPixelArray(scaleOutput.slice);
+    }
+    return null;
+  }, [scaleOutput.slice]);
+
 
   return (
     <ToolPage
@@ -92,7 +134,10 @@ export function ScaleAgeing({ isDemoMode }) {
           {/* A sub-container that arranges text lines vertically */}
           <Box sx={scaleAgeingStyles.resultContainer}>
             <Typography variant="h6" sx={{ mb: 1 }}>
-              Estimated Fish Age: {scaleOutput.age}
+              {/* Estimated Fish Age: */}
+              {scaleOutput.age.split('/n').map((line) => (
+                <>{line}<br /></>
+              ))}
             </Typography>
             
             <Typography sx={scaleAgeingStyles.infoLine}>
@@ -110,11 +155,36 @@ export function ScaleAgeing({ isDemoMode }) {
 
           {/* Display the processed image below the text lines */}
           {scaleOutput.imageUrl && (
-            <img 
-              src={scaleOutput.imageUrl} 
-              alt="Processed scale image" 
-              style={scaleAgeingStyles.resultImage}
-            />
+            <Box sx={scaleAgeingStyles.resultImageContainer}>
+              <img 
+                src={scaleOutput.imageUrl} 
+                alt="Processed scale image" 
+                style={scaleAgeingStyles.resultImage}
+              />
+              {sliceImageUrl && (
+                <img
+                  src={sliceImageUrl}
+                  alt="Slice image"
+                  style={{
+                    ...scaleAgeingStyles.resultSliceOverlay, 
+                    ...(scaleOutput.age?.startsWith('Estimated Fish Age: 5')
+                      && { 
+                        bottom: '85%', 
+                        left: '48%', 
+                        height: '48%', 
+                      }
+                    ),
+                    ...(scaleOutput.age?.startsWith('Estimated Fish Age: 6')
+                      && {
+                        bottom: '88%', 
+                        height: '45%', 
+                      }
+                    )
+                    
+                  }}
+                />
+              )}
+            </Box>
           )}
         </Box>
       )}
