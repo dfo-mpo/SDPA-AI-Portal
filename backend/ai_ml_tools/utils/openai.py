@@ -112,13 +112,16 @@ def get_relevent_chunks(chat_history: list[dict], document_chunks: list[str], do
         # Convert the list of dictionaries back to Document objects  
         # document_objects = [Document(id=index,page_content=chunk,metadata={"document_name": document_metadata[index]['document_name']}) for index, chunk in enumerate(document_chunks)]
         document_objects = [Document(id=index,page_content=chunk,metadata={"document_name": document_metadata[index]['document_name'], "page_numbers": document_metadata[index]["page_numbers"]},) for index, chunk in enumerate(document_chunks)]
-
+        # print("Number of document objects sent: " + str(len(document_objects)))
+        
         # Create vector store
         vector_store = Chroma("example_collection", embedding_function=embeddings)
         uuids = [str(uuid4()) for _ in range(len(document_objects))]
 
         vector_store.add_documents(documents=document_objects, ids=uuids)
         results = vector_store.similarity_search(chat_history[-1]['content'])
+        # print("Chunks in the database "+ str(vector_store._collection.count()))
+        vector_store.reset_collection()
         print("Number of chunks used: "+str(len(results)))
 
         for result in results:
