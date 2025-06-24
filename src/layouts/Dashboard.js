@@ -11,7 +11,7 @@ import PropTypes from 'prop-types';
 import { Box, Paper, CircularProgress, Alert } from '@mui/material';
 import { GovHeader, LeftPanel } from '.';
 import { getToolByName } from '../utils';
-import { HomePage } from '../pages';
+import { HomePage, DocxEditor } from '../pages';
 import { useLanguage } from '../contexts';
 import { Footer, TermsModalContainer } from '../components/common';
 import { getLayoutTranslations } from '../translations/layout'
@@ -97,6 +97,7 @@ export default function Dashboard({ onLogout, isDemoMode }) {
     'French Translation': FrenchTranslation,
     'Document OCR': DocumentOCR,
     'Form': SurveyForm,
+    'Document': DocxEditor,
   };
 
   const getToolComponent = (toolName) => {

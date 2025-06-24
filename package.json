@@ -19,6 +19,7 @@
     "@mui/x-data-grid": "^7.27.0",
     "@mui/x-date-pickers": "^7.27.0",
     "@mui/x-tree-view": "^7.26.0",
+    "@pdftron/webviewer": "^11.5.0",
     "@react-spring/web": "^9.7.5",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -39,13 +40,14 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "dev": "concurrently \"npm run start:client\" \"npm run start:server\"",
+    "dev": "npm run copy-webviewer && concurrently \"npm run start:client\" \"npm run start:server\"",
     "start:client": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
     "start:server": "node server/index.js",
-    "build": "NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
+    "build": "npm run copy-webviewer && NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
     "start": "node server/index.js",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "copy-webviewer": "node copy-webviewer.js"
   },
   "eslintConfig": {
     "extends": [

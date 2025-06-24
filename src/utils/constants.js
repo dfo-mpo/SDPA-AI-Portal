@@ -125,6 +125,16 @@ import {
       actionText: 'Open Form',
       showInDropdown: false
     },
+    DOCX_EDITOR: {
+      id: 'docx-editor',
+      name: 'Document',
+      category: 'Statistical and ML Algorithms Guide',
+      icon: ClipboardList,
+      backgroundImage: '/assets/clipboard.gif',
+      actionText: 'Open Form',
+      showInDropdown: false,
+      showInDemo: false,
+    },
     ML_MODELS: {
       id: 'ml-tools',
       name: 'Repositories',
@@ -158,6 +168,9 @@ import {
     ],
     'AI, ML and Data Analytics Use-Case': [
       TOOLS.DATA_INTAKE_FORM,
+    ],
+    'Statistical and ML Algorithms Guide': [
+      TOOLS.DOCX_EDITOR,
     ],
     'ML Models': [
       TOOLS.ML_MODELS,
