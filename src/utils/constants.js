@@ -17,6 +17,19 @@ import {
 } from 'lucide-react';
   
 
+  /**
+   * Tool Configuration Parameters
+   * @property {string} id - Unique identifier used for routing and internal references.
+   * @property {string} name - Display name of the tool.
+   * @property {string} category - Logical grouping for display and filtering.
+   * @property {JSX.Element} icon - Icon component used in UI.
+   * @property {string} backgroundImage - Path to background/banner image.
+   * @property {string} actionText - Text displayed on the action button.
+   * @property {boolean} [disabled=true] - (Optional) Whether the tool is disabled.
+   * @property {string} [externalUrl] - (Optional) External URL to open instead of internal routing.
+   * @property {boolean} [showInDropdown=false] - (Optional) Controls whether the tool appears in dropdown menu and tool settings.
+   * @property {boolean} [showInDemo=false] - (Optional) Controls whether the tool appears on side menu in the demo version.
+   */
   export const TOOLS = {
     // Computer Vision Tools
     SCALE_AGEING: {
