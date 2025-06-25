@@ -18,3 +18,4 @@ export {
     adaptGenericSettings, 
     getSettingsAdapter 
 } from './settingsAdapter';
+export { getParam, getAllParams, updateURLParams } from './urlParams';

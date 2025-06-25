@@ -10,7 +10,7 @@ import React, { useState, Suspense, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Paper, CircularProgress, Alert } from '@mui/material';
 import { GovHeader, LeftPanel } from '.';
-import { getToolByName } from '../utils';
+import { getToolByName, getParam, getAllParams, updateURLParams } from '../utils';
 import { HomePage, DocxEditor } from '../pages';
 import { useLanguage } from '../contexts';
 import { Footer, TermsModalContainer } from '../components/common';
@@ -44,6 +44,25 @@ export default function Dashboard({ onLogout, isDemoMode }) {
   // Determine if we're on the home page (no tool selected)
   const isHomePage = !selectedTool;
 
+  // Retrieve all current URL search parameters once on load
+  const searchParams = getAllParams();
+  
+  useEffect(()=>{
+    // If param detected on load, switch to tool page
+    if (getParam('view')) {
+      const view = getParam('view');
+      // Try to match param to a known tool
+      const tool = getToolByName(view);
+      if (view && tool) {
+        // If the tool is valid, update the selected tool in state
+        setSelectedTool(view);
+      } else {
+        // If param is invalid or unrecognized, clean the URL
+        updateURLParams({});
+      }
+    }
+  }, [searchParams]);
+
   // Check if the tool should be disabled
   const isToolDisabled = (toolName) => {
     const tool = getToolByName(toolName);
@@ -66,6 +85,8 @@ export default function Dashboard({ onLogout, isDemoMode }) {
    * @param {string} toolName - Name of the selected tool
    */
   const handleToolSelect = (toolName) => {
+    // Reset url params
+    updateURLParams({});
     // If selecting "AI Tools Home" from dropdown, set to empty string
     // Ensures we always have the correct state for home page
     setSelectedTool(toolName || '');
@@ -102,7 +123,9 @@ export default function Dashboard({ onLogout, isDemoMode }) {
 
   const getToolComponent = (toolName) => {
     const ToolComponent = toolComponents[toolName];
-    return ToolComponent ? <ToolComponent isDemoMode={isDemoMode} /> : null;
+    if (!ToolComponent) return null;
+    const props = { isDemoMode }
+    return ToolComponent ? <ToolComponent {...props} /> : null;
   };
 
   /**
