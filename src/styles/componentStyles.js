@@ -1123,7 +1123,8 @@ export const scaleAgeingStyles = {
         : '0 2px 4px rgba(0, 0, 0, 0.1)',
   },
   resultContainer: {
-    marginTop: '1rem',
+    width: '100%',
+    // marginTop: '1rem',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
@@ -1134,13 +1135,25 @@ export const scaleAgeingStyles = {
     fontSize: '1rem',
     color: (theme) => theme.palette.text.primary,
   },
+  resultImageContainer: {
+    position: 'relative',
+    marginTop: '1rem',
+    display: 'inline-block',
+  },
   resultImage: {
     width: '100%',
     maxWidth: '600px',
     height: 'auto',
-    marginTop: '1rem',
-    border: (theme) => `1px solid ${theme.palette.divider}`,
-    borderRadius: '4px',
+  },
+  resultSliceOverlay: {
+    position: 'absolute',
+    bottom: '50%',
+    left: '50%', 
+    transform: 'translateX(-50%) translateY(100%)', 
+    height: '50%', 
+    width: '4px', 
+    imageRendering: 'pixelated',
+    pointerEvents: 'none',
   },
 };
 

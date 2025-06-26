@@ -27,7 +27,8 @@ import {
   DialogActions,
   Divider,
   Card,
-  CardContent
+  CardContent,
+  useTheme
 } from '@mui/material';
 import { 
   Send, 
@@ -51,6 +52,14 @@ import { trackEvent } from '../../utils/analytics';
 export function PDFChatbot({ isDemoMode }) {
   const { language } = useLanguage();
   const toolData = getToolTranslations("pdfChatbot", language);
+  const theme = useTheme();
+
+  // const chatOutputStyles = {
+  //   'tr > th': {
+
+  //   }
+
+  // }
   
   // Get context settings from ToolSettingsContext
   const { pdfChatbotSettings, updatePdfChatbotTokenUsage } = useToolSettings();
@@ -179,7 +188,8 @@ export function PDFChatbot({ isDemoMode }) {
         table { border-collapse: collapse; width: 100%; margin: 10px 0; }
         table, th, td { border: 1px solid #ddd; }
         th, td { padding: 8px; text-align: left; }
-        th { background-color: #f5f5f5; }
+        th { background-color: #f5f5f6;
+        color: ${theme.palette.mode === 'dark' ? '#303f3f !important' : ''}; }
       </style>
     `;
     

@@ -74,7 +74,11 @@ export const processScaleAge = async (file, settings = {}) => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    const res_json = await response.json();
+    return {
+      ...res_json,
+      "filename": file.name
+    };
   } catch (error) {
     console.error('Error in processScaleAge:', error); 
     throw error;

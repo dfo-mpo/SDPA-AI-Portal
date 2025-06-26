@@ -29,6 +29,7 @@ yarn-error.log*
 
 # auth config
 src/components/auth/authConfig.js
+/public/lib/webviewer
 
 src/setupProxy.js
 src/services/apiService.js
