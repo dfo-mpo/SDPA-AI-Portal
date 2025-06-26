@@ -125,6 +125,10 @@ export default function Dashboard({ onLogout, isDemoMode }) {
     const ToolComponent = toolComponents[toolName];
     if (!ToolComponent) return null;
     const props = { isDemoMode }
+    if (toolName === 'Document') {
+      if (getParam('file')) props.file = getParam('file');
+      if (!isDemoMode && getParam('enableOfficeEditing') === 'true') props.enableOfficeEditing = true; // Editing is prohibited in demo
+    }
     return ToolComponent ? <ToolComponent {...props} /> : null;
   };
 
