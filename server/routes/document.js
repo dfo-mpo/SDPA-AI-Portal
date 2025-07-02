@@ -6,7 +6,7 @@ const router = express.Router();
 const upload = multer();
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
 
-router.post('/saveEdits', upload.single('file'), async (req, res) => {
+router.post('/docx/saveEdits', upload.single('file'), async (req, res) => {
   try {
     const { originalname, buffer } = req.file;
     const folder = req.body.folder;
@@ -25,7 +25,7 @@ router.post('/saveEdits', upload.single('file'), async (req, res) => {
   }
 });
 
-router.get('/:folder/:filename', async (req, res) => {
+router.get('/docx/:folder/:filename', async (req, res) => {
   try {
     const { folder, filename } = req.params;
 

@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 app.use('/api', storageRoutes);
-app.use('/api/document', documentRoutes);
+app.use('/api', documentRoutes);
 
 app.listen(PORT, () => {
   console.log(`Node backend running on http://localhost:${PORT}`);
