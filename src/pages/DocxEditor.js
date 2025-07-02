@@ -14,8 +14,8 @@ const DocxEditor = ({
   const [fileExists, setFileExists] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const apiEndpoint = '/api/document';
-  const docPath = `${apiEndpoint}/${file}`;
+  const apiEndpoint = '/api';
+  const docPath = `${apiEndpoint}/docx/${file}`;
 
   useEffect(() => {
     if (!file  || initialized.current) return;
@@ -72,7 +72,7 @@ const DocxEditor = ({
       formData.append('file', blob, filename);
       formData.append('folder', folder);
 
-      const res = await fetch(`${apiEndpoint}/saveEdits`, {
+      const res = await fetch(`${apiEndpoint}/docx/saveEdits`, {
         method: 'POST',
         body: formData,
       });
