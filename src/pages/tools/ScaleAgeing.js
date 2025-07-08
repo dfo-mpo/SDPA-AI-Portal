@@ -57,7 +57,8 @@ export function ScaleAgeing({ isDemoMode }) {
         species: ageData.species || species,
         enhanced: ageData.enhanced || enhance,
         placeholder: ageData.placeholder || false,
-        imageUrl: pngUrl 
+        imageUrl: pngUrl, 
+        filename: ageData.filename || null
       });
     } catch (error) {
       console.error('Error:', error);
@@ -167,14 +168,14 @@ export function ScaleAgeing({ isDemoMode }) {
                   alt="Slice image"
                   style={{
                     ...scaleAgeingStyles.resultSliceOverlay, 
-                    ...(scaleOutput.age?.startsWith('Estimated Fish Age: 5')
+                    ...(scaleOutput.filename === 'age5_Chum_SCL_2001_10.tif'
                       && { 
                         bottom: '85%', 
                         left: '48%', 
                         height: '48%', 
                       }
                     ),
-                    ...(scaleOutput.age?.startsWith('Estimated Fish Age: 6')
+                    ...(scaleOutput.filename === 'age6_Chum_SCL_2001_218.tif'
                       && {
                         bottom: '88%', 
                         height: '45%', 

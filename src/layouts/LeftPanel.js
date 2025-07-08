@@ -225,7 +225,7 @@ export default function NewLeftPanel({
       {/* Top Section - Dropdown or Static Tool List */}
       <Box sx={styles.content}>
         {isHomePage || !showToolSettings() ? (
-          <StaticToolList onToolSelect={onSelectTool} selectedTool={selectedTool} />
+          <StaticToolList onToolSelect={onSelectTool} selectedTool={selectedTool} isDemoMode={isDemoMode} />
         ) : (
           <Box sx={styles.toolSelectionContainer}>
             {/* Home Button */}

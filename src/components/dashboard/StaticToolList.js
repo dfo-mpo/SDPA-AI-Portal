@@ -35,7 +35,7 @@ import { trackEvent } from '../../utils/analytics';
  * @param {String} [props.selectedTool] - Currently selected tool (if any)
  * @returns {JSX.Element} The rendered component
  */
-export default function StaticToolList({ onToolSelect, selectedTool }) {
+export default function StaticToolList({ onToolSelect, selectedTool, isDemoMode }) {
   const { language } = useLanguage();
   const theme = useTheme();
   const translations = getToolTranslations("aiToolsDropdown", language);
@@ -91,15 +91,19 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
       {/* Categories and Tools */}
       {Object.entries(TOOL_CATEGORIES).map(([category, tools]) => (
         <Box key={category}>
-          <ListSubheader sx={staticToolListStyles.subheader}>
-            {translations.categories[category] || category}
-          </ListSubheader>
+          {/* Check if the category should be displayed in demo mode */}
+          {(!isDemoMode || tools.some(tool => tool.showInDemo !== false)) && (
+            <ListSubheader sx={staticToolListStyles.subheader}>
+              {translations.categories[category] || category}
+            </ListSubheader>
+          )}
           
           <List disablePadding>
             {tools.map((tool) => {
               const IconComponent = tool.icon;
               const isDisabled = tool.disabled;
               const isExternalLink = !!tool.externalUrl;
+              const isHideInDemo = tool.showInDemo === false && isDemoMode;
               // Determine appropriate tooltip
               let tooltipText = "";
               if (isDisabled) {
@@ -109,6 +113,7 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
               } else if (isExternalLink) {
                 tooltipText = externalLinkTooltip[language] || externalLinkTooltip.en;
               }
+              if (isHideInDemo) return null;
               return (
                 <ListItem key={tool.name} disablePadding>
                   <Tooltip 

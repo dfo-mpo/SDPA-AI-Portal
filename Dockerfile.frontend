@@ -13,6 +13,9 @@ COPY public/ ./public
 COPY src/ ./src
 COPY tailwind.config.js ./
 
+# Copy WebViewer asset
+COPY copy-webviewer.js ./
+
 # Inject REACT_APP_MODE into a .env file CRA will read
 RUN echo "REACT_APP_MODE=$REACT_APP_MODE" > .env
 
