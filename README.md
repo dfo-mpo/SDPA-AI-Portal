@@ -5,7 +5,9 @@ Note: temp measure!  Right now there is a third image for an express server, thi
 The backend is implemented using fastapi/uvicorn, the backend folder contains the dockerfile for creating its image. It uses Python 3.10 and imports all packages specified in the requirments.txt file. It is exposed to port 8000 but the port is not used by the frontend due to the reverse proxy.<br>
 <b>Important:</b> There are 2 urls for HTTP requests to the VM that need to be manually uncommented (one for Azure and one for Dat's local machine). This is in routers/age_scale.py and routers/french_translations.py
 ## Frontend Image Logic
-The frontend is implemented using Reactjs, the root of this project contains the dockerfile.frontend for creating its image. It uses Node 22.12.0 and for installing depedencies the package and package-lock jsons. The nginx-app.conf file will create a reverse proxy that allows HTTPS and WSS requests from the frontend image to be internally sent to the backend image as HTTP and WS requests. This allows the frontend and backend images communcate with out exposing non secure requests. The nginx-app.conf file also has a max file size limit set for all requests passed through the reverse proxy. It is exposed to port 80.
+The frontend is implemented using Reactjs, the root of this project contains the dockerfile.frontend for creating its image. It uses Node 22.12.0 and for installing depedencies the package and package-lock jsons. The nginx-app.conf file will create a reverse proxy that allows HTTPS and WSS requests from the frontend image to be internally sent to the backend image as HTTP and WS requests. This allows the frontend and backend images communcate with out exposing non secure requests. The nginx-app.conf file also has a max file size limit set for all requests passed through the reverse proxy. It is exposed to port 80.<br>
+Due to nginx proxy, requests to the express server should begin with /server/ while requests to the backend should begin with /api/. The backend will receive requests with the /api/ part removed while the express server will receive requests with the /server/ part replaced with /api/.
+
 ## Building the Docker Container Locally
 The docker-compose.yml file will allow for a docker container be created using the frontend and backend images. It reroutes the frontend exposure port to 3080 while rerouting the backend port to 8080. To set up your container locally:
 1. In the backend/ai_ml_tools folder, copy and rename the '.env.sample' file to '.env'. Fill in the keys for OpenAI and Document Intelligence.
@@ -282,10 +284,4 @@ pip install -r requirements.txt
 To start the backend use the command:
 ```bash
 python -m uvicorn ai_ml_tools.main:app --reload
-```
-
-## Using Docker
-If you wish to deploy this using a docker container by creating images for the Frontend and Backend switch to the docker branch and read instructions in the README.md. Run the following command in root of your local repository to switch the branch:
-```bash
-git checkout docker
 ```
