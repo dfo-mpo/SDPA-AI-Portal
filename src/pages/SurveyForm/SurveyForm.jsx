@@ -12,8 +12,10 @@ import ToolSelectionQuestion from "./ToolSelectionQuestion";
 import TooltipWord from "./TooltipWord";
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { trackEvent } from "../../utils/analytics";
+import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 
 export function SurveyForm() {
+  const surveyFormStyles = useComponentStyles('surveyForm');
 
   const initialAnswers = Questions.reduce((acc, question) => {
     acc[question.name] = "";
@@ -190,7 +192,7 @@ export function SurveyForm() {
 
         {showPopup && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <div className="p-6 rounded-lg text-center" style={surveyFormStyles.popUpMessage}>
               <p className="text-lg font-semibold mb-4">{popupMessage}</p>
               <button
                 onClick={() => {
