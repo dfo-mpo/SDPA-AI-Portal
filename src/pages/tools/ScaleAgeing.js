@@ -108,6 +108,21 @@ export function ScaleAgeing({ isDemoMode }) {
     return null;
   }, [scaleOutput.slice]);
 
+  // Add overlay slice image to select scale image
+  const overlayImageStyleConfig = {
+    'age5_Chum_SCL_2001_10.tif': {
+      bottom: '85%', 
+      left: '48%', 
+      height: '48%', 
+    },
+    'age6_Chum_SCL_2001_218.tif': {
+      bottom: '88%', 
+      height: '45%', 
+    }
+  };
+
+  const overlayImageStyle = overlayImageStyleConfig[scaleOutput.filename];
+
 
   return (
     <ToolPage
@@ -162,26 +177,13 @@ export function ScaleAgeing({ isDemoMode }) {
                 alt="Processed scale image" 
                 style={scaleAgeingStyles.resultImage}
               />
-              {sliceImageUrl && (
+              {sliceImageUrl && overlayImageStyle && (
                 <img
                   src={sliceImageUrl}
                   alt="Slice image"
                   style={{
                     ...scaleAgeingStyles.resultSliceOverlay, 
-                    ...(scaleOutput.filename === 'age5_Chum_SCL_2001_10.tif'
-                      && { 
-                        bottom: '85%', 
-                        left: '48%', 
-                        height: '48%', 
-                      }
-                    ),
-                    ...(scaleOutput.filename === 'age6_Chum_SCL_2001_218.tif'
-                      && {
-                        bottom: '88%', 
-                        height: '45%', 
-                      }
-                    )
-                    
+                    ...overlayImageStyle
                   }}
                 />
               )}
