@@ -1845,6 +1845,19 @@ export const fenceCountingStyles = {
   },
 };
 
+export const surveyFormStyles = {
+  popUpMessage: (theme) => ({
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(13, 25, 43, 1)'
+        : dfoColors.white,
+    boxShadow:
+      theme.palette.mode === 'dark'
+        ? '0 4px 12px rgba(0, 0, 0, 0.3)'
+        : '0 2px 8px rgba(0, 0, 0, 0.05)',
+  }),
+}
+
 // export all together (optional convenience)
 export default {
   container: containerStyles,
@@ -1879,4 +1892,5 @@ export default {
   pdfChatbot: pdfChatbotStyles,
   toolContentWrapper: toolContentWrapperStyles,
   fenceCounting: fenceCountingStyles,
+  surveyForm: surveyFormStyles,
 };

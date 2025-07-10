@@ -34,6 +34,7 @@ const DocxEditor = ({
             path: '/lib/webviewer',
             initialDoc: docPath,
             enableOfficeEditing,
+            licenseKey: 'YOUR_LICENSE_KEY',
           },
           viewer.current,
         ).then((instance) => {
