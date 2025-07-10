@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from "react";
-import Questions from "./Questions";
+import { Questions, SectionGroups } from "./Questions";
 import InputField from "./InputField";
 import TextArea from "./TextArea";
 import SelectBox from "./SelectBox";
@@ -78,14 +78,7 @@ export function SurveyForm() {
     setShowPopup(false);
     window.location.reload();
   };
-  // this is used to keep track of the questions we want to render for each section
-  const sectionGroups = {
-    operationalPriorities: ["average_time", "area_cost_savings", "long_term_vision"],
-    projectDetails: ["project_name", "product_owner", "project_description", "objective", "tools_needed_for_work"],
-    dataDetails: ["dataset_availability", "data_verified", "data_source", "dataset_annotation", "classification"],
-    aiMlQuestions: ["problem_statement", "project_area", "status", "priority_level"],
-    security: ["statement_of_sensitivity_exist"],
-  };
+  
   // this helper function is used to render each question type with their respective fields
   const renderQuestion = (question) => {
     switch (question.type) {
@@ -208,91 +201,28 @@ export function SurveyForm() {
         )}
 
         <form onSubmit={handleSubmit} className="bg-white p-8 shadow-xl rounded-xl w-full space-y-8 border border-gray-200 dark:bg-black">
-          {/* Operational Priorities */}
-          <div className="border rounded-2xl shadow-md overflow-hidden mb-6">
+          {Object.entries(SectionGroups).map(([key, section]) => (
+            <div key={key} className="border rounded-2xl shadow-md overflow-hidden mb-6">
             <button
               type="button"
-              onClick={() => handleSectionToggle("operationalPriorities")} // this part checks if this section is open or not
+              onClick={() => handleSectionToggle(key)} // this part checks if this section is open or not
               className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 dark:bg-gray-800 text-lg font-bold text-left"
             >
-              Operational Priorities and Productivity
-              {openSections.operationalPriorities ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              {section.label}
+              {openSections[key] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </button>
-            {openSections["operationalPriorities"] && (
+            {openSections[key] && (
               <div className="p-4 space-y-6 bg-white dark:bg-black">
-                {Questions.filter(q => sectionGroups.operationalPriorities.includes(q.name)).map(renderQuestion)}
+                {/* {Questions.filter(q => section.questions.includes(q.name)).map(renderQuestion)} */}
+                {section.questions
+                  .map(question => Questions.find(q => q.name === question))
+                  .filter(Boolean)
+                  .map(renderQuestion)}
               </div>
             )}
           </div>
-
-          {/* Project Details */}
-          <div className="border rounded-2xl shadow-md overflow-hidden mb-6">
-            <button
-              type="button"
-              onClick={() => handleSectionToggle("projectDetails")} // this part checks if this section is open or not
-              className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 dark:bg-gray-800 text-lg font-bold text-left"
-            >
-              Project Details
-              {openSections.projectDetails ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </button>
-            {openSections["projectDetails"] && (
-              <div className="p-4 space-y-6 bg-white dark:bg-black">
-                {Questions.filter(q => sectionGroups.projectDetails.includes(q.name)).map(renderQuestion)}
-              </div>
-            )}
-          </div>
-
-          {/* Data Details */}
-          <div className="border rounded-2xl shadow-md overflow-hidden mb-6">
-            <button
-              type="button"
-              onClick={() => handleSectionToggle("dataDetails")} // this part checks if this section is open or not
-              className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 dark:bg-gray-800 text-lg font-bold text-left"
-            >
-              Data Details
-              {openSections.dataDetails ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </button>
-            {openSections["dataDetails"] && (
-              <div className="p-4 space-y-6 bg-white dark:bg-black">
-                {Questions.filter(q => sectionGroups.dataDetails.includes(q.name)).map(renderQuestion)}
-              </div>
-            )}
-          </div>
-
-          {/* AI/ML Questions */}
-          <div className="border rounded-2xl shadow-md overflow-hidden mb-6">
-            <button
-              type="button"
-              onClick={() => handleSectionToggle("aiMlQuestions")} // this part checks if this section is open or not
-              className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 dark:bg-gray-800 text-lg font-bold text-left"
-            >
-              Data Science, ML and AI questions
-              {openSections.aiMlQuestions ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </button>
-            {openSections["aiMlQuestions"] && (
-              <div className="p-4 space-y-6 bg-white dark:bg-black">
-                {Questions.filter(q => sectionGroups.aiMlQuestions.includes(q.name)).map(renderQuestion)}
-              </div>
-            )}
-          </div>
-
-          {/* Security */}
-          <div className="border rounded-2xl shadow-md overflow-hidden mb-6">
-            <button
-              type="button"
-              onClick={() => handleSectionToggle("security")} // this part checks if this section is open or not
-              className="w-full flex justify-between items-center px-6 py-4 bg-gray-100 dark:bg-gray-800 text-lg font-bold text-left"
-            >
-              Security
-              {openSections.security ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </button>
-            {openSections["security"] && (
-              <div className="p-4 space-y-6 bg-white dark:bg-black">
-                {Questions.filter(q => sectionGroups.security.includes(q.name)).map(renderQuestion)}
-              </div>
-            )}
-          </div>
-
+          ))}
+          
           <div className="flex justify-center mt-6">
             <SubmitButton label="Submit Survey" />
           </div>
