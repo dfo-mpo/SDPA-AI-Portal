@@ -53,13 +53,6 @@ export function PDFChatbot({ isDemoMode }) {
   const { language } = useLanguage();
   const toolData = getToolTranslations("pdfChatbot", language);
   const theme = useTheme();
-
-  // const chatOutputStyles = {
-  //   'tr > th': {
-
-  //   }
-
-  // }
   
   // Get context settings from ToolSettingsContext
   const { pdfChatbotSettings, updatePdfChatbotTokenUsage } = useToolSettings();
