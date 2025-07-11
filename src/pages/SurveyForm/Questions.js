@@ -368,8 +368,8 @@ export const Questions = [
   {
     name: "what_related_to_time_sensitive",
     label: "",
-    type: "textarea",
-    description: "If yes, is there a specific deadline or event it relates to?"
+    type: "calander",
+    description: "If yes, is there a specific deadline?"
   }
 ];
 

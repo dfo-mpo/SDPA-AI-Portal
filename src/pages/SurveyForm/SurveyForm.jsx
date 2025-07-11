@@ -8,6 +8,7 @@ import MultiSelect from "./MultiSelect";
 import MultiSelectText from "./MultiSelectText";
 import RadioGroup from "./RadioGroup";
 import SubmitButton from "./SubmitButton";
+import Calander from "./Calander";
 import ToolSelectionQuestion from "./ToolSelectionQuestion";
 import TooltipWord from "./TooltipWord";
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -147,6 +148,14 @@ export function SurveyForm() {
         submitted={submitted}
         setSubmitted={setSubmitted}
       />;
+      case "calander":
+        return <Calander
+          name={question.name} 
+          label={question.label} 
+          description={question.description} 
+          value={answers[question.name]} 
+          onChange={handleChange} 
+        />
       default:
         return null;
     }
