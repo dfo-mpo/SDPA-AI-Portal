@@ -133,7 +133,7 @@ import {
       backgroundImage: '/assets/clipboard.gif',
       actionText: 'Open Form',
       showInDropdown: false,
-      showInDemo: false,
+      // showInDemo: false,
     },
     ML_MODELS: {
       id: 'ml-tools',
