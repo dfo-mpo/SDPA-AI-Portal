@@ -98,6 +98,7 @@ export function SurveyForm() {
         description={question.description} 
         value={answers[question.name]} 
         onChange={handleChange} 
+        required={question.required}
       />;
       case "select":
         return <SelectBox 

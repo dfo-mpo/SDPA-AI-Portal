@@ -11,12 +11,10 @@ import PropTypes from 'prop-types';
 import { Box, Paper, CircularProgress, Alert } from '@mui/material';
 import { GovHeader, LeftPanel } from '.';
 import { getToolByName, getParam, getAllParams, updateURLParams } from '../utils';
-import { HomePage, DocxEditor } from '../pages';
+import { HomePage, DocxEditor, SurveyForm } from '../pages';
 import { useLanguage } from '../contexts';
 import { Footer, TermsModalContainer } from '../components/common';
 import { getLayoutTranslations } from '../translations/layout'
-
-
 import {
   ScaleAgeing,
   FenceCounting,
@@ -27,7 +25,6 @@ import {
   FrenchTranslation,
   DocumentOCR
 } from '../pages/tools';
-import { SurveyForm } from '../pages/SurveyForm';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
 export default function Dashboard({ onLogout, isDemoMode }) {
