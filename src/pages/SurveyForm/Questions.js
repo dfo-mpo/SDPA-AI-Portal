@@ -48,8 +48,14 @@ export const Questions = [
     type: "text"
   },
   {
-    name: "use_case_overview",
+    name: "project_title",
     label: "Project Description and Objective",
+    type: "text",
+    description: "Project Title"
+  },
+  {
+    name: "use_case_overview",
+    label: "",
     type: "textarea",
     description: "Brief overview of potential program or service delivery, operations, or business process impacted being explored as a use case"
   },
@@ -227,13 +233,13 @@ export const Questions = [
     name: "project_area", 
     label: "Select the focus areas of your current or planned projects", 
     type: "multiselect", 
-    options: ["A) Data Analytics", "B) Artificial Intelligence (AI)"] 
+    options: ["Data Analytics", "Artificial Intelligence (AI)"] 
   },
   {
     name: "success_outcomes",
     label: "",
     type: "textarea",
-    description: "If B) was selected, what outcome would success look like for addressing your business problem with AI? (Try to make this measurable: faster processes, better decisions, more sales, etc.)",
+    description: "If AI was selected, what outcome would success look like for addressing your business problem with AI? (Try to make this measurable: faster processes, better decisions, more sales, etc.)",
     required: false
   },
   { 
@@ -244,11 +250,11 @@ export const Questions = [
     description: "Indicates the current maturity or stage of the project." 
   },
   { 
-    name: "is_dataset_annotation_needed", 
-    label: "Is data annotation needed?", 
+    name: "data_annotation_support", 
+    label: "Data Annotation Support", 
     type: "radio", 
     options: ["Yes", "No", "I don't know"], 
-    description: "In most instances, we will require training in ML models and therefore we will require experts to label and annotate datasets. Does your team have the capacity to support or assist with data annotation?"
+    description: "In most instances, we will require training in ML models and therefore we will require experts to label and annotate datasets. Does your team have the capacity to support with data annotation?"
   },
   {
     name: "time_sensitive",
@@ -267,7 +273,7 @@ export const Questions = [
 
   { 
     name: "statement_of_sensitivity_exist", 
-    label: "Does a Statement of Sensitivity (SOS) exist?", 
+    label: "Does a Statement of Sensitivity (SoS) exist?", 
     type: "radio", 
     options: ["Yes", "No"], 
     description: "Indicates whether the data used in this project has been formally assessed for sensitivity." 
@@ -282,6 +288,7 @@ export const SectionGroups = {
       "contact_name",
       "contact_email",
       "contact_branch_sector",
+      "project_title",
       "use_case_overview",
       "business_problem",
       "who_is_affected",
@@ -306,7 +313,7 @@ export const SectionGroups = {
       "project_area", 
       "success_outcomes",
       "status", 
-      "is_dataset_annotation_needed",
+      "data_annotation_support",
       "time_sensitive",
       "time_sensitive_deadline",
       
