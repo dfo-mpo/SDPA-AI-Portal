@@ -294,6 +294,8 @@ export const SectionGroups = {
       "who_is_affected",
       "areas_of_impact_on_business",
       "priority_level",
+      "time_sensitive",
+      "time_sensitive_deadline",
       "tools_needed_for_work",
     ],
   },
@@ -313,10 +315,7 @@ export const SectionGroups = {
       "project_area", 
       "success_outcomes",
       "status", 
-      "data_annotation_support",
-      "time_sensitive",
-      "time_sensitive_deadline",
-      
+      "data_annotation_support",      
     ],
   },
   security: {
