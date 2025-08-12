@@ -11,15 +11,18 @@ import PropTypes from 'prop-types';
 import { Box, Paper, CircularProgress, Alert } from '@mui/material';
 import { GovHeader, LeftPanel } from '.';
 import { getToolByName, getParam, getAllParams, updateURLParams } from '../utils';
-import { HomePage, DocxEditor } from '../pages';
+import { HomePage, DocxEditor, SurveyForm } from '../pages';
 import { useLanguage } from '../contexts';
 import { Footer, TermsModalContainer } from '../components/common';
 import { getLayoutTranslations } from '../translations/layout'
-
-
 import {
   ScaleAgeing,
   FenceCounting,
+  ElectronicMonitoring,
+  UnderwaterMarineLifeAnnotation,
+  FishPopulationEstimation,
+  DectectionofGhostGear,
+  CTDDataQualityControl,
   CSVAnalyzer,
   PDFChatbot,
   PIIRedactor,
@@ -27,7 +30,6 @@ import {
   FrenchTranslation,
   DocumentOCR
 } from '../pages/tools';
-import { SurveyForm } from '../pages/SurveyForm';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
 export default function Dashboard({ onLogout, isDemoMode }) {
@@ -111,6 +113,11 @@ export default function Dashboard({ onLogout, isDemoMode }) {
   const toolComponents = {
     'Scale Ageing': ScaleAgeing,
     'Fence Counting': FenceCounting,
+    'Electronic Monitoring': ElectronicMonitoring,
+    'Underwater Marine Life Annotation': UnderwaterMarineLifeAnnotation,
+    'Fish Population Estimation': FishPopulationEstimation,
+    'Dectection of Ghost Gear': DectectionofGhostGear,
+    'CTD Data Quality Control': CTDDataQualityControl,
     'CSV/PDF Analyzer': CSVAnalyzer,
     'PDF Chatbot': PDFChatbot,
     'PII Redactor': PIIRedactor,

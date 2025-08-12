@@ -32,12 +32,45 @@ import TooltipWord from "./TooltipWord";
  */
 
 export const Questions = [
-  // { 
-  //   name: "estimation_time_and_cost", 
-  //   label: "Estimation: Time and Cost", 
-  //   type: "textmultiselect", 
-  //   description: "For the business process that will be supported by the AI solution, what is the current average time and cost (e.g., FTEs and annual budget) required for the process?" 
-  // },
+  {
+    name: "contact_name",
+    label: "Contact Name",
+    type: "text"
+  },
+  {
+    name: "contact_email",
+    label: "Contact Email",
+    type: "text"
+  },
+  {
+    name: "contact_branch_sector",
+    label: "Contact Branch/Sector",
+    type: "text"
+  },
+  {
+    name: "project_title",
+    label: "Project Description and Objective",
+    type: "text",
+    description: "Project Title"
+  },
+  {
+    name: "use_case_overview",
+    label: "",
+    type: "textarea",
+    description: "Brief overview of potential program or service delivery, operations, or business process impacted being explored as a use case"
+  },
+  {
+    name: "business_problem",
+    label: "",
+    type: "textarea",
+    description: "What business problem or opportunity are you trying to address? (Tip: Focus on challenges that impact productivity, efficiency, or cost for operations or stakeholders.)"
+  },
+  {
+    name: "who_is_affected",
+    label: "",
+    type: "textarea",
+    description: "Who is affected by this problem? (Departments, teams, partners, stakeholders, public, etc.)"
+  },
   { 
     name: "areas_of_impact_on_business", 
     label: "Areas of impact on business", 
@@ -46,28 +79,13 @@ export const Questions = [
     description: "Try to estimate how it would affect time, cost, revenue, customer satisfaction, etc.", 
     includeOtherOptions: true 
   },
-  // { 
-  //   name: "long_term_vision", 
-  //   label: "Long Term Vision", 
-  //   type: "textarea", 
-  //   description: "What's your long-term vision for how to make your processes more efficient?" 
-  // },
-  // { 
-  //   name: "project_name", 
-  //   label: "Project Name", 
-  //   type: "text" 
-  // },
-  // { 
-  //   name: "product_owner", 
-  //   label: "Product Owner", 
-  //   type: "text" 
-  // },
-  // { 
-  //   name: "project_description", 
-  //   label: "Project Description and Objective", 
-  //   type: "textarea", 
-  //   description:"A brief overview of the project's purpose, objective, and intended outcome." 
-  // },
+  { 
+    name: "priority_level", 
+    label: "Priority Level", 
+    type: "radio", 
+    options: ["Low", "Medium", "High"], 
+    description: "The level of urgency or importance assigned to the project." 
+  },
   { 
     name: "tools_needed_for_work", 
     label: "Optional: What tools/services do you currently use to fulfil this project", 
@@ -171,20 +189,21 @@ export const Questions = [
       }
     ]
   },
+
+
   { 
     name: "is_dataset_available", 
-    label: "Is the Dataset available and ready to use?", 
+    label: "Is the data available and ready to use?", 
     type: "radio", 
     options: ["Yes", "No"], 
-    description: "Specifies whether the dataset required for the project is readily accessible."
+    description: "Specifies whether the data required for the project is readily accessible."
   },
-  // { 
-  //   name: "data_verified", 
-  //   label: "Has the data been verified?", 
-  //   type: "radio", 
-  //   options: ["Yes", "No"], 
-  //   description: ""
-  // },
+  {
+    name: "available_data_info",
+    label: "What kinds of information or data do you have or are currently used (if any)?",
+    type: "textarea",
+    description: "You don't need technical details—just describe what the data or information is."
+  },
   { 
     name: "data_source", 
     label: "Data Source", 
@@ -193,171 +212,50 @@ export const Questions = [
     description: "Where the data used in the project is currently stored or accessed from.", 
     includeOtherOptions: true 
   },
-  { 
-    name: "is_dataset_annotation_needed", 
-    label: "Is data annotation needed?", 
-    type: "radio", 
-    options: ["Yes", "No", "I don't know"], 
-    description: "In most instances, we will require training in ML models and therefore we will require experts to label and annotate datasets. Does your team have the capacity to support data procurement?"
+  {
+    name: "data_type",
+    label: "Data Type",
+    type: "multiselect",
+    options: ["Spreadsheets", "CRMs", "Emails", "Customer Support Platforms", "Word documents", "PDFs", "Shape files"],
+    description: "What are the stored data types? Are there existing tools, systems, or documents involved with this information or data?",
+    includeOtherOptions: true 
   },
   { 
     name: "classification", 
     label: "Classification", 
     type: "radio", 
-    options: ["Unclassified", "Protected A", "Protected B", "Protected C", "Secret"], 
-    description: (
-      <>
-        The <TooltipWord word="security or sensitivity level" tooltip="Indicates how confidential or restricted the data is, based on organizational or governmental classification."/> of the data being used in the project.
-      </>
-    )
+    options: ["Unclassified", "Protected A", "Protected B", "Protected C", "Secret", "Not yet determined"], 
+    description: "Indicate governmental classification"
   },
-  // { 
-  //   name: "problem_statement", 
-  //   label: "Problem Statement", 
-  //   type: "textarea", 
-  //   description: "Describe how data analytics, artificial intelligence, or machine learning will contribute to addressing the problem or achieving the objective." 
-  // },
+
+
   { 
     name: "project_area", 
     label: "Select the focus areas of your current or planned projects", 
     type: "multiselect", 
-    options: ["Data Analytics", "Artificial Intelligence (AI)", "Machine Learning (ML)"] 
+    options: ["Data Analytics", "Artificial Intelligence (AI)"] 
+  },
+  {
+    name: "success_outcomes",
+    label: "",
+    type: "textarea",
+    description: "If AI was selected, what outcome would success look like for addressing your business problem with AI? (Try to make this measurable: faster processes, better decisions, more sales, etc.)",
+    required: false
   },
   { 
     name: "status", 
     label: "Status", 
     type: "radio", 
-    options: ["Pre-PoC", "Proof of Concept", "Pilot", "Production"], 
+    options: ["Ideation/Planning", "Proof of Concept", "Pilot", "Production"], 
     description: "Indicates the current maturity or stage of the project." 
   },
   { 
-    name: "priority_level", 
-    label: "Priority Level", 
+    name: "data_annotation_support", 
+    label: "Data Annotation Support", 
     type: "radio", 
-    options: ["Low", "Medium", "High"], 
-    description: "The level of urgency or importance assigned to the project." 
+    options: ["Yes", "No", "I don't know"], 
+    description: "In most instances, we will require training in ML models and therefore we will require experts to label and annotate datasets. Does your team have the capacity to support with data annotation?"
   },
-  { 
-    name: "statement_of_sensitivity_exist", 
-    label: "Does a Statement of Sensitivity (SOS) exist?", 
-    type: "multiselect", 
-    options: ["Yes"], 
-    description: "Indicates whether the data used in this project has been formally assessed for sensitivity." 
-  },
-
-  // Understanding the Business Context
-  {
-    name: "user_name",
-    label: "Name",
-    type: "text"
-  },
-  {
-    name: "user_email",
-    label: "Email",
-    type: "text"
-  },
-  {
-    name: "user_branch_sector",
-    label: "Branch/Sector",
-    type: "text"
-  },
-  {
-    name: "use_case_overview",
-    label: "Project Description and Objective",
-    type: "textarea",
-    description: "Brief overview of potential program or service delivery, operations, or business process impacted being explored as a use case"
-  },
-  
-  // Understanding the Business Context
-  {
-    name: "business_problem",
-    label: "",
-    type: "textarea",
-    description: "What business problem or opportunity are you trying to address? (Tip: Focus on challenges that impact productivity, efficiency, or cost for operations or stakeholders.)"
-  },
-  {
-    name: "who_is_affected",
-    label: "",
-    type: "textarea",
-    description: "Who is affected by this problem? (Departments, teams, partners, stakeholders, public, etc.)"
-  },
-  {
-    name: "consequences_of_inaction",
-    label: "",
-    type: "textarea",
-    description: "What are the consequences of not addressing this problem? (Consider expenses, missed opportunities, increased risk, etc.)"
-  },
-
-  // Expected Goals & Outcomes
-  {
-    name: "success_outcomes",
-    label: "",
-    type: "textarea",
-    description: "What outcome would success look like for addressing your business problem? (Try to make this measurable: faster processes, better decisions, more sales, etc.)"
-  },
-  {
-    name: "ai_ml_contribution",
-    label: "",
-    type: "textarea",
-    description: "How do you think data, artificial intelligence, and/or machine learning could improve the current way of working? (Think in terms of efficiency, productivity, accuracy, personalization, automation, etc.)"
-  },
-
-  // Inputs & Resources
-  {
-    name: "available_data_info",
-    label: "What kinds of information or data do you have or are currently used (if any)?",
-    type: "textarea",
-    description: "You don't need technical details—just describe what the data or information is and where it comes from."
-  },
-  {
-    name: "data_format",
-    label: "Data Format",
-    type: "textarea",
-    description: (
-      <>
-      <b>Are there existing tools, systems, or documents involved with this information or data?</b> (E.g., spreadsheets, CRMs, emails, customer support platforms.)
-      </>
-    )
-  },
-  // {
-  //   name: "data_quality_scope",
-  //   label: "How much high-quality and verifiable data and/or information can be accessed or provided?",
-  //   type: "textarea"
-  // },
-
-  // AI Potential (Guided Imagination)
-  {
-    name: "expected_goals",
-    label: "Expected Goals & Outcomes",
-    type: "textarea",
-    description: (
-      <>
-        <b>If AI could help with this problem, what would you imagine it doing?</b> 
-        <br/>E.g., automatically flagging issues, summarizing feedback, answering questions, etc.
-      </>
-    )
-  },
-  // {
-  //   name: "ai_interaction_with_people",
-  //   label: "Would the solution need to interact with people? If yes, how?",
-  //   type: "textarea",
-  //   description: "Chatbots, suggestions to users, automated emails, etc."
-  // },
-
-  // Value & Feasibility
-  // {
-  //   name: "business_impact_if_successful",
-  //   label: "If successful, what would be the impact on the business?",
-  //   type: "textarea",
-  //   description: "Try to estimate how it would affect time, cost, revenue, customer satisfaction, etc."
-  // },
-  // {
-  //   name: "scalability",
-  //   label: "Is this problem something others also experience?",
-  //   type: "radio",
-  //   options: ["Yes", "No", "I don't know"],
-  //   description: "Helps identify scalable or repeatable use cases."
-  // },
   {
     name: "time_sensitive",
     label: "Is this project time-sensitive?",
@@ -366,11 +264,20 @@ export const Questions = [
     description: ""
   },
   {
-    name: "what_related_to_time_sensitive",
+    name: "time_sensitive_deadline",
     label: "",
     type: "calander",
     description: "If yes, is there a specific deadline?"
-  }
+  },
+
+
+  { 
+    name: "statement_of_sensitivity_exist", 
+    label: "Does a Statement of Sensitivity (SoS) exist?", 
+    type: "radio", 
+    options: ["Yes", "No"], 
+    description: "Indicates whether the data used in this project has been formally assessed for sensitivity." 
+  },
 ];
 
 // this is used to keep track of the questions we want to render for each section
@@ -378,14 +285,17 @@ export const SectionGroups = {
   projectDetails: {
     label: "Project Details",
     questions: [
-      "user_name",
-      "user_email",
-      "user_branch_sector",
+      "contact_name",
+      "contact_email",
+      "contact_branch_sector",
+      "project_title",
       "use_case_overview",
       "business_problem",
       "who_is_affected",
-      "consequences_of_inaction",
+      "areas_of_impact_on_business",
       "priority_level",
+      "time_sensitive",
+      "time_sensitive_deadline",
       "tools_needed_for_work",
     ],
   },
@@ -395,23 +305,17 @@ export const SectionGroups = {
       "is_dataset_available", 
       "available_data_info",
       "data_source", 
-      "data_format",
+      "data_type",
       "classification",
     ],
   },
   aiMlQuestions: {
-    label: "Data Science, ML and AI questions",
+    label: "Data Science, ML and AI",
     questions: [
-      "expected_goals",
-      "ai_ml_contribution", 
-      "success_outcomes",
       "project_area", 
+      "success_outcomes",
       "status", 
-      "is_dataset_annotation_needed",
-      "areas_of_impact_on_business",
-      "time_sensitive",
-      "what_related_to_time_sensitive",
-      
+      "data_annotation_support",      
     ],
   },
   security: {

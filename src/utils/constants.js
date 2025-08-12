@@ -48,6 +48,46 @@ import {
       backgroundImage: '/assets/fence-counting-banner.jpg',
       actionText: 'Upload Video'
     },
+    Electronic_Monitoring: {
+      id: 'electronic-monitoring',
+      name: 'Electronic Monitoring',
+      category: 'Computer Vision',
+      icon: Eye,
+      backgroundImage: '/assets/fence-counting-banner.jpg',
+      actionText: 'Upload Video'
+    },
+    Underwater_Marine_Life_Annotation: {
+      id: 'underwater-marine-life-annotation',
+      name: 'Underwater Marine Life Annotation',
+      category: 'Computer Vision',
+      icon: Eye,
+      backgroundImage: '/assets/fence-counting-banner.jpg',
+      actionText: 'Upload Video'
+    },
+    Fish_Population_Estimation: {
+      id: 'fish-population-estimation',
+      name: 'Fish Population Estimation',
+      category: 'Computer Vision',
+      icon: Eye,
+      backgroundImage: '/assets/fence-counting-banner.jpg',
+      actionText: 'Upload Video'
+    },
+    Dectection_of_Ghost_Gear: {
+      id: 'dectection-ghost-gear',
+      name: 'Dectection of Ghost Gear',
+      category: 'Computer Vision',
+      icon: Eye,
+      backgroundImage: '/assets/fence-counting-banner.jpg',
+      actionText: 'Upload Video'
+    },
+    CTD_Data_Quality_Control: {
+      id: 'dq-control',
+      name: 'CTD Data Quality Control',
+      category: 'Computer Vision',
+      icon: Eye,
+      backgroundImage: '/assets/fence-counting-banner.jpg',
+      actionText: 'Upload Video'
+    },
     
     // Large Language Model Tools
     CSV_ANALYZER: {
@@ -133,7 +173,7 @@ import {
       backgroundImage: '/assets/clipboard.gif',
       actionText: 'Open Form',
       showInDropdown: false,
-      showInDemo: false,
+      // showInDemo: false,
     },
     ML_MODELS: {
       id: 'ml-tools',
@@ -154,7 +194,12 @@ import {
   export const TOOL_CATEGORIES = {
     'Computer Vision': [
       TOOLS.SCALE_AGEING,
-      TOOLS.FENCE_COUNTING
+      TOOLS.FENCE_COUNTING,
+      TOOLS.Electronic_Monitoring,
+      TOOLS.Underwater_Marine_Life_Annotation,
+      TOOLS.Fish_Population_Estimation,
+      TOOLS.Dectection_of_Ghost_Gear,
+      TOOLS.CTD_Data_Quality_Control
     ],
     'Large Language Models': [
       TOOLS.CSV_ANALYZER,

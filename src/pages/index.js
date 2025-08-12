@@ -9,3 +9,4 @@ export { default as HomePage } from './HomePage';
 // Tool pages are exported from ./tools/index.js
 export * from './tools';
 export { default as DocxEditor } from './DocxEditor';
+export { SurveyForm } from './SurveyForm';

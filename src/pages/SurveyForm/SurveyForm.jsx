@@ -98,6 +98,7 @@ export function SurveyForm() {
         description={question.description} 
         value={answers[question.name]} 
         onChange={handleChange} 
+        required={question.required}
       />;
       case "select":
         return <SelectBox 
@@ -185,10 +186,10 @@ export function SurveyForm() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-10">
       <div className="max-w-5xl w-full">
-        <div className="text-center mb-6 px-8">
+        <div className="text-center mb-6 px-6">
           <h1 className="text-4xl font-extrabold text-black dark:text-white mb-3">Essential Tools and Services for Data Analytics, AI, and ML Projects</h1>
           <div className="text-sm text-black dark:text-white">
-            Data Analytics, Artificial Intelligence (AI), and Machine Learning (ML) projects require the right <TooltipWord word="tools and services" tooltip="Software platforms, infrastructure, or resources that support data-driven work like modeling, visualization, or storage." /> to support innovation and efficiency. This survey aims to gather insights on the essential tools and services needed for such projects, helping to identify gaps and improve access to the necessary resources.
+            This form is meant to be use as guide to support business users in articulating and imagining the potential of using Data, Artificial Intelligence, and Machine Learning to improve productivity, efficiencies, and generate value for program and service delivery, operations, and other business processes. It is meant to help users determine the value and potential of new data innovation from a value proposition, scalability, and sustainability lens rather than a technical implementation perspective. Complete responses will help regional management along with Data and AI Scientist determine how feasible a solution could be.
           </div>
         </div>
 
