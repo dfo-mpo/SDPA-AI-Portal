@@ -34,13 +34,15 @@ async def llm_responce(websocket: WebSocket):
         model = data.get('model', 'gpt-4o-mini')  
         temperature = data.get('temperature', 0.3)  
         reasoning_effort = data.get('reasoning_effort', 'high') 
+        token_limit = data.get('token_limit', 100000)
+        isAuth = data.get('isAuth', False)
 
         document_chunks = document_vectors['text_chunks']
         document_metadata = document_vectors['metadata']
         
         document_content = get_relevent_chunks(chat_history, document_chunks, document_metadata) 
 
-        llm_stream = request_openai_chat(chat_history, document_content=document_content, model=model, temperature=temperature, reasoning_effort=reasoning_effort)
+        llm_stream = request_openai_chat(chat_history, document_content=document_content, model=model, temperature=temperature, reasoning_effort=reasoning_effort, token_remaining=token_limit, isAuth=isAuth)
             
         # Simulate processing and responding with chunks  
         async for chunk in llm_stream:
@@ -124,13 +126,15 @@ async def llm_responce_rag(websocket: WebSocket):
         document_vectors = data['document_vectors']
         model = data.get('model', 'gpt-4o-mini')  
         temperature = data.get('temperature', 0.3)  
-        reasoning_effort = data.get('reasoning_effort', 'high') 
+        reasoning_effort = data.get('reasoning_effort', 'high')
+        token_limit = data['token_limit']
+        # isAuth = data.get('isAuth', False)
 
         document_chunks = document_vectors['text_chunks']
         document_metadata = document_vectors['metadata']
         document_content = get_relevent_chunks(chat_history, document_chunks, document_metadata) 
 
-        llm_stream = request_openai_chat(chat_history, document_content=document_content, model=model, temperature=temperature, reasoning_effort=reasoning_effort)
+        llm_stream = request_openai_chat(chat_history, document_content=document_content, model=model, temperature=temperature, reasoning_effort=reasoning_effort, token_remaining=token_limit)
             
         # Simulate processing and responding with chunks  
         async for chunk in llm_stream:
@@ -140,5 +144,6 @@ async def llm_responce_rag(websocket: WebSocket):
     except WebSocketDisconnect:  
         print("Client disconnected")  
     except Exception as e:  
+        print(e)
         await websocket.send_json({"error": str(e)})  
         await websocket.close() 

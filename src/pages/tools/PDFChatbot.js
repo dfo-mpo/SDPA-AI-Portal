@@ -142,7 +142,7 @@ export function PDFChatbot() {
    * @returns {number} The token limit
    */
   const getTokenLimitForModel = (modelType) => {
-    if (!isAuth) return 5000
+    if (!isAuth) return 15000
     switch (modelType) {
       case 'gpt4o':
         return 128000;
@@ -230,7 +230,7 @@ export function PDFChatbot() {
     
     try {
       // Use the generator with settings from context
-      const generator = askOpenAI(llmChatHistory, currentMessage, fileContent, pdfChatbotSettings);
+      const generator = askOpenAI(llmChatHistory, currentMessage, fileContent, pdfChatbotSettings, isAuth);
       let tokensUsed = 0;
       
       // Process stream: update live as chunks arrive

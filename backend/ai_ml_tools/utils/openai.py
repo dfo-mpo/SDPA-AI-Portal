@@ -49,7 +49,7 @@ Streams responses from OpenAI for the chat view.
 - Sends the formatted data to OpenAI and yields responses as they are received.
 - Handles exceptions and yields error messages if necessary.
 """
-async def request_openai_chat(chat_history: list, document_content: str, type="chat", model="gpt-4o", temperature=0.3, reasoning_effort="high"):
+async def request_openai_chat(chat_history: list, document_content: str, type="chat", model="gpt-4o", temperature=0.3, reasoning_effort="high", token_remaining=100000, isAuth=False):
     if type == "chat":
         # Only generate system message if it does not already exist
         if chat_history[0] == '' or chat_history[0]['role'] != "system":
@@ -67,38 +67,42 @@ async def request_openai_chat(chat_history: list, document_content: str, type="c
         del messages[1]
     new_message_string = json.dumps(messages)
     tokens_used = num_tokens_from_string(new_message_string)
-    
     print(f"Input tokens: {tokens_used}")
-    try:
-        if model in CAD_models:
-            stream = openAIClient_CAD_models.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                frequency_penalty=0,
-                presence_penalty=0,
-                stop=None,
-                stream=True
-            )
-        elif model in US_models:
-            stream = openAIClient_US_models.chat.completions.create(
-                model=model,
-                messages=messages,
-                reasoning_effort=reasoning_effort,
-                stop=None,
-                stream=True
-            )
-        else:
-            raise ValueError(f"{model} is not a supported model name.")
-        for response in stream:
-            content = response.choices[0].delta.content if len(response.choices) > 0 else []
-            finish_reason = response.choices[0].finish_reason if len(response.choices) > 0 else None
-            data = json.dumps({'content': content, 'finish_reason': finish_reason,'tokens_used': tokens_used})
-            yield f"data: {data}\n\n"
 
-    except Exception as e:
-        print(e)
-        yield f"data: {{'error': 'Error fetching data from OpenAI: {str(e)}'}}\n\n"
+    if (tokens_used > token_remaining) and not isAuth:
+        data = json.dumps({'content': "Model session usage reached, login to allow for larger sessions", 'finish_reason': 'end','tokens_used': token_remaining})
+        yield f"data: {data}\n\n"
+    else:
+        try:
+            if model in CAD_models:
+                stream = openAIClient_CAD_models.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                    frequency_penalty=0,
+                    presence_penalty=0,
+                    stop=None,
+                    stream=True
+                )
+            elif model in US_models:
+                stream = openAIClient_US_models.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    reasoning_effort=reasoning_effort,
+                    stop=None,
+                    stream=True
+                )
+            else:
+                raise ValueError(f"{model} is not a supported model name.")
+            for response in stream:
+                content = response.choices[0].delta.content if len(response.choices) > 0 else []
+                finish_reason = response.choices[0].finish_reason if len(response.choices) > 0 else None
+                data = json.dumps({'content': content, 'finish_reason': finish_reason,'tokens_used': tokens_used})
+                yield f"data: {data}\n\n"
+
+        except Exception as e:
+            print(e)
+            yield f"data: {{'error': 'Error fetching data from OpenAI: {str(e)}'}}\n\n"
 
 """
 Obtain relevent document chunks for a given LLM chatbot question
@@ -129,7 +133,6 @@ def get_relevent_chunks(chat_history: list[dict], document_chunks: list[str], do
             document_content += result.page_content
     except Exception as e:
         print(e)
-
     return document_content
 
 '''

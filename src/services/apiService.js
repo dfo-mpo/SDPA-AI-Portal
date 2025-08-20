@@ -325,7 +325,7 @@ export const processPdfDocument = async (files) => {
  * @param {Object} settings - Settings for the chatbot
  * @returns {AsyncGenerator} A generator that yields response chunks
  */
-export async function* askOpenAI(chatHistory, currentMessage, documentContent, settings = {}) {
+export async function* askOpenAI(chatHistory, currentMessage, documentContent, settings = {}, isAuth) {
   // Use the adapter to transform settings
   const adaptedSettings = adaptPdfChatbotSettings(settings);
   
@@ -342,7 +342,9 @@ export async function* askOpenAI(chatHistory, currentMessage, documentContent, s
     document_vectors: documentContent,
     model: adaptedSettings.model,
     temperature: adaptedSettings.temperature,
-    reasoning_effort: adaptedSettings.reasoning_effort
+    reasoning_effort: adaptedSettings.reasoning_effort,
+    token_limit: adaptedSettings.token_limit,
+    isAuth: isAuth
   };
 
   socket.send(JSON.stringify(payload));
