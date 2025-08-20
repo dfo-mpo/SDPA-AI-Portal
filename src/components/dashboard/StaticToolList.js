@@ -26,6 +26,7 @@ import { useLanguage } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { trackEvent } from '../../utils/analytics';
+import { useIsAuthenticated } from '@azure/msal-react';
 
 /**
  * Static tool list for the portal home page
@@ -35,12 +36,13 @@ import { trackEvent } from '../../utils/analytics';
  * @param {String} [props.selectedTool] - Currently selected tool (if any)
  * @returns {JSX.Element} The rendered component
  */
-export default function StaticToolList({ onToolSelect, selectedTool, isDemoMode }) {
+export default function StaticToolList({ onToolSelect, selectedTool }) {
   const { language } = useLanguage();
   const theme = useTheme();
   const translations = getToolTranslations("aiToolsDropdown", language);
   const staticToolListStyles = useComponentStyles('staticToolList');
   const dropdownStyles = useComponentStyles('dropdown');
+  const isAuth = useIsAuthenticated();
 
   // Translations for "Temporarily unavailable" tooltip
   const unavailableTooltip = {
@@ -92,7 +94,7 @@ export default function StaticToolList({ onToolSelect, selectedTool, isDemoMode 
       {Object.entries(TOOL_CATEGORIES).map(([category, tools]) => (
         <Box key={category}>
           {/* Check if the category should be displayed in demo mode */}
-          {(!isDemoMode || tools.some(tool => tool.showInDemo !== false)) && (
+          {(isAuth || tools.some(tool => tool.showInDemo !== false)) && (
             <ListSubheader sx={staticToolListStyles.subheader}>
               {translations.categories[category] || category}
             </ListSubheader>
@@ -103,7 +105,7 @@ export default function StaticToolList({ onToolSelect, selectedTool, isDemoMode 
               const IconComponent = tool.icon;
               const isDisabled = tool.disabled;
               const isExternalLink = !!tool.externalUrl;
-              const isHideInDemo = tool.showInDemo === false && isDemoMode;
+              const isHideInDemo = tool.showInDemo === false && !isAuth;
               // Determine appropriate tooltip
               let tooltipText = "";
               if (isDisabled) {

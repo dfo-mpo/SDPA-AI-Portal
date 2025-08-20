@@ -48,11 +48,13 @@ import { getToolTranslations } from '../../utils';
 import { processPdfDocument, askOpenAI } from '../../services/apiService';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { trackEvent } from '../../utils/analytics';
+import { useIsAuthenticated } from '@azure/msal-react';
 
-export function PDFChatbot({ isDemoMode }) {
+export function PDFChatbot() {
   const { language } = useLanguage();
   const toolData = getToolTranslations("pdfChatbot", language);
   const theme = useTheme();
+  const isAuth = useIsAuthenticated();
   
   // Get context settings from ToolSettingsContext
   const { pdfChatbotSettings, updatePdfChatbotTokenUsage } = useToolSettings();
@@ -140,6 +142,7 @@ export function PDFChatbot({ isDemoMode }) {
    * @returns {number} The token limit
    */
   const getTokenLimitForModel = (modelType) => {
+    if (!isAuth) return 5000
     switch (modelType) {
       case 'gpt4o':
         return 128000;
@@ -421,7 +424,6 @@ export function PDFChatbot({ isDemoMode }) {
       isProcessing={isFileProcessing}
       hideActionButton={isFileUploaded}
       uploadKey={Date.now()} // Ensure input is refreshed
-      isDemoMode={isDemoMode}
     >
       {/* Chat interface appears only when a file is uploaded */}
       {isFileUploaded && (
@@ -821,7 +823,7 @@ export function PDFChatbot({ isDemoMode }) {
                     trackEvent('Chat Interaction', 'Send Message', 'Send Message Button');
                     handleSendMessage();
                   }}
-                  disabled={!currentMessage.trim() || isResponding}
+                  disabled={!currentMessage.trim() || isResponding || (pdfChatbotSettings.tokenUsage.total === pdfChatbotSettings.tokenUsage.used)}
                   sx={{
                     minWidth: { xs: '80px', sm: '100px' },
                     whiteSpace: 'nowrap',

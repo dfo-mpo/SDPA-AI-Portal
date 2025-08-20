@@ -21,7 +21,7 @@ import { SitemarkIcon } from '../common/CustomIcons';
 import { signInStyles } from '../../styles/componentStyles';
 import { getAuthTranslations } from '../../translations/auth';
 
-export default function SignIn({ onLogin }) {
+export default function SignIn({ onLogin, cancelLogin }) {
     const { language } = useLanguage();
     const t = getAuthTranslations('signIn', language);
     const theme = useTheme();
@@ -133,7 +133,7 @@ export default function SignIn({ onLogin }) {
                     <Button
                         fullWidth
                         variant="outlined"
-                        href="https://sdpa-ai-computervision-portal-demo.azurewebsites.net/"
+                        onClick={cancelLogin}
                     >
                         {t.demoAccessButton}
                     </Button>

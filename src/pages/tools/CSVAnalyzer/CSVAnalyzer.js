@@ -16,10 +16,12 @@ import { useComponentStyles } from '../../../styles/hooks/useComponentStyles';
 import FileUploadModal from './FileUploadModal';
 import { analyzeCsvPdf } from '../../../services/apiService';
 import { trackEvent } from '../../../utils/analytics';
+import { useIsAuthenticated } from '@azure/msal-react';
 
-export function CSVAnalyzer({ isDemoMode }) {
+export function CSVAnalyzer() {
   const { language } = useLanguage();
   const toolData = getToolTranslations("csvAnalyzer", language);
+  const isAuth = useIsAuthenticated();
   
   // Use centralized style hooks
   const toolStyles = useComponentStyles('tool');
@@ -276,7 +278,6 @@ export function CSVAnalyzer({ isDemoMode }) {
         onFileSelected={handleUploadClick}
         isProcessing={isProcessing}
         hideActionButton={true} // Hide the default action button
-        isDemoMode={isDemoMode}
       >
         {/* Loading indicator */}
         {isProcessing && (

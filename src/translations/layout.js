@@ -59,7 +59,8 @@ export const en = {
       account: "My account",
       addAccount: "Add another account",
       settings: "Settings",
-      logout: "Logout"
+      logout: "Logout",
+      login: "Login"
     }
   };
   
@@ -120,7 +121,8 @@ export const en = {
       account: "Mon compte",
       addAccount: "Ajouter un autre compte",
       settings: "Paramètres",
-      logout: "Déconnexion"
+      logout: "Déconnexion",
+      login: "Connexion"
     }
   };
   

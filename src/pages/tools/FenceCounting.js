@@ -25,12 +25,14 @@ import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { processFenceCounting } from '../../services/apiService';
 import { useLanguage, useToolSettings } from '../../contexts';
 import { trackEvent } from '../../utils/analytics';
+import { useIsAuthenticated } from '@azure/msal-react';
 
-export function FenceCounting({ isDemoMode }) {
+export function FenceCounting() {
   const { language } = useLanguage();
   const { fenceCountingSettings } = useToolSettings();
   const toolData = getToolTranslations("fenceCounting", language);
   const toolStyles = useComponentStyles('tool');
+  const isAuth = useIsAuthenticated();
   
   const [originalVideo, setOriginalVideo] = useState(null);
   const [processedVideo, setProcessedVideo] = useState(null);
@@ -133,7 +135,6 @@ export function FenceCounting({ isDemoMode }) {
       backgroundImage="/assets/fence-counting.png"
       hideActionButton={true}
       containerSx={toolStyles.container}
-      isDemoMode={isDemoMode}
     >
       {/* Custom Upload Button - Visible but Disabled */}
       <Box sx={{ mb: 3 }}>

@@ -12,9 +12,12 @@ import { ToolPage } from '../../components/tools';
 import { useLanguage } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+import { useIsAuthenticated } from '@azure/msal-react';
 
-export function DocumentOCR({ isDemoMode }) {
+export function DocumentOCR() {
   const { language } = useLanguage();
+  const isAuth = useIsAuthenticated();
+  
   // This will need translations added when implementing
   const toolData = {
     title: language === 'en' ? "Optical Character Recognition" : "Reconnaissance Optique de Caractères",
@@ -41,7 +44,6 @@ export function DocumentOCR({ isDemoMode }) {
       hideActionButton={true}
       inProgress={true}
       containerSx={styles.container}
-      isDemoMode={isDemoMode}
     >
       <Paper 
         elevation={0} 

@@ -15,11 +15,13 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
+import LoginRoundedIcon from '@mui/icons-material/LoginRounded';
 import { MenuButton } from '.';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { useLanguage } from '../../contexts';
 import { getLayoutTranslations } from '../../translations/layout';
 import { trackEvent } from '../../utils/analytics';
+import { useIsAuthenticated } from '@azure/msal-react';
 
 
 // Styled menu item with consistent margin
@@ -34,12 +36,13 @@ const MenuItem = styled(MuiMenuItem)({
  * @param {Function} props.onLogout - Callback function for logout action
  * @returns {JSX.Element} The rendered component
  */
-export default function OptionsMenu({ onLogout }) {
+export default function OptionsMenu({ onLogout, onLogin }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const styles = useComponentStyles('optionsMenu');
   const { language } = useLanguage();
   const menuTranslations = getLayoutTranslations('userMenu', language);
+  const isAuth = useIsAuthenticated();
   
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -53,6 +56,13 @@ export default function OptionsMenu({ onLogout }) {
     handleClose();
     if (onLogout) {
       onLogout();
+    }
+  };
+
+  const handleLogin = () => {
+    handleClose();
+    if (onLogin) {
+      onLogin();
     }
   };
 
@@ -87,10 +97,10 @@ export default function OptionsMenu({ onLogout }) {
         <MenuItem onClick={handleClose} disabled>{menuTranslations.addAccount}</MenuItem>
         <MenuItem onClick={handleClose} disabled>{menuTranslations.settings}</MenuItem>
         <Divider /> */}
-        <MenuItem onClick={handleLogout} sx={styles.logoutMenuItem}>
-          <ListItemText>{menuTranslations.logout}</ListItemText>
+        <MenuItem onClick={isAuth? handleLogout : handleLogin} sx={styles.logoutMenuItem}>
+          <ListItemText>{isAuth? menuTranslations.logout : menuTranslations.login}</ListItemText>
           <ListItemIcon>
-            <LogoutRoundedIcon fontSize="small" sx={{ ml: 1 }} />
+            {isAuth? <LogoutRoundedIcon fontSize="small" sx={{ ml: 1 }} /> : <LoginRoundedIcon fontSize="small" sx={{ ml: 1 }}/>}
           </ListItemIcon>
         </MenuItem>
       </Menu>
