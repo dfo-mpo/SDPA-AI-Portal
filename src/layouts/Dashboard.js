@@ -18,6 +18,11 @@ import { getLayoutTranslations } from '../translations/layout'
 import {
   ScaleAgeing,
   FenceCounting,
+  ElectronicMonitoring,
+  UnderwaterMarineLifeAnnotation,
+  FishPopulationEstimation,
+  DectectionofGhostGear,
+  CTDDataQualityControl,
   CSVAnalyzer,
   PDFChatbot,
   PIIRedactor,
@@ -108,6 +113,11 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
   const toolComponents = {
     'Scale Ageing': ScaleAgeing,
     'Fence Counting': FenceCounting,
+    'Electronic Monitoring': ElectronicMonitoring,
+    'Underwater Marine Life Annotation': UnderwaterMarineLifeAnnotation,
+    'Fish Population Estimation': FishPopulationEstimation,
+    'Dectection of Ghost Gear': DectectionofGhostGear,
+    'CTD Data Quality Control': CTDDataQualityControl,
     'CSV/PDF Analyzer': CSVAnalyzer,
     'PDF Chatbot': PDFChatbot,
     'PII Redactor': PIIRedactor,
