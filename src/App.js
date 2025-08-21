@@ -10,8 +10,7 @@ import { getLayoutTranslations } from './translations/layout'
 import { initGA, trackPageview } from './utils/analytics';
 import { 
   MsalProvider, 
-  AuthenticatedTemplate, 
-  UnauthenticatedTemplate, 
+  useIsAuthenticated, 
   useMsal, 
 } from '@azure/msal-react';
 
@@ -27,13 +26,14 @@ import {
 function AppContent() {
   // Determine if the application is running in demonstration mode.
   // In demo mode, authentication is bypassed entirely.
-  const isDemoMode = process.env.REACT_APP_MODE === 'demo';
-
+  const isAuthenticated = useIsAuthenticated();
   const { handleLogout: termsLogout, declineTerms } = useTerms();
   const { language } = useLanguage();
   const appTranslations = getLayoutTranslations('app', language);
   const { instance, accounts } = useMsal();
   const [previousAccount, setPreviousAccount] = useState(null);
+  const [loggingIn, setLogginIn] = useState(false);
+  const user = accounts[0] ?? null;
   
   // Initialize Google Analytics once on mount
   useEffect(() => {
@@ -50,19 +50,6 @@ function AppContent() {
   useEffect(() => {
     document.title = appTranslations.title;
   }, [language, appTranslations]);
-  
-  /**
-   * Runs once on mount to report demo mode status.
-   * 
-   * Note:
-   * - Authentication rendering is fully handled by `AuthenticatedTemplate` and `UnauthenticatedTemplate`.
-   * - This effect is retained to log demo mode activation for debugging or analytics.
-   */
-  useEffect(() => {
-    if (isDemoMode) {
-      console.log("Running in demonstration mode.");
-    }
-  }, [isDemoMode]);
 
   /**
    * Watches MSAL `accounts` array to detect login/logout transitions.
@@ -113,6 +100,11 @@ function AppContent() {
     }
   };
 
+  // Switch to login page view for unauthenticated users
+  const loginPageContent = () =>
+    setLogginIn(true);
+  ;
+
   /**
    * Handles post-login side effects after successful MSAL authentication.
    * 
@@ -120,9 +112,7 @@ function AppContent() {
    * - Store authentication flag in localStorage for compatibility with other logic.
    */
   const onMsalLoginSuccess = () => {
-    if (!isDemoMode) {
-      localStorage.setItem('dfo-auth-status', 'authenticated');
-    }
+    localStorage.setItem('dfo-auth-status', 'authenticated');
     console.log('MSAL login complete');
   };
 
@@ -139,8 +129,18 @@ function AppContent() {
     console.log('Post logout cleanup complete');
   };
 
-  // Dashboard view when authenticated or in demo mode
-  const dashboardContent = (
+  // If user chooses not to login, view is switched back to the dashboard
+  const cancelLogin = () => {
+    setLogginIn(false);
+  };
+
+  // When a user logs in, reset the login page flag
+  useEffect(() => {
+    if(user != null) setLogginIn(false);
+  }, [user]);
+
+  return(
+    !loggingIn ?
     <>
       <Box
         sx={{
@@ -151,35 +151,20 @@ function AppContent() {
           bgcolor: 'background.default',
         }}
       >
-        <Dashboard onLogout={handleLogout} isDemoMode={isDemoMode} />
+        <Dashboard onLogout={handleLogout} onLogin={loginPageContent} isAuth={isAuthenticated} />
         {/* Terms Modal for authenticated users - pass isAuth=true */}
         <TermsModalContainer variant="full" isAuth={true} />
       </Box>
     </>
-  );
-
-  // Login page view for unauthenticated users
-  const loginPageContent = (
+    :
     <>
-      <SignIn onLogin={handleLogin} />
+      <SignIn onLogin={handleLogin} cancelLogin={cancelLogin}/>
       {/* Terms Modal for login screen - pass isAuth=false (default) */}
       <TermsModalContainer variant="full" />
     </>
-  );
+  )
 
-  // Skip MSAL logic entirely in demo mode
-  if (isDemoMode) {
-    return dashboardContent;
-  }
-
-  return (
-    <>
-      {/* Authenticated: Show Dashboard */}
-      <AuthenticatedTemplate>{dashboardContent}</AuthenticatedTemplate>
-      {/* Not authenticated: Show Sign In */}
-      <UnauthenticatedTemplate>{loginPageContent}</UnauthenticatedTemplate>
-    </>
-  );
+  
 }
 
 /**

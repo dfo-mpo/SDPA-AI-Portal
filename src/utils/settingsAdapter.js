@@ -191,7 +191,8 @@ export const adaptPdfChatbotSettings = (settings) => {
   return {
     model: mapModelTypeToAPIValue(settings.modelType),
     tempurature: settings.temperature || 0.3,
-    reasoning_effort: "high"
+    reasoning_effort: "high",
+    token_limit: settings.tokenUsage.total - settings.tokenUsage.used
   };
 };
 

@@ -56,7 +56,6 @@ import { useMsal } from '@azure/msal-react';
  * @param {number} props.headerHeight - Height of the application header
  * @param {boolean} props.isHomePage - Whether currently on home page
  * @param {Function} [props.onLogout] - Callback for logout action
- * @param {boolean} props.isDemoMode - Whether in demo mode
  * @returns {JSX.Element} The rendered component
  */
 export default function NewLeftPanel({ 
@@ -64,7 +63,7 @@ export default function NewLeftPanel({
   onSelectTool, 
   isHomePage, 
   onLogout,
-  isDemoMode 
+  onLogin
 }) {
   const theme = useTheme();
   const { language } = useLanguage();
@@ -225,7 +224,7 @@ export default function NewLeftPanel({
       {/* Top Section - Dropdown or Static Tool List */}
       <Box sx={styles.content}>
         {isHomePage || !showToolSettings() ? (
-          <StaticToolList onToolSelect={onSelectTool} selectedTool={selectedTool} isDemoMode={isDemoMode} />
+          <StaticToolList onToolSelect={onSelectTool} selectedTool={selectedTool} />
         ) : (
           <Box sx={styles.toolSelectionContainer}>
             {/* Home Button */}
@@ -269,26 +268,24 @@ export default function NewLeftPanel({
       </Box>
 
       {/* Bottom Profile Section */}
-      {!isDemoMode && (
-        <Box sx={styles.profileSection}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Avatar
-              alt={user ? user.name : 'Guest'}
-              src="/static/images/avatar/7.jpg"
-              sx={styles.avatar}
-            />
-            <Box sx={styles.userInfo}>
-              <Typography variant="body2" sx={styles.userName}>
-                {user ? user.name : 'Guest'}
-              </Typography>
-              <Typography variant="caption" sx={styles.userEmail}>
-                {user ? user.username : 'guest@example.com'}
-              </Typography>
-            </Box>
-            <OptionsMenu onLogout={onLogout} />
-          </Stack>
-        </Box>
-      )}
+      <Box sx={styles.profileSection}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Avatar
+            alt={user ? user.name : 'Guest'}
+            src="/static/images/avatar/7.jpg"
+            sx={styles.avatar}
+          />
+          <Box sx={styles.userInfo}>
+            <Typography variant="body2" sx={styles.userName}>
+              {user ? user.name : 'Guest'}
+            </Typography>
+            <Typography variant="caption" sx={styles.userEmail}>
+              {user ? user.username : 'guest@example.com'}
+            </Typography>
+          </Box> 
+          <OptionsMenu onLogout={onLogout} onLogin={onLogin} />
+        </Stack>
+      </Box>
     </Paper>
   );
 }
@@ -309,6 +306,6 @@ NewLeftPanel.propTypes = {
   /** Callback function for logout action */
   onLogout: PropTypes.func,
 
-  /** Whether in demo mode */
-  isDemoMode: PropTypes.bool.isRequired,
+  /** Callback function for login action */
+  onLogin: PropTypes.func,
 };

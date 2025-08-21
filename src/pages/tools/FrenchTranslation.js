@@ -14,14 +14,14 @@ import { getToolTranslations } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { frenchTranslationStyles } from '../../styles/componentStyles';
 import { translateToFrench } from '../../services/apiService';
+import { useIsAuthenticated } from '@azure/msal-react';
 
-
-export function FrenchTranslation({ isDemoMode }) { 
+export function FrenchTranslation() { 
   const { language } = useLanguage();
   const toolData = getToolTranslations("frenchTranslator", language);
   // const frenchStyles = frenchTranslationStyles; // centralized styles for French Translation
   const frenchStyles = useComponentStyles('frenchTranslation'); // centralized styles for French Translation
-
+  const isAuth = useIsAuthenticated();
   
   
   const [translatedText, setTranslatedText] = useState(null);
@@ -57,7 +57,6 @@ export function FrenchTranslation({ isDemoMode }) {
       onFileSelected={handleFileSelected}
       isProcessing={isProcessing}
       containerSx={frenchStyles.container} // if defined
-      isDemoMode={isDemoMode}
     >
       {error && (
         <Box sx={{ mt: 2, color: 'error.main' }}>

@@ -32,7 +32,7 @@ import {
 } from '../pages/tools';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
-export default function Dashboard({ onLogout, isDemoMode }) {
+export default function Dashboard({ onLogout, onLogin, isAuth }) {
   // Store the selected tool name
   const [selectedTool, setSelectedTool] = useState('');
   const [headerHeight, setHeaderHeight] = useState(80); // Default to 80px, dynamically updated
@@ -131,10 +131,10 @@ export default function Dashboard({ onLogout, isDemoMode }) {
   const getToolComponent = (toolName) => {
     const ToolComponent = toolComponents[toolName];
     if (!ToolComponent) return null;
-    const props = { isDemoMode }
+    const props = { isAuth }
     if (toolName === 'Document') {
       if (getParam('file')) props.file = getParam('file');
-      if (!isDemoMode && getParam('enableOfficeEditing') === 'true') props.enableOfficeEditing = true; // Editing is prohibited in demo
+      if (!isAuth && getParam('enableOfficeEditing') === 'true') props.enableOfficeEditing = true; // Editing is prohibited for none signed in users
     }
     return ToolComponent ? <ToolComponent {...props} /> : null;
   };
@@ -226,7 +226,8 @@ export default function Dashboard({ onLogout, isDemoMode }) {
               headerHeight={headerHeight}
               isHomePage={isHomePage}
               onLogout={onLogout}
-              isDemoMode={isDemoMode}
+              isAuth={isAuth}
+              onLogin={onLogin}
             />
           </Box>
 
@@ -289,6 +290,6 @@ Dashboard.propTypes = {
   /** Callback function for logout action */
   onLogout: PropTypes.func,
 
-  /** Whether in demo mode */
-  isDemoMode: PropTypes.bool.isRequired,
+  /** Whether in user is signed in */
+  isAuth: PropTypes.bool.isRequired,
 };

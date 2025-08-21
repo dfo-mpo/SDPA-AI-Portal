@@ -21,12 +21,14 @@ import { useLanguage } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { TOOL_CATEGORIES } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+import { useIsAuthenticated } from '@azure/msal-react';
 
 export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
   const { language } = useLanguage();
   const theme = useTheme();
   const translations = getToolTranslations("aiToolsDropdown", language);
   const aiToolsDropdownStyles = useComponentStyles('aiToolsDropdown');
+  const isAuth = useIsAuthenticated();
 
   /**
    * Handle change in dropdown selection
@@ -86,6 +88,8 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
             ...tools.map((tool) => {
               const IconComponent = tool.icon;
               const isDisabled = tool.disabled;
+              const isHideInDemo = tool.showInDemo === false && !isAuth;
+              if (isHideInDemo) return null;
               return (
                 <MenuItem
                   key={tool.name}

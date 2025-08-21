@@ -8,12 +8,14 @@ import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { redactPII } from '../../services/apiService';
 import { PIIRedactorSettings } from '../../components/tools/settings';
+import { useIsAuthenticated } from '@azure/msal-react';
 
-export function PIIRedactor({ isDemoMode }) {
+export function PIIRedactor() {
   const { language } = useLanguage();
   const toolData = getToolTranslations("piiRedactor", language);
   const translations = toolData?.settings; // Get settings translations from toolData
   const { piiRedactorSettings } = useToolSettings();
+  const isAuth = useIsAuthenticated();
   
   // Use centralized style hooks
   const styles = useComponentStyles('piiRedactor');
@@ -144,7 +146,6 @@ export function PIIRedactor({ isDemoMode }) {
       settingsComponent={<PIIRedactorSettings />}
       hideActionButton={!!downloadURL} // Hide the button when we have results
       uploadKey={uploadKey} // Pass the key to ensure ToolPage resets too
-      isDemoMode={isDemoMode}
     >
       {/* Error Display */}
       {error && (

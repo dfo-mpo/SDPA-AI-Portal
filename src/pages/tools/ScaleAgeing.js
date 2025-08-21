@@ -13,11 +13,13 @@ import { useLanguage, useToolSettings } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { processScaleAge, convertToPng } from '../../services/apiService';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+import { useIsAuthenticated } from '@azure/msal-react';
 
-export function ScaleAgeing({ isDemoMode }) {
+export function ScaleAgeing() {
   const { language } = useLanguage();
   const toolData = getToolTranslations("scaleAgeing", language);
   const scaleAgeingStyles = useComponentStyles('scaleAgeing');
+  const isAuth = useIsAuthenticated();
   
   // read the settings from the context
   const { scaleAgeingSettings } = useToolSettings();
@@ -133,9 +135,8 @@ export function ScaleAgeing({ isDemoMode }) {
       actionButtonText={toolData.actionButtonText}
       onFileSelected={handleFileSelected}
       isProcessing={isProcessing}
-      downloadSamplesBtn={isDemoMode? ['assets/scaleageing/chum_age5.tif', 'assets/scaleageing/chum_age6.tif']: ''}
+      downloadSamplesBtn={isAuth? '': ['assets/scaleageing/chum_age5.tif', 'assets/scaleageing/chum_age6.tif']}
       containerSx={scaleAgeingStyles.container}
-      isDemoMode={isDemoMode}
     >
       {/* Show any errors */}
       {error && (

@@ -6,6 +6,7 @@ import ToolContentWrapper from './ToolContentWrapper';
 import Banner from '../common/Banner';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { trackEvent } from '../../utils/analytics';
+import { useIsAuthenticated } from '@azure/msal-react';
 
 /**
  * Tool page component that provides consistent layout for all tools
@@ -41,12 +42,12 @@ export default function ToolPage({
   hideActionButton = false,
   inProgress = false,
   uploadKey = Date.now(), // Default key for reset support
-  isDemoMode,
   children,
 }) {
   // Get styles from our styling system
   const toolStyles = useComponentStyles('tool');
   const layoutStyles = useComponentStyles('layout');
+  const isAuth = useIsAuthenticated();
   
   // Local styles
   const styles = {
@@ -244,9 +245,6 @@ ToolPage.propTypes = {
   
   /** Key to force recreation of the file input */
   uploadKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-
-  /** Whether in demo mode */
-  isDemoMode: PropTypes.bool.isRequired,
   
   /** Additional content to render below the description */
   children: PropTypes.node,

@@ -13,11 +13,13 @@ import { getToolTranslations } from '../../utils';
 import { calculateSensitivityScore } from '../../services/apiService';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
+import { useIsAuthenticated } from '@azure/msal-react';
 
-export function SensitivityScore({ isDemoMode }) {
+export function SensitivityScore() {
   const { language } = useLanguage();
   const toolData = getToolTranslations("sensitivityScore", language);
   const sensitivityScoreStyles = useComponentStyles('sensitivityScore');
+  const isAuth = useIsAuthenticated();
 
   // Use the settings from context
   const { sensitivityScoreSettings } = useToolSettings();
@@ -136,7 +138,6 @@ export function SensitivityScore({ isDemoMode }) {
       isFormValid={isFormValid}
       validationMessage={validationMessage}
       containerSx={sensitivityScoreStyles.container}
-      isDemoMode={isDemoMode}
     >
       {score !== null && (
         <Box sx={sensitivityScoreStyles.resultContainer}>

@@ -38,7 +38,8 @@ import {
       category: 'Computer Vision',
       icon: Eye,
       backgroundImage: '/assets/scale-ageing-banner.jpg',
-      actionText: 'Upload Images'
+      actionText: 'Upload Images',
+      showInDemo:false
     },
     FENCE_COUNTING: {
       id: 'fence-counting',
@@ -46,7 +47,8 @@ import {
       category: 'Computer Vision',
       icon: Eye,
       backgroundImage: '/assets/fence-counting-banner.jpg',
-      actionText: 'Upload Video'
+      actionText: 'Upload Video',
+      showInDemo:false
     },
     Electronic_Monitoring: {
       id: 'electronic-monitoring',
@@ -96,7 +98,8 @@ import {
       category: 'Large Language Models',
       icon: FileText,
       backgroundImage: '/assets/csv-analyzer-banner.jpg',
-      actionText: 'Upload File'
+      actionText: 'Upload File',
+      showInDemo:false
     },
     PDF_CHATBOT: {
       id: 'pdf-chatbot',
