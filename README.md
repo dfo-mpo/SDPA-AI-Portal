@@ -69,13 +69,17 @@ git clone https://github.com/dfo-mpo/openAI-Chatbot.git
 cd openAI-Chatbot
 ```
 
-### 3. Run the Frontend
-#### 3.1 Install Dependencies
+### 3. Run the Frontend and JS Server
+#### 3.1 Setup .env File
+Go to server/, then copy and rename the '.env.example' file to '.env'. Make sure to add in the keys needed for connecting to the Azure storage account.
+#### 3.2 Setup Authentication Config
+Go to src/components/auth/, then copy and rename the 'authConfig.example.js' into 'authConfig.js'. Make sure to add in the values for clientId, authority, redirectURI, and postLogoutRedirectUri.
+#### 3.3 Install Dependencies
 Install all required dependencies by running the following command in the project directory:
 ```bash
 npm install
 ```
-#### 3.2 Start React Project
+#### 3.4 Start React Project
 To run the frontend project use the following command:
 ```bash
 npm run dev
@@ -101,8 +105,9 @@ Without the bash scripts, you need to start by going into the backend folder aga
 ```bash
 cd backend
 ```
-You can then activate your virtual enviroment (if using one) with the command:
+(Optional) You can then create and activate a virtual enviroment with the commands:
 ```bash
+python -m venv venv
 ./venv/Scripts/activate
 ```
 Install required packages if you haven't already:
