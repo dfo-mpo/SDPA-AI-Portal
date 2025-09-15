@@ -62,45 +62,45 @@ Download and install Node.js v22 from the official website:
 [Node Downloads](https://nodejs.org/en/download)
 Note that you will need admin privileges to run the install.
 
-### 2. Clone the Repository
+### 3. Clone the Repository
 Clone the repository to your local machine with the following command:
 ```bash
 git clone https://github.com/dfo-mpo/openAI-Chatbot.git
 cd openAI-Chatbot
 ```
 
-### 3. Run the Frontend and JS Server
-#### 3.1 Setup .env File
+### 4. Run the Frontend and JS Server
+#### 4.1 Setup .env File
 Go to server/, then copy and rename the '.env.example' file to '.env'. Make sure to add in the keys needed for connecting to the Azure storage account.
-#### 3.2 Setup Authentication Config
+#### 4.2 Setup Authentication Config
 Go to src/components/auth/, then copy and rename the 'authConfig.example.js' into 'authConfig.js'. Make sure to add in the values for clientId, authority, redirectURI, and postLogoutRedirectUri.
-#### 3.3 Install Dependencies
+#### 4.3 Install Dependencies
 Install all required dependencies by running the following command in the project directory:
 ```bash
 npm install
 ```
-#### 3.4 Start React Project
+#### 4.4 Start React Project
 To run the frontend project use the following command:
 ```bash
 npm run dev
 ```
 The terminal will output the local host path that can be pasted into a web brower to use the React frontend.
 
-### 4. Run the Backend
-#### 4.1 Setup .env File
+### 5. Run the Backend
+#### 5.1 Setup .env File
 Go to backend/ai_ml_tools, then copy and rename the '.env.example' file to '.env'. Make sure to add in the keys needed for OpenAI and Document Intelligence.
-#### 4.2 Setup and Run (With Bash Script)
+#### 5.2 Setup and Run (With Bash Script)
 Open a new terminal window at the root of the repository and go the backend, install the requirments into a virtual enviroment, and run the backend with the following commands:
 ```bash
 cd backend
 ./setup_and_run.sh
 ```
-#### 4.3 Running in the Future (With Bash Script)
+#### 5.3 Running in the Future (With Bash Script)
 After intially using the setup_and_run script, you can use the dev script instead to run the backend in the future:
 ```bash
 ./dev.sh
 ```
-#### 4.4 (Optional) Manually Running the backend
+#### 5.4 (Optional) Manually Running the backend
 Without the bash scripts, you need to start by going into the backend folder again:
 ```bash
 cd backend
