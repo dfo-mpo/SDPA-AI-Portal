@@ -17,3 +17,4 @@ export { PIIRedactor } from './PIIRedactor';
 export { ScaleAgeing } from './ScaleAgeing';
 export { SensitivityScore } from './SensitivityScore';
 export { DocumentOCR } from './DocumentOCR';
+export { MLModelsRepo } from "./MLModelsRepo";

@@ -186,7 +186,7 @@ import {
       backgroundImage: '/assets/csv-analyzer-banner.jpg', // placeholder for page; needs to be changed
       actionText: 'Open Form', // placeholder for page; needs to be changed
       showInDropdown: false,
-      disabled: true
+      // disabled: true
     },
   };
   

@@ -18,7 +18,8 @@ export const en = {
       "Sensitivity Score Calculator": "Sensitivity Score Calculator",
       "French Translation": "French Translation",
       "Document OCR": "Document OCR",
-      "Data Analytics, AI and ML Intake Form": "Data Analytics, AI and ML Intake Form"
+      "Data Analytics, AI and ML Intake Form": "Data Analytics, AI and ML Intake Form",
+      "Repositories" : "Repositories"
     }
   };
   
@@ -40,6 +41,7 @@ export const en = {
       "Sensitivity Score Calculator": "Calculateur de score de sensibilité",
       "French Translation": "Traduction français",
       "Document OCR": "ROC de document",
-      "Data Analytics, AI and ML Intake Form": "Formulaire d'admission pour l'analyse de données, l'IA et le ML"
+      "Data Analytics, AI and ML Intake Form": "Formulaire d'admission pour l'analyse de données, l'IA et le ML",
+      "Repositories" : "Dépôts"
     }
   };

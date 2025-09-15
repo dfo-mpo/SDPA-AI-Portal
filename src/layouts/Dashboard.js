@@ -28,7 +28,8 @@ import {
   PIIRedactor,
   SensitivityScore,
   FrenchTranslation,
-  DocumentOCR
+  DocumentOCR,
+  MLModelsRepo
 } from '../pages/tools';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
@@ -126,6 +127,7 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
     'Document OCR': DocumentOCR,
     'Form': SurveyForm,
     'Document': DocxEditor,
+    "Repositories" : MLModelsRepo,
   };
 
   const getToolComponent = (toolName) => {
