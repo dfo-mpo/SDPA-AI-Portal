@@ -12,6 +12,7 @@ import * as pdfChatbot from './pdfChatbot';
 import * as piiRedactor from './piiRedactor';
 import * as sensitivityScore from './sensitivityScore';
 import * as frenchTranslation from './frenchTranslation';
+import * as mlModelsRepo from './mlModelsRepo'
 
 // Export individual tool translations
 export {
@@ -21,7 +22,8 @@ export {
   pdfChatbot,
   piiRedactor,
   sensitivityScore,
-  frenchTranslation
+  frenchTranslation,
+  mlModelsRepo
 };
 
 /**
@@ -40,7 +42,8 @@ export function getToolTranslations(toolName, language = 'en') {
     'pdfChatbot': pdfChatbot,
     'piiRedactor': piiRedactor,
     'sensitivityScore': sensitivityScore,
-    'frenchTranslation': frenchTranslation
+    'frenchTranslation': frenchTranslation,
+    'mlModelsRepo' : mlModelsRepo
   };
   
   // Get the tool translations

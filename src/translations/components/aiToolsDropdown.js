@@ -42,6 +42,6 @@ export const en = {
       "French Translation": "Traduction français",
       "Document OCR": "ROC de document",
       "Data Analytics, AI and ML Intake Form": "Formulaire d'admission pour l'analyse de données, l'IA et le ML",
-      "Repositories" : "Dépôts"
+      "Repositories" : "Répertoires"
     }
   };
