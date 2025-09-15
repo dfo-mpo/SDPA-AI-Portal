@@ -15,6 +15,7 @@ import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { frenchTranslationStyles } from '../../styles/componentStyles';
 import { translateToFrench } from '../../services/apiService';
 import { useIsAuthenticated } from '@azure/msal-react';
+import { trackEvent } from '../../utils/analytics';
 
 export function FrenchTranslation() { 
   const { language } = useLanguage();
@@ -35,6 +36,7 @@ export function FrenchTranslation() {
       const result = await translateToFrench(inputFile);  
       if (result && result.translation) {
         setTranslatedText(result.translation);
+        trackEvent('French Translator', `Translated document into french.`, 'Translated document')
       } else {
         throw new Error('Invalid response format');
       }
@@ -42,6 +44,7 @@ export function FrenchTranslation() {
     catch (error) {
       console.error('Error:', error);
       setError('An error occurred while translating the document.');
+      trackEvent('French Translator', `Error occurred while translating the document.`, 'Translation Failed');
     } finally {
       setIsProcessing(false);
     }
