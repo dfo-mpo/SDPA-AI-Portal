@@ -12,6 +12,7 @@ import { Box, Tabs, Tab, Button, Stack } from "@mui/material";
 import { ToolPage } from "../../../components/tools";
 import { useLanguage } from "../../../contexts";
 import { getToolTranslations } from "../../../utils";
+import { useMsal } from "@azure/msal-react"; 
 
 // views
 import ModelsList from "./views/ModelsList";
@@ -32,6 +33,11 @@ const VIEW = {
 export function MLModelsRepo() {
   const { language } = useLanguage();
   const t = getToolTranslations("mlModelsRepo", language);
+  const { accounts } = useMsal();
+  const userId = accounts?.[0]?.idTokenClaims?.oid          // preferred stable id
+                || accounts?.[0]?.username
+                || accounts?.[0]?.homeAccountId
+                || null;
 
   // global page state
   const [view, setView] = useState(VIEW.MODELS);
@@ -46,11 +52,11 @@ export function MLModelsRepo() {
 
   // load data (replace with Azure later)
   const reload = async () => {
-    const [m, u] = await Promise.all([repo.listModels(), repo.listUploads()]);
+    const [m, u] = await Promise.all([repo.listModels(), repo.listUploads(userId)]);
     setModels(m);
     setUploads(u);
   };
-  useEffect(() => { reload(); }, []);
+  useEffect(() => { reload(); }, [userId]);
 
   // Tabs control (only two tabs: Models / My Uploads)
   const tabValue = lastListTab;
@@ -62,7 +68,7 @@ export function MLModelsRepo() {
 
   // handlers to move between views
   const openModel = async (id, fromUploads = false) => {
-    const model = await repo.getModel(id);
+    const model = await repo.getModel(id, { userId: fromUploads ? userId : undefined }); // <-- pass only if needed
     setSelectedModel(model);
     setIsMine(fromUploads || uploads.some((u) => u.id === id));
     setDetailTab(0); // land on Overview
@@ -81,7 +87,7 @@ export function MLModelsRepo() {
   };
 
   const onCreated = async () => {
-    const [m, u] = await Promise.all([repo.listModels(), repo.listUploads()]);
+    const [m, u] = await Promise.all([repo.listModels(), repo.listUploads(userId)]);
     setModels(m);
     setUploads(u);
     setView(VIEW.UPLOADS);
@@ -145,20 +151,20 @@ export function MLModelsRepo() {
       {view === VIEW.MODELS && <ModelsList rows={models} onOpenModel={openModel} />}
 
       {view === VIEW.UPLOADS && (
-        <UploadsList rows={uploads} onOpenModel={openModel} onCreateClick={onCreateClick} />
+        <UploadsList rows={uploads} onOpenModel={(id) => openModel(id, true)} onCreateClick={onCreateClick} />
       )}
 
       {view === VIEW.DETAIL && selectedModel && (
         <>
           {effectiveDetailTab === 0 && <ModelDetail model={selectedModel} />}
-          {effectiveDetailTab === 1 && <FilesTab model={selectedModel} isMine={isMine} />}
+          {effectiveDetailTab === 1 && <FilesTab model={selectedModel} isMine={isMine} userId={userId}/>}
           {isMine && effectiveDetailTab === 2 && (
             <SettingsTab model={selectedModel} onUpdated={onSettingsUpdated} />
           )}
         </>
       )}
 
-      {view === VIEW.CREATE && <CreateModel onCancel={backToList} onCreated={onCreated} />}
+      {view === VIEW.CREATE && <CreateModel userId={userId} onCancel={backToList} onCreated={onCreated} />}
     </ToolPage>
   );
 }

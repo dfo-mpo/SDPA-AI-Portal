@@ -2,14 +2,15 @@
 import React, { useRef, useState } from "react";
 import {
   Box, Paper, Grid, Stack, TextField, Button, Typography, IconButton,
-  Chip, RadioGroup, FormControlLabel, Radio, CircularProgress
+  Chip, RadioGroup, FormControlLabel, Radio, CircularProgress, Alert
 } from "@mui/material";
 import { Upload as UploadIcon, X as CloseIcon } from "lucide-react";
 import * as repo from "../services/repoApi";
 
-export default function CreateModel({ onCancel, onCreated }) {
+export default function CreateModel({ onCancel, onCreated, userId }) {
   const [owner, setOwner] = useState("");
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState([]);
   const [visibility, setVisibility] = useState("private");
@@ -18,7 +19,9 @@ export default function CreateModel({ onCancel, onCreated }) {
   const [error, setError] = useState("");
   const fileRef = useRef(null);
 
-  const canSubmit = owner.trim() && title.trim() && !saving;
+  const isGuest = !userId || userId === "me";
+
+  const canSubmit = !isGuest && owner.trim() && title.trim() && description.trim() && files.length > 0 && !saving;
 
   const addTag = (raw) => {
     const v = raw.trim().replace(/,$/, "");
@@ -52,16 +55,27 @@ export default function CreateModel({ onCancel, onCreated }) {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (isGuest){
+      setError("You must sign in to create a model.");
+      return;
+    }
+    
+    if (!canSubmit) {
+      if (!files.length) setError("Please attach at least one file.");
+      else if (!description.trim()) setError("Please provide a short description.");
+      return;
+    }
     setError("");
     try {
       setSaving(true);
       await repo.createModel({
         owner: owner.trim(),
         name: title.trim(),
+        description: description.trim(),
         tags,
-        private: visibility !== "public",
+        visibility,
         files,
+        userId
       });
       onCreated?.();
     } catch {
@@ -83,6 +97,11 @@ export default function CreateModel({ onCancel, onCreated }) {
         Add the basics, choose visibility, and attach files.
       </Typography>
 
+      {isGuest && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          You’re not signed in. Please sign in to create and upload models.
+        </Alert>
+      )}
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <TextField fullWidth size="small" required label="Owner name"
@@ -93,6 +112,18 @@ export default function CreateModel({ onCancel, onCreated }) {
             value={title} onChange={(e) => setTitle(e.target.value)} />
         </Grid>
 
+        <Grid item xs={12}>
+          <TextField
+            fullWidth size="small" required
+            label="Short description"
+            placeholder="One or two sentences about this model"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            multiline maxRows={3}
+            />
+        </Grid>
+
+        {/* tags + visibility */}
         <Grid item xs={12} md={8}>
           <TextField
             fullWidth size="small" label="Add tag"
@@ -142,6 +173,7 @@ export default function CreateModel({ onCancel, onCreated }) {
                 variant="outlined"
                 startIcon={<UploadIcon size={16} />}
                 onClick={() => fileRef.current?.click()}
+                disabled={isGuest}
               >
                 Select files
               </Button>
@@ -185,6 +217,7 @@ export default function CreateModel({ onCancel, onCreated }) {
               variant="contained"
               sx={{ whiteSpace: "nowrap" }}
               startIcon={saving ? <CircularProgress size={16} /> : null}
+              // disabled={!canSubmit}
             >
               {saving ? "Saving…" : "Create"}
             </Button>
