@@ -76,7 +76,7 @@ import {
     },
     Dectection_of_Ghost_Gear: {
       id: 'dectection-ghost-gear',
-      name: 'Dectection of Ghost Gear',
+      name: 'Detection of Ghost Gear',
       category: 'Computer Vision',
       icon: Eye,
       backgroundImage: '/assets/fence-counting-banner.jpg',
@@ -134,6 +134,16 @@ import {
       icon: Languages,
       backgroundImage: '/assets/french-translation-banner.jpg',
       actionText: 'Upload Document'
+    },
+
+    WEBSCRAPE: {
+      id: 'webscrape',
+      name: 'Web Scraper',
+      category: 'Large Language Models',
+      icon: FileSearch,
+      backgroundImage: '/assets/OCR.gif',
+      actionText: 'Coming Soon',
+      disabled: true
     },
 
     // Optical Character Recognition Tools
@@ -209,7 +219,8 @@ import {
       TOOLS.PDF_CHATBOT,
       TOOLS.PII_REDACTOR,
       TOOLS.SENSITIVITY_CALCULATOR,
-      TOOLS.FRENCH_TRANSLATION
+      TOOLS.FRENCH_TRANSLATION,
+      TOOLS.WEBSCRAPE
     ],
     'Optical Character Recognition': [
       TOOLS.DOCUMENT_OCR,
