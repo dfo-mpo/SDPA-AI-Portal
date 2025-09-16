@@ -1,36 +1,119 @@
-// Simple in-memory mocks. Replace these with Azure Blob Storage + metadata calls.
-let MODELS = [
-  { id: "m1", name: "SalmonClassifier", description: "CNN for fish species identification.", tags: ["vision","onnx","research"], version: "1.2.0", updatedAt: "2025-08-30", downloads: 812, sizeMB: 142, private: false, readme: "## SalmonClassifier\n\nExample README..." },
-  { id: "m2", name: "MADLAD-400 (10B) FT", description: "Domain-tuned English→French translation.", tags: ["nlp","translation","safetensors"], version: "0.9.1", updatedAt: "2025-08-22", downloads: 1254, sizeMB: 9800, private: true, readme: "## MADLAD FT\n\nUsage details..." },
-  { id: "m3", name: "MADLAD-400 (10B) FT", description: "Domain-tuned English→French translation.", tags: ["nlp","translation","safetensors"], version: "0.9.1", updatedAt: "2025-08-22", downloads: 1254, sizeMB: 9800, private: true, readme: "## MADLAD FT\n\nUsage details..." },
-  { id: "m4", name: "MADLAD-400 (10B) FT", description: "Domain-tuned English→French translation.", tags: ["nlp","translation","safetensors"], version: "0.9.1", updatedAt: "2025-08-22", downloads: 1254, sizeMB: 9800, private: true, readme: "## MADLAD FT\n\nUsage details..." }
+import axios from 'axios';
 
-];
-let UPLOADS = [
-  { id: "u1", name: "SockeyeRiskScore", description: "Risk scoring model for seasonal closures.", tags: ["risk","policy","sklearn"], version: "0.3.2", updatedAt: "2025-08-29", downloads: 54, sizeMB: 3, private: true },
-  { id: "u2", name: "CohoBycatchDetector", description: "Object detection head for bycatch frames.", tags: ["vision","yolo"], version: "0.1.0", updatedAt: "2025-08-18", downloads: 102, sizeMB: 86, private: false },
-  { id: "u3", name: "CohoBycatchDetector", description: "Object detection head for bycatch frames.", tags: ["vision","yolo"], version: "0.1.0", updatedAt: "2025-08-18", downloads: 102, sizeMB: 86, private: false },
-  { id: "u4", name: "CohoBycatchDetector", description: "Object detection head for bycatch frames.", tags: ["vision","yolo"], version: "0.1.0", updatedAt: "2025-08-18", downloads: 102, sizeMB: 86, private: false },
-  { id: "u5", name: "CohoBycatchDetector", description: "Object detection head for bycatch frames.", tags: ["vision","yolo"], version: "0.1.0", updatedAt: "2025-08-18", downloads: 102, sizeMB: 86, private: false },
-];
+const API = 'http://localhost:4000/api'; // or use your proxy/env
 
-export const listModels = async () => Promise.resolve(MODELS);
-export const listUploads = async () => Promise.resolve(UPLOADS);
-export const getModel = async (id) => Promise.resolve([...MODELS, ...UPLOADS].find((m) => m.id === id));
-export const createModel = async ({ owner, name, tags, private: isPrivate, files }) => {
-  const id = `m${Math.random().toString(36).slice(2, 7)}`;
-  const now = new Date().toISOString().slice(0, 10);
-  const row = { id, name, description: "", tags, version: "0.1.0", updatedAt: now, downloads: 0, sizeMB: 0, private: !!isPrivate, readme: "" };
-  UPLOADS = [row, ...UPLOADS];
-  MODELS = [row, ...MODELS];
-  return row;
-};
-export const updateModel = async (id, patch) => {
-  const apply = (list) => {
-    const i = list.findIndex((m) => m.id === id);
-    if (i >= 0) list[i] = { ...list[i], ...patch };
+// Helper to add x-user-id header when we have a userId
+function withUser(config = {}, userId) {
+  if (!userId) return config;
+  return {
+    ...config,
+    headers: {
+      ...(config.headers || {}),
+      'x-user-id': userId,
+    },
   };
-  apply(MODELS);
-  apply(UPLOADS);
-  return [...MODELS, ...UPLOADS].find((m) => m.id === id);
-};
+}
+
+/* ---------- Models ----------
+- CRUD Operations for models
+*/
+
+// ---------- List All Models ----------
+export async function listModels() {
+  const { data } = await axios.get(`${API}/models`);
+  return (data.items || []).map(x => ({
+    id: x.id,
+    name: x.name,
+    description: x.description || '',
+    tags: x.tags || [],
+    version: x.version || '1.0.0',
+    updatedAt: x.updatedAt,
+    downloads: x.downloads || 0,
+    sizeMB: x.sizeMB || 0,
+    private: !!x.private,
+    sourcePath: x.sourcePath
+  }));
+}
+
+// ---------- List All Uploads ----------
+export async function listUploads(userId) {
+  if (!userId) return [];
+  const { data } = await axios.get(`${API}/uploads`, { params: { userId } });
+  return (data.items || []).map(x => ({
+    id: x.id,
+    name: x.name,
+    description: x.description || '',
+    tags: x.tags || [],
+    version: x.version || '1.0.0',
+    updatedAt: x.updatedAt,
+    downloads: x.downloads || 0,
+    sizeMB: x.sizeMB || 0,
+    private: !!x.private,
+    sourcePath: x.sourcePath
+  }));
+}
+
+// ---------- Get a Model
+export async function getModel(id, { userId } = {}) {
+  const { data } = await axios.get(`${API}/models/${encodeURIComponent(id)}`, { params: { userId } });
+  return data;
+}
+
+// ---------- Create New Model
+export async function createModel({ owner, name, description = "", tags = [], visibility = 'private', files = [], userId }) {
+  const form = new FormData();
+  form.append('owner', owner);
+  form.append('title', name);
+  form.append('description', description);
+  form.append('visibility', visibility);
+  if (userId) form.append('userId', userId);
+  if (Array.isArray(tags)) form.append('tags', tags.join(','));
+  for (const f of files) form.append('files', f, f.name);
+
+  const { data } = await axios.post(`${API}/models/create`, form, {
+    headers: { 'Content-Type': 'multipart/form-data', ...(userId ? { 'x-user-id': userId } : {}) }
+  });
+  return data;
+}
+
+
+/* ---------- Files ---------- */
+function resolveBase({ id, isPrivate, userId, sourcePath }) {
+  if (sourcePath) return sourcePath;
+  if (isPrivate) {
+    if (!userId) throw new Error('userId required for private model path');
+    return `users/${encodeURIComponent(userId)}/models/${id}`;
+  }
+  return `models/${id}`;
+}
+
+/**
+ * List files for a model by asking the server to list blobs at {base}/files/
+ * Your server already has /api/blob/list which reads via connection string.
+ */
+export async function listModelFiles({ id, isPrivate, userId, container = 'mlmodels', sourcePath }) {
+  const base = resolveBase({ id, isPrivate, userId, sourcePath });
+  const { data } = await axios.get(`${API}/blob/list`, { params: { container, prefix: `${base}/files/` } });
+  const blobs = Array.isArray(data?.blobs) ? data.blobs : [];
+  return blobs.map(b => ({
+    name: b.name,
+    size: b.size ?? b.contentLength ?? 0,
+    lastModified: b.last_modified ?? b.properties?.lastModified,
+    contentType: b.content_type ?? b.properties?.contentType
+  }));
+}
+
+/**
+ * (Optional) Append files after creation (no SAS).
+ * Requires the tiny /api/models/append route below.
+ */
+export async function uploadModelFiles({ id, files, isPrivate, userId, container = 'mlmodels', sourcePath }) {
+  const base = resolveBase({ id, isPrivate, userId, sourcePath });
+  const form = new FormData();
+  form.append('base', base);
+  for (const f of files) form.append('files', f, f.name);
+
+  const cfg = withUser({ headers: { 'Content-Type': 'multipart/form-data' } }, userId);
+  const { data } = await axios.post(`${API}/models/append`, form, cfg);
+  return data;
+}
