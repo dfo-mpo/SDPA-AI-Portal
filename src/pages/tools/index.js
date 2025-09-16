@@ -9,7 +9,7 @@ export { FenceCounting } from './FenceCounting';
 export { ElectronicMonitoring } from './ElectronicMonitoring';
 export { UnderwaterMarineLifeAnnotation } from './UnderwaterMarineLifeAnnotation';
 export { FishPopulationEstimation } from './FishPopulationEstimation';
-export { DectectionofGhostGear } from './DectectionofGhostGear';
+export { DetectionofGhostGear } from './DetectionofGhostGear';
 export { CTDDataQualityControl } from './CTDDataQualityControl';
 export { FrenchTranslation } from './FrenchTranslation';
 export { PDFChatbot } from './PDFChatbot';
