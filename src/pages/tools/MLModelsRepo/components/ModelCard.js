@@ -1,20 +1,22 @@
 import React from "react";
-import { Card, CardContent, Stack, Typography, Chip} from "@mui/material";
+import { Card, CardContent, Stack, Typography, Chip, Checkbox } from "@mui/material";
 
 export default function ModelCard({ item, onClick }) {
   return (
     <Card
       variant="outlined"
-      sx={{ 
-        height: "100%", 
-        minWidth: 0,
+      sx={{
+        width: "100%",       // fill the grid cell
+        height: "100%",
+        minHeight: 180,      // keep a nice rectangle
         boxSizing: "border-box",
-        cursor: onClick ? "pointer" : "default"
-       }}
+        cursor: onClick ? "pointer" : "default",
+      }}
       onClick={onClick}
     >
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+          <Checkbox size="small" />
           <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
             {item.name}
           </Typography>
