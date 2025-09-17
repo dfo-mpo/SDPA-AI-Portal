@@ -2,18 +2,6 @@ import axios from 'axios';
 
 const API = 'http://localhost:4000/api'; // or use your proxy/env
 
-// Helper to add x-user-id header when we have a userId
-function withUser(config = {}, userId) {
-  if (!userId) return config;
-  return {
-    ...config,
-    headers: {
-      ...(config.headers || {}),
-      'x-user-id': userId,
-    },
-  };
-}
-
 /* ---------- Models ----------
 - CRUD Operations for models
 */
@@ -78,42 +66,26 @@ export async function createModel({ owner, name, description = "", tags = [], vi
 
 
 /* ---------- Files ---------- */
-function resolveBase({ id, isPrivate, userId, sourcePath }) {
-  if (sourcePath) return sourcePath;
-  if (isPrivate) {
-    if (!userId) throw new Error('userId required for private model path');
-    return `users/${encodeURIComponent(userId)}/models/${id}`;
-  }
-  return `models/${id}`;
+
+
+// ---------- List files for a model
+export async function listModelFilesById(id, { userId } = {}) {
+  const { data } = await axios.get(
+    `${API}/models/${encodeURIComponent(id)}/files`,
+    { params: userId ? { userId } : {} }
+  );
+  return Array.isArray(data?.items) ? data.items : [];
 }
 
-/**
- * List files for a model by asking the server to list blobs at {base}/files/
- * Your server already has /api/blob/list which reads via connection string.
- */
-export async function listModelFiles({ id, isPrivate, userId, container = 'mlmodels', sourcePath }) {
-  const base = resolveBase({ id, isPrivate, userId, sourcePath });
-  const { data } = await axios.get(`${API}/blob/list`, { params: { container, prefix: `${base}/files/` } });
-  const blobs = Array.isArray(data?.blobs) ? data.blobs : [];
-  return blobs.map(b => ({
-    name: b.name,
-    size: b.size ?? b.contentLength ?? 0,
-    lastModified: b.last_modified ?? b.properties?.lastModified,
-    contentType: b.content_type ?? b.properties?.contentType
-  }));
-}
-
-/**
- * (Optional) Append files after creation (no SAS).
- * Requires the tiny /api/models/append route below.
- */
-export async function uploadModelFiles({ id, files, isPrivate, userId, container = 'mlmodels', sourcePath }) {
-  const base = resolveBase({ id, isPrivate, userId, sourcePath });
+// ---------- Append files (contribute button in frontend)
+export async function uploadModelFiles({ id, files, isPrivate, userId, sourcePath }) {
+  const base = sourcePath || (isPrivate ? `users/${encodeURIComponent(userId)}/models/${id}` : `models/${id}`);
   const form = new FormData();
-  form.append('base', base);
-  for (const f of files) form.append('files', f, f.name);
+  form.append("base", base);
+  for (const f of files) form.append("files", f, f.name);
 
-  const cfg = withUser({ headers: { 'Content-Type': 'multipart/form-data' } }, userId);
-  const { data } = await axios.post(`${API}/models/append`, form, cfg);
+  const { data } = await axios.post(`${API}/models/append`, form, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
   return data;
 }

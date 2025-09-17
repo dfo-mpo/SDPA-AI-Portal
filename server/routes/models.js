@@ -180,4 +180,66 @@ router.get('/models/:id', async (req, res) => {
   }
 });
 
+
+
+
+
+/* ---------------- GET Files ---------------- */
+router.get('/models/:id/files', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = getUserId(req);
+    const client = getBlobServiceClient().getContainerClient(CONTAINER);
+    
+    // location of all files in a given model
+    const publicPrefix  = `models/${id}/files/`;
+    const privatePrefix = userId ? `users/${userId}/models/${id}/files/` : null;
+
+    // Prefer private path when userId provided; fallback to public
+    const prefixes = [privatePrefix, publicPrefix].filter(Boolean);
+
+    let blobs = [];
+    for (const prefix of prefixes) {
+      const tmp = [];
+      for await (const b of client.listBlobsFlat({ prefix })) {
+        tmp.push({
+          name: b.name,
+          size: b.properties?.contentLength ?? 0,
+          lastModified: b.properties?.lastModified ?? null,
+          contentType: b.properties?.contentType ?? 'application/octet-stream',
+        });
+      }
+      if (tmp.length) { blobs = tmp; break; } // first prefix with hits wins
+    }
+
+    res.json({ items: blobs });
+  } catch (e) {
+    console.error('get files error:', e);
+    res.status(500).json({ error: 'get files failed', details: e.message });
+  }
+});
+
+/* ---------------- APPEND files to an existing model ---------------- */
+router.post('/models/append', upload.array('files'), async (req, res) => {
+  try {
+    const base = (req.body.base || '').toString().replace(/\/+$/, '');
+    if (!base) return res.status(400).json({ error: 'base is required' });
+    if (!req.files || !req.files.length) return res.status(400).json({ error: 'no files' });
+
+    const container = getBlobServiceClient().getContainerClient(CONTAINER);
+    await container.createIfNotExists();
+
+    for (const f of req.files) {
+      const key = `${base}/files/${f.originalname}`;
+      await container.getBlockBlobClient(key).uploadData(f.buffer, {
+        blobHTTPHeaders: { blobContentType: f.mimetype || 'application/octet-stream' }
+      });
+    }
+    res.json({ ok: true, count: req.files.length });
+  } catch (e) {
+    console.error('append error:', e);
+    res.status(500).json({ error: 'append failed', details: e.message });
+  }
+});
+
 module.exports = router;
