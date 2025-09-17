@@ -101,6 +101,37 @@ export function MLModelsRepo() {
     setUploads((prev) => prev.map((x) => (x.id === updated.id ? { ...x, ...updated } : x)));
   };
 
+  const upsert = (list, m) =>
+  list.some(x => x.id === m.id)
+    ? list.map(x => (x.id === m.id ? { ...x, ...m } : x))
+    : [...list, m];
+
+  const handleSettingsUpdated = (updated) => {
+    setSelectedModel(updated);
+
+    // keep both lists in sync immediately
+    if (updated.private) {
+      // now private → remove from public Models, keep/add in My Uploads
+      setModels(prev => prev.filter(x => x.id !== updated.id));
+      setUploads(prev => upsert(prev, updated));
+    } else {
+      // now public → ensure in Models, keep/add pointer in My Uploads
+      setModels(prev => upsert(prev, updated));
+      setUploads(prev => upsert(prev, updated));
+    }
+
+    // optional: background truth refresh (won't flicker)
+    reload();
+  };
+
+  const handleModelDeleted = (deletedId) => {
+    setSelectedModel(null);
+    setModels(prev => prev.filter(x => x.id !== deletedId));
+    setUploads(prev => prev.filter(x => x.id !== deletedId));
+    setView(VIEW.UPLOADS);
+    // optional: reload();
+  };
+
   const showListTabs = view === VIEW.MODELS || view === VIEW.UPLOADS || view === VIEW.CREATE;
   const showDetailTabs = view === VIEW.DETAIL && selectedModel;
 
@@ -159,7 +190,7 @@ export function MLModelsRepo() {
           {effectiveDetailTab === 0 && <ModelDetail model={selectedModel} />}
           {effectiveDetailTab === 1 && <FilesTab model={selectedModel} isMine={isMine} userId={userId}/>}
           {isMine && effectiveDetailTab === 2 && (
-            <SettingsTab model={selectedModel} onUpdated={onSettingsUpdated} />
+            <SettingsTab model={selectedModel} isMine={isMine} userId={userId} onUpdated={handleSettingsUpdated} onDeleted={handleModelDeleted}/>
           )}
         </>
       )}
