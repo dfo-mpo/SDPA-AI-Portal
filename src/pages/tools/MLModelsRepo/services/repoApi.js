@@ -89,3 +89,35 @@ export async function uploadModelFiles({ id, files, isPrivate, userId, sourcePat
   });
   return data;
 }
+
+
+
+/* ---------- Settings ---------- */
+// change visibility
+export async function updateVisibility(id, { visibility, userId }) {
+  const { data } = await axios.patch(
+    `${API}/models/${encodeURIComponent(id)}/visibility`,
+    { visibility, userId },
+    { headers: userId ? { 'x-user-id': userId } : {} }
+  );
+  return data;
+}
+
+// update metadata (name/owner/description/tags)
+export async function updateMeta(id, { name, owner, description, tags, userId }) {
+  const { data } = await axios.patch(
+    `${API}/models/${encodeURIComponent(id)}/meta`,
+    { name, owner, description, tags, userId },
+    { headers: userId ? { 'x-user-id': userId } : {} }
+  );
+  return data;
+}
+
+// delete repository
+export async function deleteModel(id, { userId }) {
+  const { data } = await axios.delete(
+    `${API}/models/${encodeURIComponent(id)}`,
+    { data: { userId }, headers: userId ? { 'x-user-id': userId } : {} }
+  );
+  return data;
+}

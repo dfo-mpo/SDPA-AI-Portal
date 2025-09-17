@@ -30,6 +30,25 @@ async function readJson(containerClient, blobName) {
   return JSON.parse(buf.toString('utf8'));
 }
 
+async function listNames(container, prefix) {
+  const out = [];
+  for await (const b of container.listBlobsFlat({ prefix })) out.push(b.name);
+  return out;
+}
+async function copyTree(container, fromPrefix, toPrefix) {
+  const names = await listNames(container, fromPrefix);
+  for (const src of names) {
+    const buf = await container.getBlobClient(src).downloadToBuffer();
+    const dst = src.replace(fromPrefix, toPrefix);
+    await container.getBlockBlobClient(dst).uploadData(buf);
+  }
+}
+async function deleteTree(container, prefix) {
+  for await (const b of container.listBlobsFlat({ prefix })) {
+    await container.deleteBlob(b.name).catch(() => {});
+  }
+}
+
 // ---------- CREATE MODEL ----------
 router.post('/models/create', upload.array('files'), async (req, res) => {
   try {
@@ -243,3 +262,110 @@ router.post('/models/append', upload.array('files'), async (req, res) => {
 });
 
 module.exports = router;
+
+
+
+
+/* ---------------- Settings Tab ---------------- */
+
+// --- PATCH visibility: public <-> private ---
+router.patch('/models/:id/visibility', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const makePublic = String(req.body.visibility || '').toLowerCase() === 'public';
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: 'userId required' });
+
+    const container = getBlobServiceClient().getContainerClient(CONTAINER);
+    const privBase = `users/${userId}/models/${id}`;
+    const pubBase  = `models/${id}`;
+
+    if (makePublic) {
+      // move files to public, publish manifest, leave a pointer in "uploads"
+      await copyTree(container, `${privBase}/files/`, `${pubBase}/files/`);
+      await deleteTree(container, `${privBase}/files/`);
+
+      const src = await readJson(container, `${privBase}/manifest.json`);
+      const man = { ...src, private: false, sourcePath: pubBase, updatedAt: new Date().toISOString() };
+      await container.getBlockBlobClient(`${pubBase}/manifest.json`)
+        .uploadData(Buffer.from(JSON.stringify(man, null, 2)),
+                    { blobHTTPHeaders: { blobContentType: 'application/json' } });
+
+      const pointer = { ...man, sourcePath: pubBase }; // show in My Uploads
+      await container.getBlockBlobClient(`${privBase}/manifest.json`)
+        .uploadData(Buffer.from(JSON.stringify(pointer, null, 2)),
+                    { blobHTTPHeaders: { blobContentType: 'application/json' } });
+
+      return res.json(man);
+    } else {
+      // move files back to private and remove public copies
+      await copyTree(container, `${pubBase}/files/`, `${privBase}/files/`);
+      await deleteTree(container, `${pubBase}/`);
+
+      const src = await readJson(container, `${privBase}/manifest.json`)
+                 || await readJson(container, `${pubBase}/manifest.json`) || {};
+      const man = { ...src, private: true, sourcePath: privBase, updatedAt: new Date().toISOString() };
+      await container.getBlockBlobClient(`${privBase}/manifest.json`)
+        .uploadData(Buffer.from(JSON.stringify(man, null, 2)),
+                    { blobHTTPHeaders: { blobContentType: 'application/json' } });
+
+      return res.json(man);
+    }
+  } catch (e) {
+    console.error('visibility patch error:', e);
+    res.status(500).json({ error: 'visibility update failed', details: e.message });
+  }
+});
+
+// --- PATCH metadata: name/owner/description/tags (no path move) ---
+router.patch('/models/:id/meta', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = getUserId(req);
+    const c = getBlobServiceClient().getContainerClient(CONTAINER);
+
+    const pub = `models/${id}/manifest.json`;
+    const prv = userId ? `users/${userId}/models/${id}/manifest.json` : null;
+
+    let man = (await readJson(c, pub)) || (prv && await readJson(c, prv));
+    if (!man) return res.status(404).json({ error: 'not found' });
+
+    const patch = {};
+    ['name', 'owner', 'description', 'tags'].forEach(k => {
+      if (k in req.body) patch[k] = req.body[k];
+    });
+    man = { ...man, ...patch, updatedAt: new Date().toISOString() };
+
+    const targets = [];
+    if (await c.getBlobClient(pub).exists()) targets.push(pub);
+    if (prv && await c.getBlobClient(prv).exists()) targets.push(prv);
+
+    for (const p of targets) {
+      await c.getBlockBlobClient(p).uploadData(
+        Buffer.from(JSON.stringify(man, null, 2)),
+        { blobHTTPHeaders: { blobContentType: 'application/json' } }
+      );
+    }
+    res.json(man);
+  } catch (e) {
+    console.error('meta patch error:', e);
+    res.status(500).json({ error: 'meta update failed', details: e.message });
+  }
+});
+
+// --- DELETE repository (public + private trees) ---
+router.delete('/models/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = getUserId(req);
+    const c = getBlobServiceClient().getContainerClient(CONTAINER);
+
+    await deleteTree(c, `models/${id}/`);
+    if (userId) await deleteTree(c, `users/${userId}/models/${id}/`);
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('delete error:', e);
+    res.status(500).json({ error: 'delete failed', details: e.message });
+  }
+});
