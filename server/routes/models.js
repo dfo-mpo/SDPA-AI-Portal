@@ -8,13 +8,10 @@ const CONTAINER = process.env.AZURE_STORAGE_CONTAINER_MODELS;
 
 // helper: get the currently acting user
 function getUserId(req) {
-  return (
-    req.header('x-user-id') || // preferred: from auth middleware
-    req.query.userId ||
-    req.body.userId ||
-    null
-  );
+  // works whether or not express.json() ran, and whether body/query exist
+  return req.get?.('x-user-id') || req.query?.userId || req.body?.userId || null;
 }
+
 
 // tiny slugifier to avoid extra deps
 function toSlug(s = '') {
@@ -164,13 +161,18 @@ router.get('/models/:id', async (req, res) => {
     const publicPath = `models/${id}/manifest.json`;
     const privatePath = `users/${userId}/models/${id}/manifest.json`;
 
-    let json = await readJson(client, publicPath);
-    if (!json) json = await readJson(client, privatePath);
-    if (!json && userId) {
-        const privatePath = `users/${userId}/models/${id}/manifest.json`;
-        json = await readJson(client, privatePath);
-    }
+    const tryPaths = [publicPath, privatePath].filter(Boolean);
 
+    let json = null;
+    for (const p of tryPaths) {
+      const blob = client.getBlobClient(p);
+      if (await blob.exists()) {
+        const buf = await blob.downloadToBuffer();
+        json = JSON.parse(buf.toString('utf8'));
+        break;
+      }
+    }
+    if (!json) return res.status(404).json({ error: 'not found', tried: tryPaths });
     res.json(json);
   } catch (e) {
     console.error('get model error:', e);
