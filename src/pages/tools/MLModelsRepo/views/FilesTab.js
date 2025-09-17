@@ -88,7 +88,7 @@ export function FilesTab({ model, isMine, userId }) {
           <>
             <List disablePadding>
               {rows.map((f) => {
-                const size = f.size ? `${(f.size / (1024 * 1024)).toFixed(2)} MB` : "";
+                const size = f.size ? `${(f.size / (1024 * 1024)).toFixed(4)} MB` : "";
                 const name = f.rel.split("/").pop();
                 const path = f.rel.includes("/") ? f.rel.replace(`/${name}`, "") : "";
                 return (
