@@ -1,4 +1,14 @@
-// src/pages/tools/MLModelsRepo/views/CreateModel.js
+/**
+ * Create Model
+ *
+ * Form for publishing a new ML model to the repository.
+ * Requirements: user must be signed in; Owner, Title, Short description, and ≥1 file.
+ * Visibility:
+ *  - Private → stored at users/<userId>/models/<id> and shown only in “My Uploads”.
+ *  - Public  → stored at models/<id> and also referenced in “My Uploads”.
+ * On submit, uploads files and writes a manifest.json to Azure Blob, then calls onCreated().
+ */
+
 import React, { useRef, useState } from "react";
 import {
   Box, Paper, Grid, Stack, TextField, Button, Typography, IconButton,
@@ -51,7 +61,6 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
       return [...prev, ...arr.filter((f) => !seen.has(`${f.name}-${f.size}`))];
     });
   };
-  const removeFile = (f) => setFiles((prev) => prev.filter((x) => x !== f));
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -105,11 +114,11 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <TextField fullWidth size="small" required label="Owner name"
-            value={owner} onChange={(e) => setOwner(e.target.value)} />
+            value={owner} onChange={(e) => setOwner(e.target.value)} disabled={isGuest}/>
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField fullWidth size="small" required label="Model title"
-            value={title} onChange={(e) => setTitle(e.target.value)} />
+            value={title} onChange={(e) => setTitle(e.target.value)} disabled={isGuest}/>
         </Grid>
 
         <Grid item xs={12}>
@@ -120,6 +129,7 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             multiline maxRows={3}
+            disabled={isGuest}
             />
         </Grid>
 
@@ -132,6 +142,7 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
             onChange={(e) => setTagInput(e.target.value)}
             onKeyDown={onTagKeyDown}
             onPaste={onTagPaste}
+            disabled={isGuest}
           />
           <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
             {tags.map((t) => (
