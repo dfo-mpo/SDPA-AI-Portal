@@ -77,7 +77,7 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
     setError("");
     try {
       setSaving(true);
-      await repo.createModel({
+      const out = await repo.createModel({
         owner: owner.trim(),
         name: title.trim(),
         description: description.trim(),
@@ -86,12 +86,18 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
         files,
         userId
       });
-      onCreated?.();
+      const newId = out?.manifest?.id;
+      onCreated?.(newId);
     } catch {
       setError("Could not create the model. Please try again.");
     } finally {
       setSaving(false);
     }
+  };
+
+  const tallInput = {
+    "& .MuiOutlinedInput-root": { height: 50 },            
+    "& .MuiOutlinedInput-input": { py: 1.25 }              
   };
 
   return (
@@ -114,11 +120,11 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <TextField fullWidth size="small" required label="Owner name"
-            value={owner} onChange={(e) => setOwner(e.target.value)} disabled={isGuest}/>
+            value={owner} onChange={(e) => setOwner(e.target.value)} disabled={isGuest} sx={tallInput}/>
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField fullWidth size="small" required label="Model title"
-            value={title} onChange={(e) => setTitle(e.target.value)} disabled={isGuest}/>
+            value={title} onChange={(e) => setTitle(e.target.value)} disabled={isGuest} sx={tallInput}/>
         </Grid>
 
         <Grid item xs={12}>
@@ -128,8 +134,9 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
             placeholder="One or two sentences about this model"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            multiline maxRows={3}
+            multiline maxRows={5}
             disabled={isGuest}
+            sx={{ "& .MuiOutlinedInput-root": { height: 120, alignItems: "flex-start" } }}
             />
         </Grid>
 
