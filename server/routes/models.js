@@ -48,6 +48,50 @@ async function deleteTree(container, prefix) {
     await container.deleteBlob(b.name).catch(() => {});
   }
 }
+async function upsertReadme(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: 'userId required' });
+
+    const c = getBlobServiceClient().getContainerClient(CONTAINER);
+    const pubBase  = `models/${id}`;
+    const privBase = `users/${userId}/models/${id}`;
+
+    // write into whichever base exists; default to private
+    const targets = [];
+    if (await c.getBlobClient(`${pubBase}/manifest.json`).exists())  targets.push(`${pubBase}/README.md`);
+    if (await c.getBlobClient(`${privBase}/manifest.json`).exists()) targets.push(`${privBase}/README.md`);
+    if (targets.length === 0) targets.push(`${privBase}/README.md`);
+
+    const markdown = String(req.body?.markdown ?? '');
+    const data = Buffer.from(markdown, 'utf8');
+
+    for (const p of targets) {
+      await c.getBlockBlobClient(p).uploadData(data, {
+        blobHTTPHeaders: { blobContentType: 'text/markdown; charset=utf-8' }
+      });
+    }
+
+    // bump updatedAt where applicable
+    for (const m of [`${pubBase}/manifest.json`, `${privBase}/manifest.json`]) {
+      const manBlob = c.getBlobClient(m);
+      if (await manBlob.exists()) {
+        const buf = await manBlob.downloadToBuffer();
+        const man = JSON.parse(buf.toString('utf8'));
+        man.updatedAt = new Date().toISOString();
+        await c.getBlockBlobClient(m).uploadData(Buffer.from(JSON.stringify(man, null, 2)), {
+          blobHTTPHeaders: { blobContentType: 'application/json' }
+        });
+      }
+    }
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('readme save error:', e);
+    res.status(500).json({ error: 'readme save failed', details: e.message });
+  }
+}
 
 // ---------- CREATE MODEL ----------
 router.post('/models/create', upload.array('files'), async (req, res) => {
@@ -201,7 +245,7 @@ router.get('/models/:id', async (req, res) => {
 
 
 
-
+/* ---------------- Files Tab ---------------- */
 
 /* ---------------- GET Files ---------------- */
 router.get('/models/:id/files', async (req, res) => {
@@ -369,3 +413,37 @@ router.delete('/models/:id', async (req, res) => {
     res.status(500).json({ error: 'delete failed', details: e.message });
   }
 });
+
+
+
+/* ---------------- Overview Tab ---------------- */
+// --- Get README.md (public first, then private)
+router.get('/models/:id/readme', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = getUserId(req);
+    const c = getBlobServiceClient().getContainerClient(CONTAINER);
+
+    // Prefer private if caller is the owner; fall back to public
+    const tryPaths = [
+      userId ? `users/${userId}/models/${id}/README.md` : null,
+      `models/${id}/README.md`,
+    ].filter(Boolean);
+
+    for (const p of tryPaths) {
+      const blob = c.getBlobClient(p);
+      if (await blob.exists()) {
+        const buf = await blob.downloadToBuffer();
+        return res.type('text/markdown; charset=utf-8').send(buf.toString('utf8'));
+      }
+    }
+    return res.type('text/markdown; charset=utf-8').send(''); // 200, no README yet
+  } catch (e) {
+    console.error('readme get error:', e);
+    res.status(500).json({ error: 'readme get failed', details: e.message });
+  }
+});
+
+// accept BOTH methods so client and server won’t drift
+router.put('/models/:id/readme', upsertReadme);
+router.post('/models/:id/readme', upsertReadme);
