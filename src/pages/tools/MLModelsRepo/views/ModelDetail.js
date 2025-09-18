@@ -1,47 +1,110 @@
-import React from "react";
-import { Box, Chip, Stack, Typography, Divider } from "@mui/material";
+// src/pages/tools/MLModelsRepo/views/ModelDetail.js
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  IconButton,
+  Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Tooltip,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import MenuBookTwoToneIcon from "@mui/icons-material/MenuBookTwoTone"; // book icon
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";       // pencil
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import * as repo from "../services/repoApi";
+import { mdComponents } from "./mdComponents";
+import CreateReadme from "./CreateReadme";
 
-export default function ModelDetail({ model }) {
-  if (!model) return null;
+// NOTE: we rely ONLY on isMine + userId (same idea as SettingsTab)
+export default function ModelDetail({ model, userId, isMine }) {
+  const [md, setMd] = useState("");
+  const [openEditor, setOpenEditor] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Same permission idea as SettingsTab: can edit iff authenticated AND it's mine
+  const canEdit = useMemo(() => Boolean(userId) && Boolean(isMine), [userId, isMine]);
+
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      const text = await repo.getReadme(model.id, { userId });
+      setMd(text || "");
+    } catch {
+      setMd("");
+    } finally {
+      setLoading(false);
+    }
+  }, [model.id, userId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleSaved = async () => {
+    await load();         // refresh after save
+    setOpenEditor(false); // close popup
+  };
 
   return (
-    <Box sx={{ width: "100%" }}>
-      <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-        {model.name} <Typography component="span" variant="body2">v{model.version}</Typography>
-      </Typography>
+    <>
+      <Paper sx={{ p: 2, width: "100%" }}>
+        {/* Header: book icon + label (left), pencil (right if canEdit) */}
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <MenuBookTwoToneIcon fontSize="small" sx={{ color: "text.secondary" }} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, letterSpacing: 0.2 }}>
+              README
+            </Typography>
+          </Stack>
 
-      <Stack direction="row" spacing={1} sx={{ mb: 2 }} useFlexGap flexWrap="wrap">
-        {(model.tags || []).map((t) => <Chip key={t} size="small" label={t} />)}
-        <Chip size="small" label={model.private ? "Private" : "Public"} />
-      </Stack>
+          {canEdit && (
+            <Tooltip title={md ? "Edit README" : "Create README"}>
+              <IconButton size="small" onClick={() => setOpenEditor(true)}>
+                <EditOutlinedIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Stack>
 
-      <Typography variant="body1" sx={{ mb: 2 }}>{model.description}</Typography>
+        {/* Content (no divider) */}
+        <Box sx={{ mt: 1 }}>
+          {loading ? (
+            <Typography variant="body2" color="text.secondary">Loading…</Typography>
+          ) : md ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+              {md}
+            </ReactMarkdown>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              No README yet.
+            </Typography>
+          )}
+        </Box>
+      </Paper>
 
-      <Divider sx={{ my: 2 }} />
-      <Typography variant="h6" sx={{ mb: 1 }}>README</Typography>
-      <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", mb: 2 }}>
-        {model.readme || "No README provided yet."}
-      </Typography>
-
-      <Divider sx={{ my: 2 }} />
-      <Typography variant="h6" sx={{ mb: 1 }}>SDK Usage</Typography>
-
-      <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Python</Typography>
-      <pre style={{ overflowX: "auto", padding: 12, background: "#0f172a", color: "white", borderRadius: 8 }}>
-{`from dfo_ml import load_model
-
-m = load_model("${model.id}", version="${model.version}")
-pred = m.predict(data)`}
-      </pre>
-
-      <Typography variant="subtitle2" sx={{ mt: 2, mb: 0.5 }}>REST</Typography>
-      <pre style={{ overflowX: "auto", padding: 12, background: "#0f172a", color: "white", borderRadius: 8 }}>
-{`POST /api/models/${model.id}/v/${model.version}/predict
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{"inputs": {...}}`}
-      </pre>
-    </Box>
+      {/* Editor dialog (same CreateReadme UI) */}
+      <Dialog
+        open={openEditor}
+        onClose={() => setOpenEditor(false)}
+        fullWidth
+        maxWidth="lg"
+        PaperProps={{ sx: { height: { xs: "92vh", md: "84vh" }, backgroundColor: "#f5f5f5" } }}
+      >
+        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {md ? "Edit README" : "Create README"} — <b>{model?.id}</b>
+          <IconButton onClick={() => setOpenEditor(false)} sx={{ ml: "auto" }} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 2 }}>
+          <CreateReadme modelId={model.id} userId={userId} onSaved={handleSaved} />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
