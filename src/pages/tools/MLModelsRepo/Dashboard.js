@@ -7,7 +7,7 @@
  * metadata, uploading new models, and monitoring usage statistics.
  */
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Tabs, Tab, Button, Stack } from "@mui/material";
 import { ToolPage } from "../../../components/tools";
 import { useLanguage } from "../../../contexts";
@@ -21,6 +21,7 @@ import ModelDetail from "./views/ModelDetail";
 import CreateModel from "./views/CreateModel";
 import FilesTab from "./views/FilesTab";         // NEW
 import SettingsTab from "./views/SettingsTab";   // NEW
+import CreateReadme from "./views/CreateReadme"  // NEW
 import * as repo from "./services/repoApi";
 
 const VIEW = {
@@ -45,6 +46,7 @@ export function MLModelsRepo() {
   const [models, setModels] = useState([]);
   const [uploads, setUploads] = useState([]);
   const [selectedModel, setSelectedModel] = useState(null);
+  const [pendingReadmeId, setPendingReadmeId] = useState(null);
 
   // detail sub-tabs: 0 = Overview, 1 = Files, 2 = Settings (only if mine)
   const [detailTab, setDetailTab] = useState(0);
@@ -83,15 +85,24 @@ export function MLModelsRepo() {
 
   const onCreateClick = () => {
     setLastListTab(1);
+    setPendingReadmeId(null);
     setView(VIEW.CREATE);
   };
 
-  const onCreated = async () => {
+  const onCreated = async (newId) => {
     const [m, u] = await Promise.all([repo.listModels(), repo.listUploads(userId)]);
     setModels(m);
     setUploads(u);
-    setView(VIEW.UPLOADS);
+    setPendingReadmeId(newId);
+    setView(VIEW.CREATE);
+    // 
   };
+
+  const onReadmeSaved = async (id) => {
+    await reload();
+    setPendingReadmeId(null);
+    openModel(id, true);
+  }
 
   // Update selected model after settings change
   const onSettingsUpdated = (updated) => {
@@ -187,7 +198,7 @@ export function MLModelsRepo() {
 
       {view === VIEW.DETAIL && selectedModel && (
         <>
-          {effectiveDetailTab === 0 && <ModelDetail model={selectedModel} />}
+          {effectiveDetailTab === 0 && <ModelDetail model={selectedModel} isMine={isMine} userId={userId}/>}
           {effectiveDetailTab === 1 && <FilesTab model={selectedModel} isMine={isMine} userId={userId}/>}
           {isMine && effectiveDetailTab === 2 && (
             <SettingsTab model={selectedModel} isMine={isMine} userId={userId} onUpdated={handleSettingsUpdated} onDeleted={handleModelDeleted}/>
@@ -195,7 +206,11 @@ export function MLModelsRepo() {
         </>
       )}
 
-      {view === VIEW.CREATE && <CreateModel userId={userId} onCancel={backToList} onCreated={onCreated} />}
+      {view === VIEW.CREATE && (
+        pendingReadmeId 
+        ? <CreateReadme modelId={pendingReadmeId} userId={userId} onSaved={() => onReadmeSaved(pendingReadmeId)} />
+        : 
+        <CreateModel userId={userId} onCancel={backToList} onCreated={onCreated} />)}
     </ToolPage>
   );
 }
