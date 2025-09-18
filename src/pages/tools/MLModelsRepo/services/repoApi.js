@@ -121,3 +121,24 @@ export async function deleteModel(id, { userId }) {
   );
   return data;
 }
+
+
+
+/* ---------- Overview Tab ---------- */
+// get README.md
+export async function getReadme(id, { userId } = {}) {
+  const res = await axios.get(`${API}/models/${encodeURIComponent(id)}/readme`, {
+    params: userId ? { userId } : {}
+  });
+  return typeof res.data === 'string' ? res.data : (res.data ?? '');
+}
+
+// save README.md
+export async function saveReadme(id, { markdown, userId }) {
+  const { data } = await axios.put(
+    `${API}/models/${encodeURIComponent(id)}/readme`,
+    { markdown, userId },
+    { headers: userId ? { 'x-user-id': userId } : {} }
+  );
+  return data;
+}
