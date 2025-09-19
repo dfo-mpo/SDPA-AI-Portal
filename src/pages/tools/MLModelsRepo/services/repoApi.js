@@ -48,7 +48,7 @@ export async function getModel(id, { userId } = {}) {
 }
 
 // ---------- Create New Model
-export async function createModel({ owner, name, description = "", tags = [], visibility = 'private', files = [], userId }) {
+export async function createModelWithPaths({ owner, name, description = "", tags = [], visibility = 'private', files = [], paths = [], userId }) {
   const form = new FormData();
   form.append('owner', owner);
   form.append('title', name);
@@ -56,7 +56,11 @@ export async function createModel({ owner, name, description = "", tags = [], vi
   form.append('visibility', visibility);
   if (userId) form.append('userId', userId);
   if (Array.isArray(tags)) form.append('tags', tags.join(','));
-  for (const f of files) form.append('files', f, f.name);
+
+  files.forEach((f, i) => {
+    form.append('files', f, f.name);
+    form.append('paths', paths[i] || f.name);
+  });
 
   const { data } = await axios.post(`${API}/models/create`, form, {
     headers: { 'Content-Type': 'multipart/form-data', ...(userId ? { 'x-user-id': userId } : {}) }
@@ -77,15 +81,27 @@ export async function listModelFilesById(id, { userId } = {}) {
   return Array.isArray(data?.items) ? data.items : [];
 }
 
-// ---------- Append files (contribute button in frontend)
-export async function uploadModelFiles({ id, files, isPrivate, userId, sourcePath }) {
+// ---------- Append files (add button in frontend)
+export async function uploadModelFiles({ id, files, isPrivate, userId, sourcePath, dir = "" }) {
   const base = sourcePath || (isPrivate ? `users/${encodeURIComponent(userId)}/models/${id}` : `models/${id}`);
   const form = new FormData();
   form.append("base", base);
+  form.append("dir", dir);
   for (const f of files) form.append("files", f, f.name);
 
-  const { data } = await axios.post(`${API}/models/append`, form, {
-    headers: { "Content-Type": "multipart/form-data" }
+  const { data } = await axios.post(`${API}/models/append`, form);
+  return data;
+}
+
+// ---------- Delete files
+export async function deleteModelFile({ id, filePath, isPrivate, userId, sourcePath }) {
+  const base = sourcePath || (isPrivate
+    ? `users/${encodeURIComponent(userId)}/models/${id}`
+    : `models/${id}`);
+
+  // filePath is relative inside /files/
+  const { data } = await axios.delete(`${API}/models/file`, {
+    data: { base, filePath, userId },
   });
   return data;
 }
