@@ -403,17 +403,44 @@ router.delete('/models/file', async (req, res) => {
       return res.status(400).json({ error: 'base and filePath required' });
     }
 
-    const key = `${base}/files/${filePath}`;
     const container = getBlobServiceClient().getContainerClient(CONTAINER);
-    const blob = container.getBlockBlobClient(key);
 
-    await blob.deleteIfExists();
-    res.json({ ok: true, deleted: key });
+    // figure out id from base
+    const parts = base.split('/');
+    const id = parts[parts.length - 1]; // last segment is model id
+
+    const privBase = userId ? `users/${userId}/models/${id}` : null;
+    const pubBase  = `models/${id}`;
+
+    const targets = [];
+
+    if (base.startsWith('models/')) {
+      // public delete → do both
+      targets.push(`${pubBase}/files/${filePath}`);
+      if (privBase) targets.push(`${privBase}/files/${filePath}`);
+    } else {
+      // private delete → just private
+      targets.push(`${privBase}/files/${filePath}`);
+    }
+
+    const deleted = [];
+    for (const key of targets) {
+      try {
+        await container.deleteBlob(key);
+        deleted.push(key);
+      } catch (err) {
+        // swallow "not found" errors
+        console.warn(`delete failed for ${key}:`, err.message);
+      }
+    }
+
+    res.json({ ok: true, deleted });
   } catch (e) {
     console.error('delete error:', e);
     res.status(500).json({ error: 'delete failed', details: e.message });
   }
 });
+
 
 
 /* ---------------- Settings Tab ---------------- */
