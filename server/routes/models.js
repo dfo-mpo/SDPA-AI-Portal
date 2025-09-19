@@ -23,6 +23,13 @@ function toSlug(s = '') {
     || 'model';
 }
 
+// sanitize rel path
+function cleanRelPath(p) {
+  const s = String(p || "").replace(/\\/g, "/");
+  if (!s || s.startsWith("/") || s.includes("..")) return null;
+  return s.split("/").filter(Boolean).join("/");
+}
+
 async function readJson(containerClient, blobName) {
   const blob = containerClient.getBlobClient(blobName);
   if (!(await blob.exists())) return null;
@@ -30,19 +37,54 @@ async function readJson(containerClient, blobName) {
   return JSON.parse(buf.toString('utf8'));
 }
 
-async function listNames(container, prefix) {
-  const out = [];
-  for await (const b of container.listBlobsFlat({ prefix })) out.push(b.name);
-  return out;
+// Ensure prefix always ends with a single slash
+function normPrefix(p = "") {
+  return String(p).replace(/\\/g, "/").replace(/\/+$/,"") + "/";
 }
-async function copyTree(container, fromPrefix, toPrefix) {
-  const names = await listNames(container, fromPrefix);
-  for (const src of names) {
-    const buf = await container.getBlobClient(src).downloadToBuffer();
-    const dst = src.replace(fromPrefix, toPrefix);
-    await container.getBlockBlobClient(dst).uploadData(buf);
+
+// Overwrite old copyTree with a robust, prefix-safe version
+async function copyTree(container, fromPrefixRaw, toPrefixRaw) {
+  const fromPrefix = normPrefix(fromPrefixRaw);
+  const toPrefix   = normPrefix(toPrefixRaw);
+
+  let copied = 0;
+  const failed = [];
+
+  for await (const b of container.listBlobsFlat({ prefix: fromPrefix })) {
+    const src = b.name;
+    if (!src) continue;
+
+    // skip any “folder marker” blobs (like Notes with no extension)
+    const relative = src.substring(fromPrefix.length);
+    if (!relative || relative.endsWith("/")) continue; // definitely a folder
+    if (!relative.includes(".")) continue; // no file extension = probably a fake folder marker
+
+    // Destination = keep path after /files/
+    const splitIdx = src.indexOf("/files/");
+    if (splitIdx === -1) continue;
+    const relPath = src.substring(splitIdx + "/files/".length);
+    const dst = `${toPrefix}${relPath}`;
+
+    try {
+      const buf = await container.getBlobClient(src).downloadToBuffer();
+      await container.getBlockBlobClient(dst).uploadData(buf, {
+        blobHTTPHeaders: {
+          blobContentType: b.properties?.contentType || "application/octet-stream",
+        },
+      });
+      copied++;
+    } catch (err) {
+      console.error("copyTree failed", { src, dst, err: err.message });
+      failed.push({ src, dst, error: err.message });
+    }
   }
+
+  return { copied, failed };
 }
+
+
+
+
 async function deleteTree(container, prefix) {
   for await (const b of container.listBlobsFlat({ prefix })) {
     await container.deleteBlob(b.name).catch(() => {});
@@ -93,6 +135,16 @@ async function upsertReadme(req, res) {
   }
 }
 
+async function blobExists(container, key) {
+  return container.getBlobClient(key).exists();
+}
+async function copyBlob(container, fromKey, toKey, contentType = 'application/octet-stream') {
+  const buf = await container.getBlobClient(fromKey).downloadToBuffer();
+  await container.getBlockBlobClient(toKey).uploadData(buf, {
+    blobHTTPHeaders: { blobContentType: contentType }
+  });
+}
+
 // ---------- CREATE MODEL ----------
 router.post('/models/create', upload.array('files'), async (req, res) => {
   try {
@@ -120,56 +172,76 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
     if (!Array.isArray(tags)) tags = [];
 
     const id = toSlug(title) || toSlug(owner);
-    const isPrivate = visibility !== 'public';
-    const basePublic = `models/${id}`;
+    const makePublic = visibility === 'public';
+    const basePublic  = `models/${id}`;
     const basePrivate = `users/${userId}/models/${id}`;
-    const base = isPrivate ? basePrivate : basePublic;
 
     const svc = getBlobServiceClient();
     const container = svc.getContainerClient(CONTAINER);
     await container.createIfNotExists();
 
+    // manifest (private copy is always canonical)
     const manifest = {
       id,
       name: title || id,
       owner,
       description,
       tags,
-      private: isPrivate,
+      private: !makePublic,         // private flag reflects visibility
       version: '1.0.0',
       updatedAt: new Date().toISOString(),
       downloads: 0,
-      sourcePath: base
+      sourcePath: basePrivate       // sourcePath always points to private
     };
 
-    // write manifest.json
-    await container.getBlockBlobClient(`${base}/manifest.json`).uploadData(
+    // --- Write private manifest.json
+    await container.getBlockBlobClient(`${basePrivate}/manifest.json`).uploadData(
       Buffer.from(JSON.stringify(manifest, null, 2)),
       { blobHTTPHeaders: { blobContentType: 'application/json' } }
     );
 
-    // write any attached files under files/
-    for (const f of req.files || []) {
-      const target = `${base}/files/${f.originalname}`;
+    // --- Write any attached files under private/files/
+    let rels = req.body.paths || req.body['paths[]'];
+    if (!Array.isArray(rels)) rels = typeof rels === 'string' ? [rels] : [];
+
+    for (let i = 0; i < (req.files || []).length; i++) {
+      const f = req.files[i];
+      const rel = cleanRelPath(rels[i] || f.originalname);
+      if (!rel) continue;
+      const target = `${basePrivate}/files/${rel}`;
       await container.getBlockBlobClient(target).uploadData(f.buffer, {
         blobHTTPHeaders: { blobContentType: f.mimetype || 'application/octet-stream' }
       });
     }
 
-    // If PUBLIC, also add a pointer manifest under the user's uploads so it appears in "My Uploads"
-    if (!isPrivate) {
-        const pointer = {
-            ...manifest,
-            private: false,
-            // point to the public location explicitly
-            sourcePath: basePublic
-        };
-        await container.getBlockBlobClient(`${basePrivate}/manifest.json`).uploadData(
-            Buffer.from(JSON.stringify(pointer, null, 2)),
-            { blobHTTPHeaders: { blobContentType: 'application/json' } }
-        );
+    // --- If PUBLIC, also create a mirrored public manifest and copy files
+    if (makePublic) {
+      // mirror manifest
+      const pubMan = { ...manifest, private: false, sourcePath: basePublic };
+      await container.getBlockBlobClient(`${basePublic}/manifest.json`).uploadData(
+        Buffer.from(JSON.stringify(pubMan, null, 2)),
+        { blobHTTPHeaders: { blobContentType: 'application/json' } }
+      );
+
+      // mirror all uploaded files
+      for (let i = 0; i < (req.files || []).length; i++) {
+        const f = req.files[i];
+        const rel = cleanRelPath(rels[i] || f.originalname);
+        if (!rel) continue;
+        const target = `${basePublic}/files/${rel}`;
+        await container.getBlockBlobClient(target).uploadData(f.buffer, {
+          blobHTTPHeaders: { blobContentType: f.mimetype || 'application/octet-stream' }
+        });
+      }
     }
-    res.json({ ok: true, base, manifest, fileCount: (req.files || []).length });
+
+    res.json({
+      ok: true,
+      privateBase: basePrivate,
+      publicBase: makePublic ? basePublic : null,
+      manifest,
+      fileCount: (req.files || []).length
+    });
   } catch (e) {
     console.error('models/create error:', e);
     res.status(500).json({ error: 'create failed', details: e.message });
@@ -221,9 +293,10 @@ router.get('/models/:id', async (req, res) => {
     const userId = getUserId(req);
     const client = getBlobServiceClient().getContainerClient(CONTAINER);
 
-    const publicPath = `models/${id}/manifest.json`;
-    const privatePath = `users/${userId}/models/${id}/manifest.json`;
+    const publicPath  = `models/${id}/manifest.json`;
+    const privatePath = userId ? `users/${userId}/models/${id}/manifest.json` : null;
 
+    // ✅ Always prefer public first, fallback to private
     const tryPaths = [publicPath, privatePath].filter(Boolean);
 
     let json = null;
@@ -235,13 +308,18 @@ router.get('/models/:id', async (req, res) => {
         break;
       }
     }
-    if (!json) return res.status(404).json({ error: 'not found', tried: tryPaths });
+
+    if (!json) {
+      return res.status(404).json({ error: 'not found', tried: tryPaths });
+    }
+
     res.json(json);
   } catch (e) {
     console.error('get model error:', e);
     res.status(500).json({ error: 'get failed', details: e.message });
   }
 });
+
 
 
 
@@ -289,25 +367,53 @@ router.post('/models/append', upload.array('files'), async (req, res) => {
     if (!base) return res.status(400).json({ error: 'base is required' });
     if (!req.files || !req.files.length) return res.status(400).json({ error: 'no files' });
 
+    let dir = (req.body.dir || '').toString().trim();
+    // normalize: remove leading slash, collapse consecutive slashes
+    dir = dir.replace(/\\/g, '/').replace(/^\/+/, '').replace(/\.\.+/g, '').replace(/\/+/g, '/');
+    // ensure trailing slash when non-empty
+    if (dir && !dir.endsWith('/')) dir += '/';
+
     const container = getBlobServiceClient().getContainerClient(CONTAINER);
     await container.createIfNotExists();
 
     for (const f of req.files) {
-      const key = `${base}/files/${f.originalname}`;
-      await container.getBlockBlobClient(key).uploadData(f.buffer, {
-        blobHTTPHeaders: { blobContentType: f.mimetype || 'application/octet-stream' }
-      });
+      const safeName = String(f.originalname).replace(/\\/g, '/').split('/').pop(); // ignore client path pieces
+      const key = `${base}/files/${dir}${safeName}`;
+      try {
+        await container.getBlockBlobClient(key).uploadData(f.buffer, {
+          blobHTTPHeaders: { blobContentType: f.mimetype || 'application/octet-stream' }
+        });
+      } catch (err) {
+        console.error('append upload error:', { key, err: err.message });
+        throw err;
+      }
     }
     res.json({ ok: true, count: req.files.length });
   } catch (e) {
-    console.error('append error:', e);
-    res.status(500).json({ error: 'append failed', details: e.message });
+    console.error('append error:', e?.message || e);
+    res.status(500).json({ error: 'append failed', details: e?.message || String(e) });
   }
 });
 
-module.exports = router;
+/* ---------------- DELETE files from an existing model ---------------- */
+router.delete('/models/file', async (req, res) => {
+  try {
+    const { base, filePath, userId } = req.body;
+    if (!base || !filePath) {
+      return res.status(400).json({ error: 'base and filePath required' });
+    }
 
+    const key = `${base}/files/${filePath}`;
+    const container = getBlobServiceClient().getContainerClient(CONTAINER);
+    const blob = container.getBlockBlobClient(key);
 
+    await blob.deleteIfExists();
+    res.json({ ok: true, deleted: key });
+  } catch (e) {
+    console.error('delete error:', e);
+    res.status(500).json({ error: 'delete failed', details: e.message });
+  }
+});
 
 
 /* ---------------- Settings Tab ---------------- */
@@ -321,45 +427,51 @@ router.patch('/models/:id/visibility', async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'userId required' });
 
     const container = getBlobServiceClient().getContainerClient(CONTAINER);
+    await container.createIfNotExists();
+
     const privBase = `users/${userId}/models/${id}`;
     const pubBase  = `models/${id}`;
 
     if (makePublic) {
-      // move files to public, publish manifest, leave a pointer in "uploads"
-      await copyTree(container, `${privBase}/files/`, `${pubBase}/files/`);
-      await deleteTree(container, `${privBase}/files/`);
+      // Mirror private -> public
+      const filesCopy = await copyTree(container, `${privBase}/files/`, `${pubBase}/files/`);
 
-      const src = await readJson(container, `${privBase}/manifest.json`);
-      const man = { ...src, private: false, sourcePath: pubBase, updatedAt: new Date().toISOString() };
-      await container.getBlockBlobClient(`${pubBase}/manifest.json`)
-        .uploadData(Buffer.from(JSON.stringify(man, null, 2)),
-                    { blobHTTPHeaders: { blobContentType: 'application/json' } });
+      // README mirror if present in private
+      if (await blobExists(container, `${privBase}/README.md`)) {
+        await copyBlob(container, `${privBase}/README.md`, `${pubBase}/README.md`, "text/markdown; charset=utf-8");
+      }
 
-      const pointer = { ...man, sourcePath: pubBase }; // show in My Uploads
-      await container.getBlockBlobClient(`${privBase}/manifest.json`)
-        .uploadData(Buffer.from(JSON.stringify(pointer, null, 2)),
-                    { blobHTTPHeaders: { blobContentType: 'application/json' } });
+      // Build public manifest (private stays untouched as canonical)
+      const privMan = await readJson(container, `${privBase}/manifest.json`) || {};
+      const pubMan  = { ...privMan, private: false, sourcePath: pubBase, updatedAt: new Date().toISOString() };
 
-      return res.json(man);
-    } else {
-      // move files back to private and remove public copies
-      await copyTree(container, `${pubBase}/files/`, `${privBase}/files/`);
-      await deleteTree(container, `${pubBase}/`);
+      await container.getBlockBlobClient(`${pubBase}/manifest.json`).uploadData(
+        Buffer.from(JSON.stringify(pubMan, null, 2)),
+        { blobHTTPHeaders: { blobContentType: 'application/json' } }
+      );
 
-      const src = await readJson(container, `${privBase}/manifest.json`)
-                 || await readJson(container, `${pubBase}/manifest.json`) || {};
-      const man = { ...src, private: true, sourcePath: privBase, updatedAt: new Date().toISOString() };
-      await container.getBlockBlobClient(`${privBase}/manifest.json`)
-        .uploadData(Buffer.from(JSON.stringify(man, null, 2)),
-                    { blobHTTPHeaders: { blobContentType: 'application/json' } });
-
-      return res.json(man);
+      return res.json({ ...pubMan, copyReport: filesCopy });
     }
+
+    // Public -> Private: remove the public mirror only
+    await deleteTree(container, `${pubBase}/`);
+
+    // Make sure private manifest flags are correct
+    const privMan0 = await readJson(container, `${privBase}/manifest.json`) || {};
+    const privMan  = { ...privMan0, private: true, sourcePath: privBase, updatedAt: new Date().toISOString() };
+
+    await container.getBlockBlobClient(`${privBase}/manifest.json`).uploadData(
+      Buffer.from(JSON.stringify(privMan, null, 2)),
+      { blobHTTPHeaders: { blobContentType: 'application/json' } }
+    );
+
+    return res.json(privMan);
   } catch (e) {
     console.error('visibility patch error:', e);
     res.status(500).json({ error: 'visibility update failed', details: e.message });
   }
 });
+
 
 // --- PATCH metadata: name/owner/description/tags (no path move) ---
 router.patch('/models/:id/meta', async (req, res) => {
@@ -447,3 +559,4 @@ router.get('/models/:id/readme', async (req, res) => {
 // accept BOTH methods so client and server won’t drift
 router.put('/models/:id/readme', upsertReadme);
 router.post('/models/:id/readme', upsertReadme);
+module.exports = router;
