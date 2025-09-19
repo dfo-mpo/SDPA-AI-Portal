@@ -16,7 +16,6 @@ export default function ModelCard({ item, onClick }) {
     >
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-          <Checkbox size="small" />
           <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
             {item.name}
           </Typography>

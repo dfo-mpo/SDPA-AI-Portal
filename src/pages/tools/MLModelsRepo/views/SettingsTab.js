@@ -41,8 +41,13 @@ export function SettingsTab({ model, userId, onUpdated, onDeleted }) {
     } finally { setSaving(false); }
   };
 
+  const tallInput = {
+    "& .MuiOutlinedInput-root": { height: 50 },            
+    "& .MuiOutlinedInput-input": { py: 1.25 }              
+  };
+
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={{width: "50%", minWidth: "400px"}} >
       {msg && <Alert severity="success" onClose={() => setMsg("")}>{msg}</Alert>}
 
       {/* Visibility */}
@@ -68,11 +73,12 @@ export function SettingsTab({ model, userId, onUpdated, onDeleted }) {
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="subtitle1">Rename or Transfer Ownership</Typography>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 1 }}>
-              <TextField size="small" label="New Owner" value={owner} onChange={e => setOwner(e.target.value)} />
-              <TextField size="small" label="New Name"  value={name}  onChange={e => setName(e.target.value)} />
+              <TextField size="small" label="New Owner" sx={tallInput} value={owner} onChange={e => setOwner(e.target.value)} />
+              <TextField size="small" label="New Name"  sx={tallInput} value={name}  onChange={e => setName(e.target.value)} />
             </Stack>
             <TextField
-              size="small" label="Short description" fullWidth sx={{ mt: 1 }}
+              size="small" label="Short description" fullWidth multiline maxRows={5}
+              sx={{ mt: 2, "& .MuiOutlinedInput-root": { height: 120, alignItems: "flex-start" } }}
               value={description} onChange={e => setDescription(e.target.value)}
             />
           </Box>
@@ -87,7 +93,7 @@ export function SettingsTab({ model, userId, onUpdated, onDeleted }) {
           This action cannot be undone. Type the model name (<b>{model.name}</b>) to confirm.
         </Typography>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1 }}>
-          <TextField size="small" placeholder={model.name} value={confirm} onChange={e => setConfirm(e.target.value)} />
+          <TextField size="small" placeholder={model.name} value={confirm} onChange={e => setConfirm(e.target.value)} sx={{width: "50%"}}/>
           <Button color="error" variant="contained" onClick={destroy} disabled={!canEdit}>I understand, delete this model</Button>
         </Stack>
       </Paper>
