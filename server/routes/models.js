@@ -145,6 +145,15 @@ async function copyBlob(container, fromKey, toKey, contentType = 'application/oc
   });
 }
 
+// helper: stream → buffer
+async function streamToBuffer(readable) {
+  const chunks = [];
+  for await (const chunk of readable) {
+    chunks.push(chunk instanceof Buffer ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
+
 // ---------- CREATE MODEL ----------
 router.post('/models/create', upload.array('files'), async (req, res) => {
   try {
@@ -223,6 +232,15 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
         { blobHTTPHeaders: { blobContentType: 'application/json' } }
       );
 
+      // mirror README if private one exists
+      const privReadme = container.getBlobClient(`${basePrivate}/README.md`);
+      if (await privReadme.exists()) {
+        const buf = await privReadme.downloadToBuffer();
+        await container.getBlockBlobClient(`${basePublic}/README.md`).uploadData(buf, {
+          blobHTTPHeaders: { blobContentType: 'text/markdown; charset=utf-8' }
+        });
+      }
+
       // mirror all uploaded files
       for (let i = 0; i < (req.files || []).length; i++) {
         const f = req.files[i];
@@ -253,11 +271,23 @@ router.get('/models', async (_req, res) => {
   try {
     const client = getBlobServiceClient().getContainerClient(CONTAINER);
     const items = [];
+
     for await (const b of client.listBlobsFlat({ prefix: 'models/' })) {
-      if (!b.name.endsWith('/manifest.json')) continue;
-      const json = await readJson(client, b.name).catch(() => null);
-      if (json) items.push(json);
+      // only manifests
+      if (!b.name.endsWith('manifest.json')) continue;
+
+      try {
+        const blob = client.getBlobClient(b.name);
+        // only grab the first 4KB (enough for your JSON)
+        const resp = await blob.download(0, 4096);
+        const buf = await streamToBuffer(resp.readableStreamBody);
+        const json = JSON.parse(buf.toString('utf8'));
+        items.push(json);
+      } catch (e) {
+        console.warn('bad manifest', b.name, e.message);
+      }
     }
+
     res.json({ items });
   } catch (e) {
     console.error('models list error:', e);
@@ -272,13 +302,21 @@ router.get('/uploads', async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'userId required' });
     const prefix = `users/${userId}/models/`;
     const client = getBlobServiceClient().getContainerClient(CONTAINER);
-
     const items = [];
     for await (const b of client.listBlobsFlat({ prefix })) {
-      if (!b.name.endsWith('/manifest.json')) continue;
-      const json = await readJson(client, b.name).catch(() => null);
-      if (json) items.push(json);
+      if (!b.name.endsWith('manifest.json')) continue;
+      
+      try {
+        const blob = client.getBlobClient(b.name);
+        const resp = await blob.download(0, 4096);
+        const buf = await streamToBuffer(resp.readableStreamBody);
+        const json = JSON.parse(buf.toString('utf8'));
+        items.push(json);
+      } catch (e) {
+        console.warn('bad manifest', b.name, e.message);
+      }
     }
+
     res.json({ items });
   } catch (e) {
     console.error('uploads list error:', e);

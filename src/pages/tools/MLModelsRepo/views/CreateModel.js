@@ -48,6 +48,7 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
   const [files, setFiles] = useState([]);
   const [paths, setPaths] = useState([]);     // array of relPath (same length as files)
   const fileRef = useRef(null);
+  const folderRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -319,17 +320,34 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
             </Typography>
           </Stack>
           <Stack direction="row" spacing={1}>
+            {/* Pick files */}
             <Button
               variant="outlined"
               startIcon={<UploadIcon size={16} />}
               onClick={() => fileRef.current?.click()}
               disabled={isGuest}
             >
-              Select files/folder
+              Select files
             </Button>
-            {/* Folder picker support (Chrome/Edge) */}
             <input
               ref={fileRef}
+              type="file"
+              hidden
+              multiple
+              onChange={pickFiles}
+            />
+
+            {/* Pick folders */}
+            <Button
+              variant="outlined"
+              startIcon={<UploadIcon size={16} />}
+              onClick={() => folderRef.current?.click()}
+              disabled={isGuest}
+            >
+              Select folder
+            </Button>
+            <input
+              ref={folderRef}
               type="file"
               hidden
               multiple
