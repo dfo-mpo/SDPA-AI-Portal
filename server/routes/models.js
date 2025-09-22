@@ -365,30 +365,52 @@ router.post('/models/append', upload.array('files'), async (req, res) => {
   try {
     const base = (req.body.base || '').toString().replace(/\/+$/, '');
     if (!base) return res.status(400).json({ error: 'base is required' });
-    if (!req.files || !req.files.length) return res.status(400).json({ error: 'no files' });
 
-    let dir = (req.body.dir || '').toString().trim();
-    // normalize: remove leading slash, collapse consecutive slashes
-    dir = dir.replace(/\\/g, '/').replace(/^\/+/, '').replace(/\.\.+/g, '').replace(/\/+/g, '/');
-    // ensure trailing slash when non-empty
-    if (dir && !dir.endsWith('/')) dir += '/';
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: 'userId required' });
+
+    const parts = base.split('/');
+    const id = parts[parts.length - 1];
+    const privBase = `users/${userId}/models/${id}`;
+    const pubBase  = `models/${id}`;
+    const isPublic = base.startsWith('models/');
 
     const container = getBlobServiceClient().getContainerClient(CONTAINER);
     await container.createIfNotExists();
 
-    for (const f of req.files) {
-      const safeName = String(f.originalname).replace(/\\/g, '/').split('/').pop(); // ignore client path pieces
-      const key = `${base}/files/${dir}${safeName}`;
-      try {
-        await container.getBlockBlobClient(key).uploadData(f.buffer, {
-          blobHTTPHeaders: { blobContentType: f.mimetype || 'application/octet-stream' }
-        });
-      } catch (err) {
-        console.error('append upload error:', { key, err: err.message });
-        throw err;
+    let dir = (req.body.dir || '').toString().trim();
+    dir = dir.replace(/\\/g, '/').replace(/^\/+/, '').replace(/\.\.+/g, '').replace(/\/+/g, '/');
+    if (dir && !dir.endsWith('/')) dir += '/';
+
+    // normalize paths array
+    let rels = req.body.paths || req.body['paths[]'];
+    if (!Array.isArray(rels)) rels = rels ? [rels] : [];
+
+    const uploaded = [];
+
+    if (req.files && req.files.length) {
+      for (let i = 0; i < req.files.length; i++) {
+        const f = req.files[i];
+        const rel = cleanRelPath(rels[i] || f.originalname || f.fieldname);
+        if (!rel) continue;
+
+        const relPath = dir + rel;
+
+        const targets = isPublic
+          ? [ `${privBase}/files/${relPath}`, `${pubBase}/files/${relPath}` ]
+          : [ `${privBase}/files/${relPath}` ];
+
+        for (const key of targets) {
+          await container.getBlockBlobClient(key).uploadData(f.buffer, {
+            blobHTTPHeaders: { blobContentType: f.mimetype || 'application/octet-stream' }
+          });
+          uploaded.push(key);
+        }
       }
     }
-    res.json({ ok: true, count: req.files.length });
+
+
+    res.json({ ok: true, count: uploaded.length, uploaded });
   } catch (e) {
     console.error('append error:', e?.message || e);
     res.status(500).json({ error: 'append failed', details: e?.message || String(e) });

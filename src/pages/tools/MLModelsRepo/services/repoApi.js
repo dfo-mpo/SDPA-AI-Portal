@@ -82,14 +82,30 @@ export async function listModelFilesById(id, { userId } = {}) {
 }
 
 // ---------- Append files (add button in frontend)
-export async function uploadModelFiles({ id, files, isPrivate, userId, sourcePath, dir = "" }) {
-  const base = sourcePath || (isPrivate ? `users/${encodeURIComponent(userId)}/models/${id}` : `models/${id}`);
+export async function uploadModelFiles({ id, files = [], isPrivate, userId, sourcePath, dir = "", paths = [] }) {
+  if (!userId) throw new Error("uploadModelFiles requires userId");
+
+  const base = sourcePath || (
+    isPrivate ? `users/${encodeURIComponent(userId)}/models/${id}` : `models/${id}`
+  );
+
   const form = new FormData();
   form.append("base", base);
   form.append("dir", dir);
-  for (const f of files) form.append("files", f, f.name);
+  form.append("userId", userId);
 
-  const { data } = await axios.post(`${API}/models/append`, form);
+  files.forEach((f, i) => {
+    form.append("files", f, f.name);
+    form.append("paths", paths[i] || f.name); // critical
+  });
+
+  const { data } = await axios.post(`${API}/models/append`, form, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      "x-user-id": userId,
+    },
+  });
+
   return data;
 }
 

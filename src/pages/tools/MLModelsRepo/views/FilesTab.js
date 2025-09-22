@@ -15,9 +15,7 @@ export function FilesTab({ model, isMine, userId }) {
   const fileInputRef = useRef(null);
   const [currentDir, setCurrentDir] = useState("");
   const [selectedPath, setSelectedPath] = useState("");
-
-  const base = model?.sourcePath || (model?.private ? `users/${userId}/models/${model?.id}` : `models/${model?.id}`);
-  const prefix = `${base}/files/`;
+  const folderInputRef = useRef(null);
 
   const reload = useCallback(async () => {
     const items = await repo.listModelFilesById(model.id, { userId });
@@ -29,7 +27,6 @@ export function FilesTab({ model, isMine, userId }) {
   }, [reload]);
   // Make a simple flat list with relative paths and basic search
   const rows = useMemo(() => {
-    const q = query.trim().toLowerCase();
     const raw = (files || [])
       .map(f => {
         let rel = f.name;
@@ -47,8 +44,12 @@ export function FilesTab({ model, isMine, userId }) {
        }
      }
      // drop any blob whose rel equals a dir name (prevents “Notes” showing twice)
-     return raw.filter(f => !dirSet.has(f.rel));
-  }, [files, prefix, query]);
+     return raw.filter(f => {
+        // exclude blobs that are actually just folder markers
+        if (!f.rel.includes(".")) return false;
+        return !dirSet.has(f.rel);
+      });
+  }, [files]);
 
   const handleTreeSelect = (_event, nodeIds) => {
     // SimpleTreeView gives an array; take the last one
@@ -140,7 +141,6 @@ export function FilesTab({ model, isMine, userId }) {
   }
   const canContribute = Boolean(userId) && Boolean(isMine);
 
-  const pickFiles = () => fileInputRef.current?.click();
   const onPicked = async (e) => {
     const arr = Array.from(e.target.files || []);
     if (!arr.length) return;
@@ -151,13 +151,14 @@ export function FilesTab({ model, isMine, userId }) {
       userId,
       sourcePath: model.sourcePath,
       dir: currentDir,
+      paths: arr.map(f => f.webkitRelativePath || f.name),
     });
     e.target.value = "";
     reload();
   };
 
   return (
-    <Box  sx={{width: "50%", minWidth: "400px"}} > 
+    <Box  sx={{width: "60%", minWidth: "700px"}} > 
       {/* Toolbar */}
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
         <SearchBar
@@ -166,23 +167,47 @@ export function FilesTab({ model, isMine, userId }) {
           placeholder="Search files…"
           sx={{ flexGrow: 1, maxWidth: 520 }}
         />
-        <Tooltip title={canContribute ? "Upload files to this model" : "Only the owner can add/delete"}>
+        <Tooltip title={canContribute ? "Upload files" : "Only the owner can add/delete"}>
           <span>
             <Button
               variant="outlined"
               size="small"
               startIcon={<Plus size={16} />}
-              onClick={pickFiles}
+              onClick={() => fileInputRef.current?.click()}
               disabled={!canContribute}
             >
-              Add
+              File
             </Button>
           </span>
         </Tooltip>
-        <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+
+        <Tooltip title={canContribute ? "Upload folder" : "Only the owner can add/delete"}>
+          <span>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Plus size={16} />}
+              onClick={() => folderInputRef.current?.click()}
+              disabled={!canContribute}
+            >
+              Folder
+            </Button>
+          </span>
+        </Tooltip>
+
+        <Typography variant="caption" color="text.secondary" sx={{ ml: 1}}>
           Target: {selectedPath || currentDir || "(root)"}
         </Typography>
         <input ref={fileInputRef} type="file" hidden multiple onChange={onPicked} />
+        <input
+          ref={folderInputRef}
+          type="file"
+          hidden
+          webkitdirectory="true"
+          directory="true"
+          multiple
+          onChange={onPicked}
+        />
       </Stack>
 
       {/* List */}
