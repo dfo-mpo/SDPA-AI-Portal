@@ -364,30 +364,36 @@ router.get('/uploads', async (req, res) => {
 router.get('/models/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const { version } = req.query;
     const userId = getUserId(req);
     const client = getBlobServiceClient().getContainerClient(CONTAINER);
 
-    const publicPath  = `models/${id}/manifest.json`;
-    const privatePath = userId ? `users/${userId}/models/${id}/manifest.json` : null;
+    const paths = [
+      `models/${id}/manifest.json`,
+      userId ? `users/${userId}/models/${id}/manifest.json` : null,
+    ].filter(Boolean);
 
-    // ✅ Always prefer public first, fallback to private
-    const tryPaths = [publicPath, privatePath].filter(Boolean);
-
-    let json = null;
-    for (const p of tryPaths) {
+    let rootMan = null;
+    for (const p of paths) {
       const blob = client.getBlobClient(p);
       if (await blob.exists()) {
         const buf = await blob.downloadToBuffer();
-        json = JSON.parse(buf.toString('utf8'));
+        rootMan = JSON.parse(buf.toString('utf8'));
         break;
       }
     }
+    if (!rootMan) return res.status(404).json({ error: 'not found' });
 
-    if (!json) {
-      return res.status(404).json({ error: 'not found', tried: tryPaths });
+    const targetVer = version || rootMan.latestVersion;
+    const verManifestPath = `${rootMan.sourcePath}/versions/${targetVer}/manifest.json`;
+
+    let verMan = null;
+    if (await client.getBlobClient(verManifestPath).exists()) {
+      const buf = await client.getBlobClient(verManifestPath).downloadToBuffer();
+      verMan = JSON.parse(buf.toString('utf8'));
     }
 
-    res.json(json);
+    res.json({ ...rootMan, version: targetVer, versionManifest: verMan });
   } catch (e) {
     console.error('get model error:', e);
     res.status(500).json({ error: 'get failed', details: e.message });
@@ -405,18 +411,44 @@ router.get('/models/:id/files', async (req, res) => {
     const { id } = req.params;
     const userId = getUserId(req);
     const client = getBlobServiceClient().getContainerClient(CONTAINER);
-    
-    // location of all files in a given model
-    const publicPrefix  = `models/${id}/files/`;
-    const privatePrefix = userId ? `users/${userId}/models/${id}/files/` : null;
+
+    // load root manifest (prefer public, fallback to private)
+    const rootPaths = [
+      `models/${id}/manifest.json`,
+      userId ? `users/${userId}/models/${id}/manifest.json` : null,
+    ].filter(Boolean);
+
+    let rootMan = null;
+    for (const p of rootPaths) {
+      const blob = client.getBlobClient(p);
+      if (await blob.exists()) {
+        const buf = await blob.downloadToBuffer();
+        rootMan = JSON.parse(buf.toString("utf8"));
+        break;
+      }
+    }
+    if (!rootMan) return res.status(404).json({ error: "model not found" });
+
+    // resolve latest version
+    const targetVer = rootMan.latestVersion || (rootMan.versions?.slice(-1)[0]);
+    if (!targetVer) return res.json({ items: [] });
+
+    // figure out versioned prefix
+    const publicPrefix  = `models/${id}/versions/${targetVer}/files/`;
+    const privatePrefix = userId ? `users/${userId}/models/${id}/versions/${targetVer}/files/` : null;
 
     // Prefer private path when userId provided; fallback to public
     const prefixes = [privatePrefix, publicPrefix].filter(Boolean);
+    const JUNK = new Set(['.keep', '.DS_Store', 'Thumbs.db']);
 
     let blobs = [];
     for (const prefix of prefixes) {
       const tmp = [];
       for await (const b of client.listBlobsFlat({ prefix })) {
+        // hide folder markers and OS junk
+        const leaf = b.name.split('/').pop();
+        if (JUNK.has(leaf)) continue;
+
         tmp.push({
           name: b.name,
           size: b.properties?.contentLength ?? 0,
@@ -427,12 +459,13 @@ router.get('/models/:id/files', async (req, res) => {
       if (tmp.length) { blobs = tmp; break; } // first prefix with hits wins
     }
 
-    res.json({ items: blobs });
+    res.json({ items: blobs, version: targetVer });
   } catch (e) {
     console.error('get files error:', e);
     res.status(500).json({ error: 'get files failed', details: e.message });
   }
 });
+
 
 /* ---------------- APPEND files to an existing model ---------------- */
 router.post('/models/append', upload.array('files'), async (req, res) => {
