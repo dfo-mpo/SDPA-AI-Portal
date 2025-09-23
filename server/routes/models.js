@@ -145,13 +145,21 @@ async function copyBlob(container, fromKey, toKey, contentType = 'application/oc
   });
 }
 
-// helper: stream → buffer
-async function streamToBuffer(readable) {
-  const chunks = [];
-  for await (const chunk of readable) {
-    chunks.push(chunk instanceof Buffer ? chunk : Buffer.from(chunk));
+async function listTopLevelIds(container, base /* e.g. 'models/' or `users/${uid}/models/` */) {
+  const ids = [];
+  const root = base.replace(/\/+$/, '') + '/';
+  const delim = '/';
+
+  const pager = container.listBlobsByHierarchy(delim, { prefix: root }).byPage({ maxPageSize: 5000 });
+  for await (const page of pager) {
+    const dirs = page.segment?.blobPrefixes || [];
+    for (const d of dirs) {
+      // d.name like 'models/my-model/'
+      const id = d.name.slice(root.length).split('/')[0];
+      if (id) ids.push(id);
+    }
   }
-  return Buffer.concat(chunks);
+  return ids;
 }
 
 // ---------- CREATE MODEL ----------
@@ -289,24 +297,27 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
 // ---------- LIST PUBLIC MODELS ----------
 router.get('/models', async (_req, res) => {
   try {
-    const client = getBlobServiceClient().getContainerClient(CONTAINER);
+    const c = getBlobServiceClient().getContainerClient(CONTAINER);
+    const ids = await listTopLevelIds(c, 'models/');
     const items = [];
 
-    for await (const b of client.listBlobsFlat({ prefix: 'models/' })) {
-      // only manifests
-      if (!b.name.endsWith('manifest.json')) continue;
-
-      try {
-        const blob = client.getBlobClient(b.name);
-        // only grab the first 4KB (enough for your JSON)
-        const resp = await blob.download(0, 4096);
-        const buf = await streamToBuffer(resp.readableStreamBody);
-        const json = JSON.parse(buf.toString('utf8'));
-        items.push(json);
-      } catch (e) {
-        console.warn('bad manifest', b.name, e.message);
+    // small bounded concurrency to avoid serial RTTs
+    const limit = 24;
+    let i = 0;
+    const work = Array.from({ length: Math.min(limit, ids.length) }, async function worker() {
+      while (i < ids.length) {
+        const idx = i++; const id = ids[idx];
+        const key = `models/${id}/manifest.json`;
+        const bc = c.getBlobClient(key);
+        if (await bc.exists()) {
+          const buf = await bc.downloadToBuffer();
+          const man = JSON.parse(buf.toString('utf8'));
+          // only root manifests (no .version)
+          if (man && man.id === id && !man.version) items.push(man);
+        }
       }
-    }
+    });
+    await Promise.all(work);
 
     res.json({ items });
   } catch (e) {
@@ -320,22 +331,27 @@ router.get('/uploads', async (req, res) => {
   try {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: 'userId required' });
-    const prefix = `users/${userId}/models/`;
-    const client = getBlobServiceClient().getContainerClient(CONTAINER);
+
+    const c = getBlobServiceClient().getContainerClient(CONTAINER);
+    const base = `users/${userId}/models/`;
+    const ids = await listTopLevelIds(c, base);
     const items = [];
-    for await (const b of client.listBlobsFlat({ prefix })) {
-      if (!b.name.endsWith('manifest.json')) continue;
-      
-      try {
-        const blob = client.getBlobClient(b.name);
-        const resp = await blob.download(0, 4096);
-        const buf = await streamToBuffer(resp.readableStreamBody);
-        const json = JSON.parse(buf.toString('utf8'));
-        items.push(json);
-      } catch (e) {
-        console.warn('bad manifest', b.name, e.message);
+
+    const limit = 24;
+    let i = 0;
+    const work = Array.from({ length: Math.min(limit, ids.length) }, async function worker() {
+      while (i < ids.length) {
+        const idx = i++; const id = ids[idx];
+        const key = `${base}${id}/manifest.json`;
+        const bc = c.getBlobClient(key);
+        if (await bc.exists()) {
+          const buf = await bc.downloadToBuffer();
+          const man = JSON.parse(buf.toString('utf8'));
+          if (man && man.id === id && !man.version) items.push(man);
+        }
       }
-    }
+    });
+    await Promise.all(work);
 
     res.json({ items });
   } catch (e) {
