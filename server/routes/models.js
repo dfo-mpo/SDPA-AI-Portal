@@ -42,43 +42,64 @@ function normPrefix(p = "") {
   return String(p).replace(/\\/g, "/").replace(/\/+$/,"") + "/";
 }
 
-// Overwrite old copyTree with a robust, prefix-safe version
+// Copy every real blob under fromPrefix into toPrefix (preserve relative paths), recursively.
 async function copyTree(container, fromPrefixRaw, toPrefixRaw) {
   const fromPrefix = normPrefix(fromPrefixRaw);
   const toPrefix   = normPrefix(toPrefixRaw);
+  const JUNK = new Set(['.keep', '.DS_Store', 'Thumbs.db']);
 
   let copied = 0;
   const failed = [];
 
-  for await (const b of container.listBlobsFlat({ prefix: fromPrefix })) {
-    const src = b.name;
-    if (!src) continue;
+  async function walk(prefix) {
+    // page through current level
+    const pages = container.listBlobsByHierarchy('/', { prefix }).byPage({ maxPageSize: 5000 });
+    for await (const page of pages) {
+      const items = page.segment?.blobItems || [];
+      const dirs  = page.segment?.blobPrefixes || [];
 
-    // skip any “folder marker” blobs (like Notes with no extension)
-    const relative = src.substring(fromPrefix.length);
-    if (!relative || relative.endsWith("/")) continue; // definitely a folder
-    if (!relative.includes(".")) continue; // no file extension = probably a fake folder marker
+      // copy files at this level
+      for (const b of items) {
+        const src = b.name;                           // full path
+        if (!src.startsWith(fromPrefix)) continue;
 
-    // Destination = keep path after /files/
-    const splitIdx = src.indexOf("/files/");
-    if (splitIdx === -1) continue;
-    const relPath = src.substring(splitIdx + "/files/".length);
-    const dst = `${toPrefix}${relPath}`;
+        const relPath = src.substring(fromPrefix.length);
+        if (!relPath) continue;
 
-    try {
-      const buf = await container.getBlobClient(src).downloadToBuffer();
-      await container.getBlockBlobClient(dst).uploadData(buf, {
-        blobHTTPHeaders: {
-          blobContentType: b.properties?.contentType || "application/octet-stream",
-        },
-      });
-      copied++;
-    } catch (err) {
-      console.error("copyTree failed", { src, dst, err: err.message });
-      failed.push({ src, dst, error: err.message });
+        const leaf = relPath.split('/').pop();
+        if (!leaf) continue;
+        if (leaf.startsWith('~$')) continue;          // Office temp files
+        if (JUNK.has(leaf)) continue;
+
+        const dst = `${toPrefix}${relPath}`;
+
+        try {
+          const srcClient = container.getBlobClient(src);
+          const [buf, props] = await Promise.all([
+            srcClient.downloadToBuffer(),
+            srcClient.getProperties().catch(() => ({})),
+          ]);
+
+          await container.getBlockBlobClient(dst).uploadData(buf, {
+            blobHTTPHeaders: {
+              blobContentType: props.contentType || "application/octet-stream",
+            },
+          });
+          copied++;
+        } catch (err) {
+          console.error("copyTree failed", { src, dst, err: err.message });
+          failed.push({ src, dst, error: err.message });
+        }
+      }
+
+      // recurse into subfolders
+      for (const d of dirs) {
+        await walk(d.name);
+      }
     }
   }
 
+  await walk(fromPrefix);
   return { copied, failed };
 }
 
@@ -160,6 +181,12 @@ async function listTopLevelIds(container, base /* e.g. 'models/' or `users/${uid
     }
   }
   return ids;
+}
+
+function joinRelSafe(a = "", b = "") {
+  a = (a || "").replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  b = (b || "").replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  return [a, b].filter(Boolean).join("/");
 }
 
 async function mirrorAllVersionsToPublic(container, privBase, pubBase, versions = []) {
