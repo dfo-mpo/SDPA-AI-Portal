@@ -162,6 +162,40 @@ async function listTopLevelIds(container, base /* e.g. 'models/' or `users/${uid
   return ids;
 }
 
+async function mirrorAllVersionsToPublic(container, privBase, pubBase, versions = []) {
+  const reports = [];
+
+  for (const ver of versions) {
+    const privVerManKey = `${privBase}/versions/${ver}/manifest.json`;
+    const pubVerManKey  = `${pubBase}/versions/${ver}/manifest.json`;
+
+    // read private version manifest; skip if missing
+    let verMan = await readJson(container, privVerManKey);
+    if (!verMan) {
+      reports.push({ version: ver, skipped: true, reason: 'no private version manifest' });
+      continue;
+    }
+
+    // write public version manifest
+    const pubVer = { ...verMan, private: false, sourcePath: pubBase };
+    await container.getBlockBlobClient(pubVerManKey).uploadData(
+      Buffer.from(JSON.stringify(pubVer, null, 2)),
+      { blobHTTPHeaders: { blobContentType: 'application/json' } }
+    );
+
+    // copy version files tree
+    const copyReport = await copyTree(
+      container,
+      `${privBase}/versions/${ver}/files/`,
+      `${pubBase}/versions/${ver}/files/`
+    );
+
+    reports.push({ version: ver, copyReport });
+  }
+
+  return reports;
+}
+
 // ---------- CREATE MODEL ----------
 router.post('/models/create', upload.array('files'), async (req, res) => {
   try {
@@ -691,40 +725,65 @@ router.patch('/models/:id/visibility', async (req, res) => {
     const privBase = `users/${userId}/models/${id}`;
     const pubBase  = `models/${id}`;
 
+    // Load the private root manifest (canonical)
+    const privMan = await readJson(container, `${privBase}/manifest.json`);
+    if (!privMan) {
+      return res.status(404).json({ error: 'model not found (private manifest missing)' });
+    }
+
     if (makePublic) {
-      // Mirror private -> public
-      const filesCopy = await copyTree(container, `${privBase}/files/`, `${pubBase}/files/`);
-
-      // README mirror if present in private
-      if (await blobExists(container, `${privBase}/README.md`)) {
-        await copyBlob(container, `${privBase}/README.md`, `${pubBase}/README.md`, "text/markdown; charset=utf-8");
-      }
-
-      // Build public manifest (private stays untouched as canonical)
-      const privMan = await readJson(container, `${privBase}/manifest.json`) || {};
-      const pubMan  = { ...privMan, private: false, sourcePath: pubBase, updatedAt: new Date().toISOString() };
-
+      // 1) Write/refresh the public root manifest
+      const pubMan  = {
+        ...privMan,
+        private: false,
+        sourcePath: pubBase,
+        updatedAt: new Date().toISOString(),
+      };
       await container.getBlockBlobClient(`${pubBase}/manifest.json`).uploadData(
         Buffer.from(JSON.stringify(pubMan, null, 2)),
         { blobHTTPHeaders: { blobContentType: 'application/json' } }
       );
 
-      return res.json({ ...pubMan, copyReport: filesCopy });
+      // 2) Mirror README if present
+      if (await blobExists(container, `${privBase}/README.md`)) {
+        await copyBlob(container, `${privBase}/README.md`, `${pubBase}/README.md`, "text/markdown; charset=utf-8");
+      }
+
+      // 3) Mirror **all versions** (manifests + files)
+      const versions = Array.isArray(privMan.versions) ? privMan.versions : [];
+      const versionReports = await mirrorAllVersionsToPublic(container, privBase, pubBase, versions);
+
+      return res.json({
+        ok: true,
+        visibility: 'public',
+        id,
+        publicBase: pubBase,
+        versionsMirrored: versions,
+        reports: versionReports,
+      });
     }
 
-    // Public -> Private: remove the public mirror only
+    // makePrivate: remove ONLY the public mirror; private stays canonical
     await deleteTree(container, `${pubBase}/`);
 
-    // Make sure private manifest flags are correct
-    const privMan0 = await readJson(container, `${privBase}/manifest.json`) || {};
-    const privMan  = { ...privMan0, private: true, sourcePath: privBase, updatedAt: new Date().toISOString() };
-
+    // ensure private flags are correct on private root manifest
+    const newPrivMan = {
+      ...privMan,
+      private: true,
+      sourcePath: privBase,
+      updatedAt: new Date().toISOString(),
+    };
     await container.getBlockBlobClient(`${privBase}/manifest.json`).uploadData(
-      Buffer.from(JSON.stringify(privMan, null, 2)),
+      Buffer.from(JSON.stringify(newPrivMan, null, 2)),
       { blobHTTPHeaders: { blobContentType: 'application/json' } }
     );
 
-    return res.json(privMan);
+    return res.json({
+      ok: true,
+      visibility: 'private',
+      id,
+      privateBase: privBase,
+    });
   } catch (e) {
     console.error('visibility patch error:', e);
     res.status(500).json({ error: 'visibility update failed', details: e.message });
