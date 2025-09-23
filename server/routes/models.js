@@ -483,41 +483,86 @@ router.post('/models/append', upload.array('files'), async (req, res) => {
     const isPublic = base.startsWith('models/');
 
     const container = getBlobServiceClient().getContainerClient(CONTAINER);
-    await container.createIfNotExists();
 
-    let dir = (req.body.dir || '').toString().trim();
-    dir = dir.replace(/\\/g, '/').replace(/^\/+/, '').replace(/\.\.+/g, '').replace(/\/+/g, '/');
-    if (dir && !dir.endsWith('/')) dir += '/';
+    const rootMan = await readJson(container, `${privBase}/manifest.json`);
+    if (!rootMan) return res.status(404).json({ error: 'model not found' });
 
-    // normalize paths array
-    let rels = req.body.paths || req.body['paths[]'];
-    if (!Array.isArray(rels)) rels = rels ? [rels] : [];
+    const prevVer = rootMan.latestVersion;
+    const newVer  = `v${rootMan.versions.length + 1}`;
 
-    const uploaded = [];
+    // bump and save manifests
+    rootMan.versions.push(newVer);
+    rootMan.latestVersion = newVer;
+    rootMan.updatedAt = new Date().toISOString();
 
-    if (req.files && req.files.length) {
-      for (let i = 0; i < req.files.length; i++) {
-        const f = req.files[i];
-        const rel = cleanRelPath(rels[i] || f.originalname || f.fieldname);
-        if (!rel) continue;
+    await container.getBlockBlobClient(`${privBase}/manifest.json`).uploadData(
+      Buffer.from(JSON.stringify(rootMan, null, 2)),
+      { blobHTTPHeaders: { blobContentType: 'application/json' } }
+    );
 
-        const relPath = dir + rel;
+    const verMan = { ...rootMan, version: newVer };
+    await container.getBlockBlobClient(`${privBase}/versions/${newVer}/manifest.json`).uploadData(
+      Buffer.from(JSON.stringify(verMan, null, 2)),
+      { blobHTTPHeaders: { blobContentType: 'application/json' } }
+    );
 
-        const targets = isPublic
-          ? [ `${privBase}/files/${relPath}`, `${pubBase}/files/${relPath}` ]
-          : [ `${privBase}/files/${relPath}` ];
-
-        for (const key of targets) {
-          await container.getBlockBlobClient(key).uploadData(f.buffer, {
-            blobHTTPHeaders: { blobContentType: f.mimetype || 'application/octet-stream' }
-          });
-          uploaded.push(key);
-        }
-      }
+    // snapshot previous --> new
+    if (prevVer) {
+      await copyTree(
+        container,
+        `${privBase}/versions/${prevVer}/files/`,
+        `${privBase}/versions/${newVer}/files/`
+      );
     }
 
+    // overlay new files
+    let rels = req.body.paths || req.body["paths[]"];
+    if (!Array.isArray(rels)) rels = (typeof rels === "string") ? [rels] : [];
 
-    res.json({ ok: true, count: uploaded.length, uploaded });
+    // allow caller to force a target subfolder (relative to repo root)
+    const targetDirRaw = req.body.targetDir || req.body.target || req.body.dir || req.body.prefix || "";
+    const targetDir = cleanRelPath(targetDirRaw) || "";
+
+    const uploaded = [];
+    const versionRoot = `${privBase}/versions/${newVer}/files/`;
+
+    for (let i = 0; i < (req.files || []).length; i++) {
+      const f = req.files[i];
+
+      // base rel comes from paths[] if provided, else filename
+      const relBase = (rels && rels[i]) ? rels[i] : f.originalname;
+      const relJoined = joinRelSafe(targetDir, relBase);
+      const rel = cleanRelPath(relJoined);
+      if (!rel) continue;
+
+      await container.getBlockBlobClient(`${versionRoot}${rel}`).uploadData(f.buffer, {
+        blobHTTPHeaders: { blobContentType: f.mimetype || 'application/octet-stream' }
+      });
+      uploaded.push(rel);
+    }
+
+    // mirror to public if needed
+    if (isPublic) {
+      const pubRoot = { ...rootMan, private: false, sourcePath: pubBase };
+      const pubVer  = { ...verMan,  private: false, sourcePath: pubBase };
+
+      await container.getBlockBlobClient(`${pubBase}/manifest.json`).uploadData(
+        Buffer.from(JSON.stringify(pubRoot, null, 2)),
+        { blobHTTPHeaders: { blobContentType: 'application/json' } }
+      );
+      await container.getBlockBlobClient(`${pubBase}/versions/${newVer}/manifest.json`).uploadData(
+        Buffer.from(JSON.stringify(pubVer, null, 2)),
+        { blobHTTPHeaders: { blobContentType: 'application/json' } }
+      );
+
+      await copyTree(
+        container,
+        `${privBase}/versions/${newVer}/files/`,
+        `${pubBase}/versions/${newVer}/files/`
+      );
+    }
+
+    res.json({ ok: true, version: newVer, uploaded });
   } catch (e) {
     console.error('append error:', e?.message || e);
     res.status(500).json({ error: 'append failed', details: e?.message || String(e) });
@@ -527,45 +572,103 @@ router.post('/models/append', upload.array('files'), async (req, res) => {
 /* ---------------- DELETE files from an existing model ---------------- */
 router.delete('/models/file', async (req, res) => {
   try {
-    const { base, filePath, userId } = req.body;
-    if (!base || !filePath) {
-      return res.status(400).json({ error: 'base and filePath required' });
+    const base = (req.body.base || '').toString().replace(/\/+$/, '');
+    let deletes = req.body.filePaths ?? req.body['filePaths[]'] ?? req.body.filePath;
+    if (!base || (!deletes || (Array.isArray(deletes) && deletes.length === 0))) {
+      return res.status(400).json({ error: 'base and filePaths (or filePath) required' });
     }
+    deletes = Array.isArray(deletes) ? deletes : [deletes];
+
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: 'userId required' });
+
+    const parts = base.split('/');
+    const id = parts[parts.length - 1];
+    const privBase = `users/${userId}/models/${id}`;
+    const pubBase  = `models/${id}`;
+    const isPublic = base.startsWith('models/');
 
     const container = getBlobServiceClient().getContainerClient(CONTAINER);
 
-    // figure out id from base
-    const parts = base.split('/');
-    const id = parts[parts.length - 1]; // last segment is model id
+    const rootMan = await readJson(container, `${privBase}/manifest.json`);
+    if (!rootMan) return res.status(404).json({ error: 'model not found' });
 
-    const privBase = userId ? `users/${userId}/models/${id}` : null;
-    const pubBase  = `models/${id}`;
+    const prevVer = rootMan.latestVersion;
+    const newVer  = `v${rootMan.versions.length + 1}`;
 
-    const targets = [];
+    rootMan.versions.push(newVer);
+    rootMan.latestVersion = newVer;
+    rootMan.updatedAt = new Date().toISOString();
 
-    if (base.startsWith('models/')) {
-      // public delete → do both
-      targets.push(`${pubBase}/files/${filePath}`);
-      if (privBase) targets.push(`${privBase}/files/${filePath}`);
-    } else {
-      // private delete → just private
-      targets.push(`${privBase}/files/${filePath}`);
+    await container.getBlockBlobClient(`${privBase}/manifest.json`).uploadData(
+      Buffer.from(JSON.stringify(rootMan, null, 2)),
+      { blobHTTPHeaders: { blobContentType: 'application/json' } }
+    );
+
+    const verMan = { ...rootMan, version: newVer };
+    await container.getBlockBlobClient(`${privBase}/versions/${newVer}/manifest.json`).uploadData(
+      Buffer.from(JSON.stringify(verMan, null, 2)),
+      { blobHTTPHeaders: { blobContentType: 'application/json' } }
+    );
+
+    // snapshot previous → new
+    if (prevVer) {
+      await copyTree(
+        container,
+        `${privBase}/versions/${prevVer}/files/`,
+        `${privBase}/versions/${newVer}/files/`
+      );
     }
 
-    const deleted = [];
-    for (const key of targets) {
-      try {
-        await container.deleteBlob(key);
-        deleted.push(key);
-      } catch (err) {
-        // swallow "not found" errors
-        console.warn(`delete failed for ${key}:`, err.message);
+    // apply deletions (file or folder)
+    const versionRoot = `${privBase}/versions/${newVer}/files/`;
+    const actuallyDeleted = [];
+
+    for (const relRaw of deletes) {
+      const rel = cleanRelPath(relRaw);
+      if (!rel) continue;
+
+      // try folder first
+      const folderPrefix = `${versionRoot}${rel.replace(/\/+$/,'')}/`;
+      let foundAny = false;
+      for await (const b of container.listBlobsFlat({ prefix: folderPrefix })) {
+        await container.deleteBlob(b.name).catch(() => {});
+        foundAny = true;
+        actuallyDeleted.push(b.name.substring(versionRoot.length));
       }
+      if (foundAny) continue;
+
+      // else single file
+      const single = `${versionRoot}${rel}`;
+      await container.deleteBlob(single).then(() => {
+        actuallyDeleted.push(rel);
+      }).catch(() => {});
     }
 
-    res.json({ ok: true, deleted });
+    // mirror to public if needed
+    if (isPublic) {
+      const pubRoot = { ...rootMan, private: false, sourcePath: pubBase };
+      const pubVer  = { ...verMan,  private: false, sourcePath: pubBase };
+
+      await container.getBlockBlobClient(`${pubBase}/manifest.json`).uploadData(
+        Buffer.from(JSON.stringify(pubRoot, null, 2)),
+        { blobHTTPHeaders: { blobContentType: 'application/json' } }
+      );
+      await container.getBlockBlobClient(`${pubBase}/versions/${newVer}/manifest.json`).uploadData(
+        Buffer.from(JSON.stringify(pubVer, null, 2)),
+        { blobHTTPHeaders: { blobContentType: 'application/json' } }
+      );
+
+      await copyTree(
+        container,
+        `${privBase}/versions/${newVer}/files/`,
+        `${pubBase}/versions/${newVer}/files/`
+      );
+    }
+
+    res.json({ ok: true, version: newVer, deleted: actuallyDeleted });
   } catch (e) {
-    console.error('delete error:', e);
+    console.error('delete versioned error:', e);
     res.status(500).json({ error: 'delete failed', details: e.message });
   }
 });
