@@ -182,6 +182,7 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
 
     const id = toSlug(title) || toSlug(owner);
     const makePublic = visibility === 'public';
+    const version = "v1"; // always start at v1
     const basePublic  = `models/${id}`;
     const basePrivate = `users/${userId}/models/${id}`;
 
@@ -190,22 +191,35 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
     await container.createIfNotExists();
 
     // manifest (private copy is always canonical)
-    const manifest = {
+    const rootManifest = {
       id,
       name: title || id,
       owner,
       description,
       tags,
       private: !makePublic,         // private flag reflects visibility
-      version: '1.0.0',
+      versions: [version],
+      latestVersion: version,
       updatedAt: new Date().toISOString(),
       downloads: 0,
       sourcePath: basePrivate       // sourcePath always points to private
     };
 
+    // Version manifest
+    const versionManifest = {
+      ...rootManifest,
+      version,
+    };
+
     // --- Write private manifest.json
     await container.getBlockBlobClient(`${basePrivate}/manifest.json`).uploadData(
-      Buffer.from(JSON.stringify(manifest, null, 2)),
+      Buffer.from(JSON.stringify(rootManifest, null, 2)),
+      { blobHTTPHeaders: { blobContentType: 'application/json' } }
+    );
+
+    // Save version manifest
+    await container.getBlockBlobClient(`${basePrivate}/versions/${version}/manifest.json`).uploadData(
+      Buffer.from(JSON.stringify(versionManifest, null, 2)),
       { blobHTTPHeaders: { blobContentType: 'application/json' } }
     );
 
@@ -217,7 +231,7 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
       const f = req.files[i];
       const rel = cleanRelPath(rels[i] || f.originalname);
       if (!rel) continue;
-      const target = `${basePrivate}/files/${rel}`;
+      const target = `${basePrivate}/versions/${version}/files/${rel}`;
       await container.getBlockBlobClient(target).uploadData(f.buffer, {
         blobHTTPHeaders: { blobContentType: f.mimetype || 'application/octet-stream' }
       });
@@ -226,9 +240,15 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
     // --- If PUBLIC, also create a mirrored public manifest and copy files
     if (makePublic) {
       // mirror manifest
-      const pubMan = { ...manifest, private: false, sourcePath: basePublic };
+      const pubMan = { ...rootManifest, private: false, sourcePath: basePublic };
       await container.getBlockBlobClient(`${basePublic}/manifest.json`).uploadData(
         Buffer.from(JSON.stringify(pubMan, null, 2)),
+        { blobHTTPHeaders: { blobContentType: 'application/json' } }
+      );
+
+      const pubVer  = { ...versionManifest, private: false, sourcePath: basePublic };
+      await container.getBlockBlobClient(`${basePublic}/versions/${version}/manifest.json`).uploadData(
+        Buffer.from(JSON.stringify(pubVer, null, 2)),
         { blobHTTPHeaders: { blobContentType: 'application/json' } }
       );
 
@@ -246,7 +266,7 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
         const f = req.files[i];
         const rel = cleanRelPath(rels[i] || f.originalname);
         if (!rel) continue;
-        const target = `${basePublic}/files/${rel}`;
+        const target = `${basePublic}/versions/${version}/files/${rel}`;
         await container.getBlockBlobClient(target).uploadData(f.buffer, {
           blobHTTPHeaders: { blobContentType: f.mimetype || 'application/octet-stream' }
         });
@@ -257,7 +277,7 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
       ok: true,
       privateBase: basePrivate,
       publicBase: makePublic ? basePublic : null,
-      manifest,
+      manifest: rootManifest,
       fileCount: (req.files || []).length
     });
   } catch (e) {
