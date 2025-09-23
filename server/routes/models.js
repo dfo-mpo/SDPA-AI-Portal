@@ -403,13 +403,34 @@ router.get('/uploads', async (req, res) => {
     const work = Array.from({ length: Math.min(limit, ids.length) }, async function worker() {
       while (i < ids.length) {
         const idx = i++; const id = ids[idx];
-        const key = `${base}${id}/manifest.json`;
-        const bc = c.getBlobClient(key);
-        if (await bc.exists()) {
-          const buf = await bc.downloadToBuffer();
-          const man = JSON.parse(buf.toString('utf8'));
-          if (man && man.id === id && !man.version) items.push(man);
+        const privKey = `${base}${id}/manifest.json`;
+        const pubKey  = `models/${id}/manifest.json`;
+        const [privExists, pubExists] = await Promise.all([
+          c.getBlobClient(privKey).exists(),
+          c.getBlobClient(pubKey).exists(),
+        ]);
+
+        if (!privExists && !pubExists) continue;
+
+        // Prefer private manifest content if present, but derive visibility from public existence
+        let man = null;
+        if (privExists) {
+          const buf = await c.getBlobClient(privKey).downloadToBuffer();
+          man = JSON.parse(buf.toString('utf8'));
+        } else {
+          const buf = await c.getBlobClient(pubKey).downloadToBuffer();
+          man = JSON.parse(buf.toString('utf8'));
         }
+
+        // Visibility truth comes from existence of the public manifest
+        man.private = !pubExists;
+
+        // Optional: include where it’s mirrored for the UI
+        man.publicBase = pubExists ? `models/${id}` : null;
+        man.sourcePath = man.private ? `${base}${id}` : `models/${id}`;
+
+        // Keep only root manifests (skip version manifests just in case)
+        if (man && man.id === id && !man.version) items.push(man);
       }
     });
     await Promise.all(work);
