@@ -1,4 +1,3 @@
-// src/pages/tools/MLModelsRepo/views/ModelDetail.js
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Box,
@@ -10,23 +9,24 @@ import {
   DialogTitle,
   DialogContent,
   Tooltip,
+  CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import MenuBookTwoToneIcon from "@mui/icons-material/MenuBookTwoTone"; // book icon
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";       // pencil
+import MenuBookTwoToneIcon from "@mui/icons-material/MenuBookTwoTone";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import * as repo from "../services/repoApi";
 import { mdComponents } from "./mdComponents";
 import CreateReadme from "./CreateReadme";
 
-// NOTE: we rely ONLY on isMine + userId (same idea as SettingsTab)
 export default function ModelDetail({ model, userId, isMine }) {
   const [md, setMd] = useState("");
   const [openEditor, setOpenEditor] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [manifest, setManifest] = useState(null);
+  const [loadingManifest, setLoadingManifest] = useState(true);
 
-  // Same permission idea as SettingsTab: can edit iff authenticated AND it's mine
   const canEdit = useMemo(() => Boolean(userId) && Boolean(isMine), [userId, isMine]);
 
   const load = useCallback(async () => {
@@ -41,19 +41,32 @@ export default function ModelDetail({ model, userId, isMine }) {
     }
   }, [model.id, userId]);
 
+  const loadManifest = useCallback(async () => {
+    try {
+      setLoadingManifest(true);
+      const m = await repo.getManifest(model.id, { userId });
+      setManifest(m);
+    } catch {
+      setManifest(null);
+    } finally {
+      setLoadingManifest(false);
+    }
+  }, [model.id, userId]);
+
   useEffect(() => {
     load();
-  }, [load]);
+    loadManifest();
+  }, [load, loadManifest]);
 
   const handleSaved = async () => {
-    await load();         // refresh after save
-    setOpenEditor(false); // close popup
+    await load();
+    setOpenEditor(false);
   };
 
   return (
-    <>
-      <Paper sx={{ p: 2, width: "100%" }}>
-        {/* Header: book icon + label (left), pencil (right if canEdit) */}
+    <Stack direction="row" spacing={2} sx={{ width: "100%" }}>
+      {/* Left side: README */}
+      <Paper sx={{ p: 2, alignSelf: "flex-start", maxWidth: "75%", }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Stack direction="row" alignItems="center" spacing={1}>
             <MenuBookTwoToneIcon fontSize="small" sx={{ color: "text.secondary" }} />
@@ -71,7 +84,6 @@ export default function ModelDetail({ model, userId, isMine }) {
           )}
         </Stack>
 
-        {/* Content (no divider) */}
         <Box sx={{ mt: 1 }}>
           {loading ? (
             <Typography variant="body2" color="text.secondary">Loading…</Typography>
@@ -87,7 +99,40 @@ export default function ModelDetail({ model, userId, isMine }) {
         </Box>
       </Paper>
 
-      {/* Editor dialog (same CreateReadme UI) */}
+      {/* Right side: Manifest info */}
+      <Paper sx={{ border: '1px solid', p: 2, alignSelf: "flex-start", minWidth: 250, maxWidth: "25%" }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+          Summary
+        </Typography>
+        {loadingManifest && <CircularProgress size={20} />}
+        {!loadingManifest && manifest ? (
+          <Stack spacing={1.5}>
+            <Typography variant="body2"><b>Owner:</b> {manifest.owner}</Typography>
+            <Typography variant="body2"><b>Title:</b> {manifest.name}</Typography>
+            <Typography variant="body2"><b>Description:</b> {manifest.description}</Typography>
+            <Typography variant="body2"><b>How To Use:</b> {manifest.howToUse}</Typography>
+            <Typography variant="body2"><b>Data Sources:</b> {manifest.dataSources}</Typography>
+            <Typography variant="body2"><b>Intended Use:</b> {manifest.intendedUse}</Typography>
+            <Typography variant="body2"><b>Out of Scope:</b> {manifest.outOfScope}</Typography>
+            <Typography variant="body2"><b>System Requirements:</b> {manifest.systemRequirements}</Typography>
+            <Typography variant="body2"><b>Pipeline:</b> {manifest.pipelineTag}</Typography>
+            <Typography variant="body2"><b>Library:</b> {manifest.library}</Typography>
+            <Typography variant="body2">
+              <b>Languages:</b> {Array.isArray(manifest.languages) ? manifest.languages.join(", ") : manifest.languages}
+            </Typography>
+            <Typography variant="body2"><b>License:</b> {manifest.license}</Typography>
+            <Typography variant="body2"><b>Model Size:</b> {manifest.modelSize}</Typography>
+            <Typography variant="body2"><b>Data Classification:</b> {manifest.dataClassification}</Typography>
+            <Typography variant="body2"><b>Tags:</b> {manifest.tags}</Typography>
+            <Typography variant="body2"><b>Last Updated:</b> {new Date(manifest.updatedAt).toLocaleString()}</Typography>
+
+          </Stack>
+        ) : (
+          !loadingManifest && <Typography variant="body2" color="text.secondary">No manifest available.</Typography>
+        )}
+      </Paper>
+
+      {/* README Editor Dialog */}
       <Dialog
         open={openEditor}
         onClose={() => setOpenEditor(false)}
@@ -105,6 +150,6 @@ export default function ModelDetail({ model, userId, isMine }) {
           <CreateReadme modelId={model.id} userId={userId} onSaved={handleSaved} />
         </DialogContent>
       </Dialog>
-    </>
+    </Stack>
   );
 }
