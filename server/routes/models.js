@@ -232,6 +232,22 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
     const visibility = (req.body.visibility || 'private').toLowerCase();
     const userId     = getUserId(req); 
 
+    // collect metadata fields
+    const howToUse          = req.body.howToUse || "";
+    const dataSources       = req.body.dataSources || "";
+    const pipelineTag       = req.body.pipelineTag || "";
+    const library           = req.body.library || "";
+    const languages         = (typeof req.body.languages === "string")
+      ? req.body.languages.split(",").map(s => s.trim()).filter(Boolean)
+      : Array.isArray(req.body.languages) ? req.body.languages : [];
+    const license           = req.body.license || "";
+    const intendedUse       = req.body.intendedUse || "";
+    const outOfScope        = req.body.outOfScope || "";
+    const systemRequirements= req.body.systemRequirements || "";
+    const modelSize         = req.body.modelSize || "";
+    const dataClassification= req.body.dataClassification || "";
+    const lastUpdated       = req.body.lastUpdated || new Date().toISOString();
+
     if (!userId || userId === "me"){
         return res.status(401).json({ error: 'Sign-in required to create a model.' });
     }
@@ -271,7 +287,21 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
       latestVersion: version,
       updatedAt: new Date().toISOString(),
       downloads: 0,
-      sourcePath: basePrivate       // sourcePath always points to private
+      sourcePath: basePrivate,       // sourcePath always points to private
+
+      // --- NEW FIELDS ---
+      howToUse,
+      dataSources,
+      pipelineTag,
+      library,
+      languages,
+      license,
+      intendedUse,
+      outOfScope,
+      systemRequirements,
+      modelSize,
+      dataClassification,
+      lastUpdated,
     };
 
     // Version manifest
@@ -926,3 +956,32 @@ router.get('/models/:id/readme', async (req, res) => {
 router.put('/models/:id/readme', upsertReadme);
 router.post('/models/:id/readme', upsertReadme);
 module.exports = router;
+
+
+/* ---------------- Manifest ---------------- */
+router.get('/models/:id/manifest', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = getUserId(req);
+    const c = getBlobServiceClient().getContainerClient(CONTAINER);
+
+    // Prefer private manifest if caller is owner, else public
+    const tryPaths = [
+      userId ? `users/${userId}/models/${id}/manifest.json` : null,
+      `models/${id}/manifest.json`,
+    ].filter(Boolean);
+
+    for (const p of tryPaths) {
+      const blob = c.getBlobClient(p);
+      if (await blob.exists()) {
+        const buf = await blob.downloadToBuffer();
+        return res.type('application/json').send(buf.toString('utf8'));
+      }
+    }
+
+    return res.status(404).json({ error: 'manifest not found' });
+  } catch (e) {
+    console.error('manifest get error:', e);
+    res.status(500).json({ error: 'manifest get failed', details: e.message });
+  }
+});

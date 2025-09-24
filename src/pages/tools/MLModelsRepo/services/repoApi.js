@@ -48,25 +48,64 @@ export async function getModel(id, { userId } = {}) {
 }
 
 // ---------- Create New Model
-export async function createModelWithPaths({ owner, name, description = "", tags = [], visibility = 'private', files = [], paths = [], userId }) {
+export async function createModelWithPaths({
+  owner,
+  name,
+  description = "",
+  howToUse = "",
+  dataSources = "",
+  tags = [],
+  visibility = "private",
+  files = [],
+  paths = [],
+  userId,
+  pipelineTag,
+  library,
+  languages = [],
+  license,
+  intendedUse,
+  outOfScope,
+  systemRequirements,
+  modelSize,
+  dataClassification,
+  lastUpdated,
+}) {
   const form = new FormData();
-  form.append('owner', owner);
-  form.append('title', name);
-  form.append('description', description);
-  form.append('visibility', visibility);
-  if (userId) form.append('userId', userId);
-  if (Array.isArray(tags)) form.append('tags', tags.join(','));
+  form.append("owner", owner);
+  form.append("title", name);
+  form.append("description", description);
+  form.append("howToUse", howToUse);
+  form.append("dataSources", dataSources);
+  form.append("visibility", visibility);
+  if (userId) form.append("userId", userId);
+  if (Array.isArray(tags)) form.append("tags", tags.join(","));
+
+  // --- NEW metadata ---
+  if (pipelineTag) form.append("pipelineTag", pipelineTag);
+  if (library) form.append("library", library);
+  if (Array.isArray(languages)) form.append("languages", languages.join(","));
+  if (license) form.append("license", license);
+  if (intendedUse) form.append("intendedUse", intendedUse);
+  if (outOfScope) form.append("outOfScope", outOfScope);
+  if (systemRequirements) form.append("systemRequirements", systemRequirements);
+  if (modelSize) form.append("modelSize", modelSize);
+  if (dataClassification) form.append("dataClassification", dataClassification);
+  if (lastUpdated) form.append("lastUpdated", lastUpdated);
 
   files.forEach((f, i) => {
-    form.append('files', f, f.name);
-    form.append('paths', paths[i] || f.name);
+    form.append("files", f, f.name);
+    form.append("paths", paths[i] || f.name);
   });
 
   const { data } = await axios.post(`${API}/models/create`, form, {
-    headers: { 'Content-Type': 'multipart/form-data', ...(userId ? { 'x-user-id': userId } : {}) }
+    headers: {
+      "Content-Type": "multipart/form-data",
+      ...(userId ? { "x-user-id": userId } : {}),
+    },
   });
   return data;
 }
+
 
 
 /* ---------- Files ---------- */
@@ -173,4 +212,15 @@ export async function saveReadme(id, { markdown, userId }) {
     { headers: userId ? { 'x-user-id': userId } : {} }
   );
   return data;
+}
+
+
+/* ---------- Manifest.json ---------- */
+// get Manifest
+export async function getManifest(id, { userId } = {}) {
+  const res = await axios.get(
+    `${API}/models/${encodeURIComponent(id)}/manifest`,
+    { params: userId ? { userId } : {} }
+  );
+  return res.data; // should be the JSON contents of manifest.json
 }
