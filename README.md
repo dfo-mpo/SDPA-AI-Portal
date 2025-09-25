@@ -11,7 +11,9 @@ Due to nginx proxy, requests to the express server should begin with /server/ wh
 ## Building the Docker Container Locally
 The docker-compose.yml file will allow for a docker container be created using the frontend and backend images. It reroutes the frontend exposure port to 3080 while rerouting the backend port to 8080. To set up your container locally:
 1. In the backend/ai_ml_tools folder, copy and rename the '.env.sample' file to '.env'. Fill in the keys for OpenAI and Document Intelligence.
-2. Build the local docker container using the command:
+2. In the server/ folder, copy and rename the '.env.sample' file to 'env'. Fill in the details for an Azure storage account.
+3. In the src/components/auth/ folder, copy and rename the 'authConfig.example.js' into 'authConfig.js'. Make sure to add in the values for clientId, authority, redirectURI, and postLogoutRedirectUri.
+4. Build the local docker container using the command:
 ```bash
 docker-compose up --build
 ```
@@ -241,13 +243,17 @@ git clone https://github.com/dfo-mpo/openAI-Chatbot.git
 cd openAI-Chatbot
 ```
 
-### 4. Run the Frontend
-#### 4.1 Install Dependencies
+### 4. Run the Frontend and JS Server
+#### 4.1 Setup .env File
+Go to server/, then copy and rename the '.env.example' file to '.env'. Make sure to add in the keys needed for connecting to the Azure storage account.
+#### 4.2 Setup Authentication Config
+Go to src/components/auth/, then copy and rename the 'authConfig.example.js' into 'authConfig.js'. Make sure to add in the values for clientId, authority, redirectURI, and postLogoutRedirectUri.
+#### 4.3 Install Dependencies
 Install all required dependencies by running the following command in the project directory:
 ```bash
 npm install
 ```
-#### 4.2 Start React Project
+#### 4.4 Start React Project
 To run the frontend project use the following command:
 ```bash
 npm run dev
@@ -263,7 +269,9 @@ Open a new terminal window at the root of the repository and go the backend, ins
 cd backend
 ./setup_and_run.sh
 ```
-#### 5.3 Running in the Future (With Bash Script)
+
+#### 5.3 Running in the Future (With Bash Script) (if having issues use 5.4 method instead)
+
 After intially using the setup_and_run script, you can use the dev script instead to run the backend in the future:
 ```bash
 ./dev.sh
@@ -273,8 +281,9 @@ Without the bash scripts, you need to start by going into the backend folder aga
 ```bash
 cd backend
 ```
-You can then activate your virtual enviroment (if using one) with the command:
+(Optional) You can then create and activate a virtual enviroment with the commands:
 ```bash
+python -m venv venv
 ./venv/Scripts/activate
 ```
 Install required packages if you haven't already:

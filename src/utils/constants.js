@@ -190,13 +190,13 @@ import {
     },
     ML_MODELS: {
       id: 'ml-tools',
-      name: 'Repositories',
+      name: 'Repositories - TEST',
       category: 'ML Models',
       icon: Loader, // placeholder for page; needs to be changed
       backgroundImage: '/assets/csv-analyzer-banner.jpg', // placeholder for page; needs to be changed
       actionText: 'Open Form', // placeholder for page; needs to be changed
       showInDropdown: false,
-      disabled: true
+      // disabled: true
     },
   };
   

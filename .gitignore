@@ -31,5 +31,7 @@ yarn-error.log*
 src/components/auth/authConfig.js
 /public/lib/webviewer
 
+# venv 
+backend/.venv/
 src/setupProxy.js
 src/services/apiService.js
