@@ -269,7 +269,9 @@ Open a new terminal window at the root of the repository and go the backend, ins
 cd backend
 ./setup_and_run.sh
 ```
+
 #### 5.3 Running in the Future (With Bash Script) (if having issues use 5.4 method instead)
+
 After intially using the setup_and_run script, you can use the dev script instead to run the backend in the future:
 ```bash
 ./dev.sh

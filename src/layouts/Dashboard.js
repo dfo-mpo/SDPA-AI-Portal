@@ -21,14 +21,15 @@ import {
   ElectronicMonitoring,
   UnderwaterMarineLifeAnnotation,
   FishPopulationEstimation,
-  DectectionofGhostGear,
+  DetectionofGhostGear,
   CTDDataQualityControl,
   CSVAnalyzer,
   PDFChatbot,
   PIIRedactor,
   SensitivityScore,
   FrenchTranslation,
-  DocumentOCR
+  DocumentOCR,
+  MLModelsRepo
 } from '../pages/tools';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
@@ -116,7 +117,7 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
     'Electronic Monitoring': ElectronicMonitoring,
     'Underwater Marine Life Annotation': UnderwaterMarineLifeAnnotation,
     'Fish Population Estimation': FishPopulationEstimation,
-    'Dectection of Ghost Gear': DectectionofGhostGear,
+    'Detection of Ghost Gear': DetectionofGhostGear,
     'CTD Data Quality Control': CTDDataQualityControl,
     'CSV/PDF Analyzer': CSVAnalyzer,
     'PDF Chatbot': PDFChatbot,
@@ -126,6 +127,7 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
     'Document OCR': DocumentOCR,
     'Form': SurveyForm,
     'Document': DocxEditor,
+    "Repositories - TEST" : MLModelsRepo,
   };
 
   const getToolComponent = (toolName) => {

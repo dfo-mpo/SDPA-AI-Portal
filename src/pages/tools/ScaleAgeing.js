@@ -14,6 +14,7 @@ import { getToolTranslations } from '../../utils';
 import { processScaleAge, convertToPng } from '../../services/apiService';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { useIsAuthenticated } from '@azure/msal-react';
+import { trackEvent } from '../../utils/analytics';
 
 export function ScaleAgeing() {
   const { language } = useLanguage();
@@ -62,9 +63,11 @@ export function ScaleAgeing() {
         imageUrl: pngUrl, 
         filename: ageData.filename || null
       });
+      trackEvent('Scale Ageing', `Predicted age of scale.`, 'Age predicted image')
     } catch (error) {
       console.error('Error:', error);
       setError('An error occurred while processing the image: ' + error.message);
+      trackEvent('Scale Ageing', `An error occurred while processing the image.`, 'Ageing Failed');
     } finally {
       setIsProcessing(false); 
     }
