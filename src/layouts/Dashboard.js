@@ -127,7 +127,7 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
     'Document OCR': DocumentOCR,
     'Form': SurveyForm,
     'Document': DocxEditor,
-    "Repositories" : MLModelsRepo,
+    "Repositories - TEST" : MLModelsRepo,
   };
 
   const getToolComponent = (toolName) => {

@@ -116,7 +116,7 @@ export default function CreateReadme({ modelId, userId, onSaved, lang = "en" }) 
           startIcon={saving ? <CircularProgress size={14} /> : null}
           disabled={saving}
         >
-          {saving ? "Saving…" : dirty ? "Save README" : "Saved"}
+          {saving ? "Saving…" : dirty ? "Save README" : "Create"}
         </Button>
       </Stack>
 
