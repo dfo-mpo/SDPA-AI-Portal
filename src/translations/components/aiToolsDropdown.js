@@ -27,7 +27,8 @@ export const en = {
       "French Translation": "French Translation",
       "Web Scraper": "Web Scraper",
       "Document OCR": "Document OCR",
-      "Data Analytics, AI and ML Intake Form": "Data Analytics, AI and ML Intake Form"
+      "Data Analytics, AI and ML Intake Form": "Data Analytics, AI and ML Intake Form",
+      "Repositories - TEST" : "Repositories - TEST"
     }
   };
   
@@ -57,6 +58,7 @@ export const en = {
       "French Translation": "Traduction français",
       "Web Scraper": "Racloir Web",
       "Document OCR": "ROC de document",
-      "Data Analytics, AI and ML Intake Form": "Formulaire d'admission pour l'analyse de données, l'IA et le ML"
+      "Data Analytics, AI and ML Intake Form": "Formulaire d'admission pour l'analyse de données, l'IA et le ML",
+      "Repositories - TEST" : "Répertoires - TEST"
     }
   };
