@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API = 'http://localhost:4000/api'; // or use your proxy/env
+const API = 'server'; // or use your proxy/env
 
 /* ---------- Models ----------
 - CRUD Operations for models
