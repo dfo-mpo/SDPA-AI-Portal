@@ -14,7 +14,7 @@ const DocxEditor = ({
   const [fileExists, setFileExists] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const apiEndpoint = '/api';
+  const apiEndpoint = '/server';
   const docPath = `${apiEndpoint}/docx/${file}`;
 
   useEffect(() => {
@@ -34,7 +34,7 @@ const DocxEditor = ({
             path: '/lib/webviewer',
             initialDoc: docPath,
             enableOfficeEditing,
-            licenseKey: 'YOUR_LICENSE_KEY',
+            licenseKey: 'demo:1750444548238:61daf9b903000000004d14c55be15ae0b77115e5570861099c08de9d72',
           },
           viewer.current,
         ).then((instance) => {

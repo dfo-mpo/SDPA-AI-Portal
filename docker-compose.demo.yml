@@ -1,0 +1,10 @@
+version: '3.8'  
+  
+services:    
+  frontend:  
+    image: sdpa-ai-portal-frontend:demo
+    build:  
+      context: .  
+      dockerfile: Dockerfile.frontend  
+      args:
+        REACT_APP_MODE: demo

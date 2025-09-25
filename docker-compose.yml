@@ -1,0 +1,28 @@
+version: '3.8'  
+  
+services:  
+  frontend:  
+    build:  
+      context: .  
+      dockerfile: Dockerfile.frontend  
+      args:
+        REACT_APP_MODE: prod
+    ports:  
+      - "3080:80"  
+    depends_on:  
+      - backend
+      - server  
+  
+  backend:  
+    build:  
+      context: ./backend
+      dockerfile: Dockerfile  
+    ports:  
+      - "8080:8000"
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - "4080:4000"
