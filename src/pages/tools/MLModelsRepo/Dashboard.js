@@ -8,7 +8,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { Box, Tabs, Tab, Button, Stack } from "@mui/material";
+import { Box, Tabs, Tab, Button, Stack, Alert, AlertTitle } from "@mui/material";
 import { ToolPage } from "../../../components/tools";
 import { useLanguage } from "../../../contexts";
 import { getToolTranslations } from "../../../utils";
@@ -158,7 +158,16 @@ export function MLModelsRepo() {
       hideActionButton
       onFileSelected={() => {}}
     >
-      <div><div></div></div>
+      {/* Disclaimer banner */}
+      <Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
+        <AlertTitle>Disclaimer</AlertTitle>
+        This hub is for <strong>demonstration purposes only</strong> and is <strong>not</strong> an enterprise solution.
+        Upload and publish <strong>only unclassified/unprotected information</strong>: both models and their training data
+        must be unclassified or publicly available. <strong>Do not</strong> upload protected, sensitive, or classified data.
+        Content here is intended for collaborative exploration and documentation with <strong>no production guarantees</strong>.
+        By proceeding, you confirm you have the right to share the materials and agree to comply with these boundaries.
+      </Alert>
+      
       {/* Top rail */}
       <Stack direction="row" alignItems="center" sx={{ width: "100%", mb: 2 }}>
         {showListTabs && (
