@@ -64,9 +64,16 @@ export default function ModelDetail({ model, userId, isMine }) {
   };
 
   return (
-    <Stack direction="row" spacing={2} sx={{ width: "100%" }}>
+    <Stack
+      direction="row"
+      spacing={2}
+      sx={{
+        width: "100%",
+        alignItems: "flex-start",
+      }}
+    >
       {/* Left side: README */}
-      <Paper sx={{ p: 2, alignSelf: "flex-start", maxWidth: "75%", }}>
+      <Paper sx={{ p: 2,flex: "1 1 75%", maxWidth: "75%" }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Stack direction="row" alignItems="center" spacing={1}>
             <MenuBookTwoToneIcon fontSize="small" sx={{ color: "text.secondary" }} />
@@ -100,7 +107,17 @@ export default function ModelDetail({ model, userId, isMine }) {
       </Paper>
 
       {/* Right side: Manifest info */}
-      <Paper sx={{ border: '1px solid', p: 2, alignSelf: "flex-start", minWidth: 250, maxWidth: "25%" }}>
+      <Paper
+        sx={{
+          border: "1px solid",
+          p: 2,
+          minWidth: 280,
+          maxWidth: "25%",
+          height: "fit-content",
+          position: "sticky",
+          top: 16,
+        }}
+      >
         <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
           Summary
         </Typography>
@@ -124,6 +141,7 @@ export default function ModelDetail({ model, userId, isMine }) {
             <Typography variant="body2"><b>Model Size:</b> {manifest.modelSize}</Typography>
             <Typography variant="body2"><b>Data Classification:</b> {manifest.dataClassification}</Typography>
             <Typography variant="body2"><b>Tags:</b> {manifest.tags}</Typography>
+            <Typography variant="body2"><b>Repo Url:</b> {manifest.repoUrl}</Typography>
             <Typography variant="body2"><b>Last Updated:</b> {new Date(manifest.updatedAt).toLocaleString()}</Typography>
 
           </Stack>
