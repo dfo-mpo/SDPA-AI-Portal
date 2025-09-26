@@ -215,6 +215,7 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
     const modelSize         = req.body.modelSize || "";
     const dataClassification= req.body.dataClassification || "";
     const lastUpdated       = req.body.lastUpdated || new Date().toISOString();
+    const repoUrl           = req.body.repoUrl || "";
 
     if (!userId || userId === "me"){
         return res.status(401).json({ error: 'Sign-in required to create a model.' });
@@ -264,6 +265,7 @@ router.post('/models/create', upload.array('files'), async (req, res) => {
       modelSize,
       dataClassification,
       lastUpdated,
+      repoUrl
     };
 
     await container.getBlockBlobClient(`${basePrivate}/manifest.json`).uploadData(

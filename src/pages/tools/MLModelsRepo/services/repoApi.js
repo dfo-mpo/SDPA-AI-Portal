@@ -69,6 +69,7 @@ export async function createModelWithPaths({
   modelSize,
   dataClassification,
   lastUpdated,
+  repoUrl
 }) {
   const form = new FormData();
   form.append("owner", owner);
@@ -91,6 +92,7 @@ export async function createModelWithPaths({
   if (modelSize) form.append("modelSize", modelSize);
   if (dataClassification) form.append("dataClassification", dataClassification);
   if (lastUpdated) form.append("lastUpdated", lastUpdated);
+  if (repoUrl) form.append("repoUrl", repoUrl);
 
   files.forEach((f, i) => {
     form.append("files", f, f.name);
