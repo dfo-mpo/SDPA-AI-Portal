@@ -19,27 +19,61 @@ export default function UploadsList({ rows = [], onOpenModel, onCreateClick }) {
 
   return (
     <>
-      {/* Top bar: Search (left) and + New Model (right) */}
       <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={2}
-        alignItems={{ xs: "stretch", sm: "center" }}
-        justifyContent="space-between"
-        sx={{ mb: 2, flexWrap: "wrap", rowGap: 2 }}
+      direction="row"
+      spacing={1}
+      alignItems="center"
+      sx={{ mb: 2, flexWrap: { xs: "wrap", sm: "nowrap" } }}
+    >
+      <SearchBar
+        value={query}
+        onChange={setQuery}
+        placeholder="Search by name or tag"
+        sx={{
+          flex: "1 1 520px",
+          minWidth: 240,
+          width: { xs: "100%", sm: "auto" },
+        }}
+      />
+      <Button
+        variant="contained"
+        onClick={onCreateClick}
+        sx={{
+          flexShrink: 0,
+          whiteSpace: "nowrap",
+          mt: { xs: 1, sm: 0 },
+        }}
       >
-        <SearchBar
-          value={query}
-          onChange={setQuery}
-          placeholder="Search by name or tag"
-          sx={{ flexGrow: 1, maxWidth: 480 }}
-        />
-        <Button variant="contained" onClick={onCreateClick} sx={{ whiteSpace: "nowrap" }}>
-          + New Model
-        </Button>
-      </Stack>
+        + New Model
+      </Button>
+    </Stack>
 
-      <Box>
-        <CardsGrid>
+      {/* Grid pinned to page width (no off-screen overflow) */}
+      <Box sx={{ mt: 2, width: "100%", overflowX: "visible" }}>
+        <CardsGrid
+          sx={{
+            // ensure it can’t be wider than the Paper
+            width: "100%",
+            maxWidth: "100%",
+            mx: 0,
+            px: 0,
+
+            // force left alignment
+            justifyContent: "flex-start !important",
+            justifyItems: "stretch",
+
+            // make it responsive even if CardsGrid has defaults
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, minmax(0, 1fr))",
+              md: "repeat(2, minmax(0, 1fr))",
+              lg: "repeat(3, minmax(0, 1fr))",
+            },
+            gap: 2.5,
+            boxSizing: "border-box",
+          }}
+        >
           {filtered.map((item) => (
             <Box key={item.id}>
               <ModelCard item={item} onClick={() => onOpenModel?.(item.id)} />
