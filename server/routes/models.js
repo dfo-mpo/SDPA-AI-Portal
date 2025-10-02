@@ -681,7 +681,25 @@ router.patch('/models/:id/meta', async (req, res) => {
     if (!man) return res.status(404).json({ error: 'not found' });
 
     const patch = {};
-    ['name', 'owner', 'description', 'tags'].forEach(k => {
+    ['name',
+      'owner',
+      'description',
+      'howToUse',
+      'dataSources',
+      'tags',
+      'pipelineTag',
+      'library',
+      'languages',
+      'license',
+      'intendedUse',
+      'outOfScope',
+      'systemRequirements',
+      'modelSize',
+      'dataClassification',
+      'lastUpdated',
+      'repoUrl',
+    ]
+    .forEach(k => {
       if (k in req.body) patch[k] = req.body[k];
     });
     man = { ...man, ...patch, updatedAt: new Date().toISOString() };

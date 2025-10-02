@@ -177,10 +177,45 @@ export async function updateVisibility(id, { visibility, userId }) {
 }
 
 // update metadata (name/owner/description/tags)
-export async function updateMeta(id, { name, owner, description, tags, userId }) {
+export async function updateMeta(id, { 
+  name, 
+  owner, 
+  description, 
+  howToUse, 
+  dataSources, 
+  tags, 
+  pipelineTag,
+  library,
+  languages,
+  license,
+  intendedUse,
+  outOfScope,
+  systemRequirements,
+  modelSize,
+  dataClassification,
+  lastUpdated,
+  repoUrl,
+  userId }) {
   const { data } = await axios.patch(
     `${API}/models/${encodeURIComponent(id)}/meta`,
-    { name, owner, description, tags, userId },
+    { name, 
+  owner, 
+  description, 
+  howToUse, 
+  dataSources, 
+  tags, 
+  pipelineTag,
+  library,
+  languages,
+  license,
+  intendedUse,
+  outOfScope,
+  systemRequirements,
+  modelSize,
+  dataClassification,
+  lastUpdated,
+  repoUrl,
+  userId },
     { headers: userId ? { 'x-user-id': userId } : {} }
   );
   return data;
