@@ -140,7 +140,9 @@ export default function ModelDetail({ model, userId, isMine }) {
             <Typography variant="body2"><b>License:</b> {manifest.license}</Typography>
             <Typography variant="body2"><b>Model Size:</b> {manifest.modelSize}</Typography>
             <Typography variant="body2"><b>Data Classification:</b> {manifest.dataClassification}</Typography>
-            <Typography variant="body2"><b>Tags:</b> {manifest.tags}</Typography>
+            <Typography variant="body2">
+              <b>Tags:</b> {Array.isArray(manifest.tags) ? manifest.tags.join(", ") : manifest.tags}
+            </Typography>
             <Typography variant="body2"><b>Repo Url:</b> {manifest.repoUrl}</Typography>
             <Typography variant="body2"><b>Last Updated:</b> {new Date(manifest.updatedAt).toLocaleString()}</Typography>
 
