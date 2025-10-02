@@ -8,7 +8,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { Box, Tabs, Tab, Button, Stack, Alert, AlertTitle } from "@mui/material";
+import { Box, Tabs, Tab, Button, Stack, Alert, AlertTitle, Paper } from "@mui/material";
 import { ToolPage } from "../../../components/tools";
 import { useLanguage } from "../../../contexts";
 import { getToolTranslations } from "../../../utils";
@@ -150,14 +150,24 @@ export function MLModelsRepo() {
   const effectiveDetailTab = isMine ? detailTab : Math.min(detailTab, 1);
 
   return (
-    <ToolPage
-      title={t.title}
-      shortDescription={t.shortDescription}
-      longDescription={t.longDescription}
-      backgroundImage="/assets/calculations.png"
-      hideActionButton
-      onFileSelected={() => {}}
-    >
+    <Paper sx={{
+        p: { xs: 1, sm: 1, md: 2 },
+        mx: "auto",
+        my: 2,
+        maxWidth: 1320,
+        borderRadius: 3,
+      }}>
+      <Stack sx={{mb: 1}}>
+        <p style={{ fontSize: 50, fontWeight: 600, marginTop: 30 }}>
+          ML Models Repository
+        </p>
+        <p style={{ fontSize: 20, marginTop: 0 }}>
+          Explore and Upload ML Models
+        </p>
+        <p style={{ marginTop: 60 }}>
+          A unified repository where users can upload, explore, and manage machine learning models. It supports versioning, model cards with key metadata, and provides SDK-ready examples in Python, R, and REST to help teams quickly integrate models into their workflows. Users can browse existing models from OCDS and SDPA or contribute their own, with support for common formats like ONNX, TorchScript, and scikit-learn.
+        </p>
+      </Stack>
       {/* Disclaimer banner */}
       <Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
         <AlertTitle>Disclaimer</AlertTitle>
@@ -220,7 +230,7 @@ export function MLModelsRepo() {
         ? <CreateReadme modelId={pendingReadmeId} userId={userId} onSaved={() => onReadmeSaved(pendingReadmeId)} />
         : 
         <CreateModel userId={userId} onCancel={backToList} onCreated={onCreated} />)}
-    </ToolPage>
+    </Paper>
   );
 }
 
