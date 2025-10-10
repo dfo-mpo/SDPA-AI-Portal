@@ -49,13 +49,13 @@ export const Questions = [
   },
   {
     name: "project_title",
-    label: "Project Description and Objective",
+    label: "Use Case Title",
     type: "text",
-    description: "Project Title"
+    description: "Enter a short, cleat name that describes this use case."
   },
   {
     name: "use_case_overview",
-    label: "",
+    label: "Project Description and Objective",
     type: "textarea",
     description: "Brief overview of potential program or service delivery, operations, or business process impacted being explored as a use case"
   },
@@ -85,6 +85,45 @@ export const Questions = [
     type: "radio", 
     options: ["Low", "Medium", "High"], 
     description: "The level of urgency or importance assigned to the project." 
+  },
+  { 
+    name: "strategic_alignment", 
+    label: "Strategic Alignment to DFO", 
+    type: "subtitle", 
+    description: "Select all that apply:" 
+  },
+  { 
+    name: "fisheries_and_aquaculture", 
+    label: "", 
+    type: "multiselect", 
+    options: ["Sustainable management of Canadian fisheries", "Sustainable aquaculture", "Safe access to harbours", "Protection from unlawful exploitation", "Improved scientific advice for fisheries", "Indigenous outcomes in fisheries/aquaculture"], 
+    description: "Fisheries and Aquaculture" 
+  },
+  { 
+    name: "aquatic_ecosystems", 
+    label: "", 
+    type: "multiselect", 
+    options: ["Protection of oceans and ecosystems", "Science for ecosystem decision-making", "Indigenous outcomes in ecosystem protection"], 
+    description: "Aquatic Ecosystems" 
+  },
+  { 
+    name: "justification_for_strategic_alignment", 
+    label: "Justification for Strategic Alignment:", 
+    type: "textarea", 
+    description: "Explain why this use case supports the selected DFO priorities:" 
+  },
+  { 
+    name: "feasibility", 
+    label: "Feasibility", 
+    type: "multiselect", 
+    options: ["Data is available and usable", "Required AI methods are technically mature", "Internal or external expertise can support this", "Budget or funding is feasible", "Tools, infrastructure, or platforms are accessible", "Legal or policy issues are manageable", "Stakeholder or partner support is realistic", "Implementation can begin within 6-12 months"],
+    description: "Check all that apply to reflect readiness and ease of implementation:" 
+  },
+  { 
+    name: "justification_for_feasibility", 
+    label: "Justification for Feasibility:", 
+    type: "textarea", 
+    description: "Explain the key enablers or challenges for implementation:" 
   },
   { 
     name: "tools_needed_for_work", 
@@ -242,6 +281,14 @@ export const Questions = [
     description: "If AI was selected, what outcome would success look like for addressing your business problem with AI? (Try to make this measurable: faster processes, better decisions, more sales, etc.)",
     required: false
   },
+  {
+    name: "ai_capability_used",
+    label: "AI Capability Used",
+    type: "multiselect",
+    options: ["Estimate (e.g., effort, time, cost)", "Forecast (e.g., trends, ocean conditions)", "Compare (e.g., rank or score options)", "Detect (e.g., patterns, anomalies)", "Identify (e.g., classify images or signals)", "Discover (e.g., find new patterns or clusters)", "Generate (e.g., summaries, recommendations)", "Act (e.g., automate responses or control systems)"],
+    description: "Select the main type of AI functionality this idea applies:",
+    includeOtherOptions: true 
+  },
   { 
     name: "status", 
     label: "Status", 
@@ -278,6 +325,22 @@ export const Questions = [
     options: ["Yes", "No"], 
     description: "Indicates whether the data used in this project has been formally assessed for sensitivity." 
   },
+
+  {
+    name: "risks_area",
+    label: "",
+    type: "multiselect",
+    options: ["Privacy or data protection", "Fairness or bias", "Transparency or explainability", "Indigenous data sovereignty", "Environmental impact", "Legal or regulatory ris"],
+    description: "Select all applicable areas of concern",
+    includeOtherOptions: true
+  },
+  {
+    name: "risks_level",
+    label: "Justification for Risk Level",
+    type: "textarea",
+    description: "Describe any potential risks",
+    required: false
+  },
 ];
 
 // this is used to keep track of the questions we want to render for each section
@@ -294,8 +357,12 @@ export const SectionGroups = {
       "who_is_affected",
       "areas_of_impact_on_business",
       "priority_level",
-      "time_sensitive",
-      "time_sensitive_deadline",
+      "strategic_alignment",
+      "fisheries_and_aquaculture",
+      "aquatic_ecosystems",
+      "justification_for_strategic_alignment",
+      "feasibility",
+      "justification_for_feasibility",
       "tools_needed_for_work",
     ],
   },
@@ -314,14 +381,24 @@ export const SectionGroups = {
     questions: [
       "project_area", 
       "success_outcomes",
+      "ai_capability_used",
       "status", 
-      "data_annotation_support",      
+      "data_annotation_support",
+      "time_sensitive",
+      "time_sensitive_deadline",
     ],
   },
   security: {
     label: "Security",
     questions: [
       "statement_of_sensitivity_exist"
+    ],
+  },
+  risks: {
+    label: "Risks",
+    questions: [
+      "risks_area",
+      "risks_level"
     ],
   },
 };

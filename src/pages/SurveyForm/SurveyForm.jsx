@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import { Questions, SectionGroups } from "./Questions";
+import Subtitle from "./Subtitle";
 import InputField from "./InputField";
 import TextArea from "./TextArea";
 import SelectBox from "./SelectBox";
@@ -83,6 +84,12 @@ export function SurveyForm() {
   // this helper function is used to render each question type with their respective fields
   const renderQuestion = (question) => {
     switch (question.type) {
+      case "subtitle":
+        return <Subtitle 
+        name={question.name} 
+        label={question.label} 
+        description={question.description} 
+      />;
       case "text":
         return <InputField 
         name={question.name} 
