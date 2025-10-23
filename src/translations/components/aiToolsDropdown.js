@@ -3,6 +3,7 @@
  */
 
 export const en = {
+    title: "DFO AI Portal",
     home: "AI Tools Home",
     selectTool: "Select a tool",
     categories: {
@@ -32,6 +33,7 @@ export const en = {
   };
   
   export const fr = {
+    title: "Portail IA du MPO",
     home: "Accueil des outils IA",
     selectTool: "Sélectionnez un outil",
     categories: {

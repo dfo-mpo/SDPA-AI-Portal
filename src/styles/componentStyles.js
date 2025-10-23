@@ -8,6 +8,8 @@
 
 import { alpha } from '@mui/material/styles';
 import { dfoColors } from './themePrimitives';
+import { LeftPanel } from '../layouts';
+import zIndex from '@mui/material/styles/zIndex';
 
 // ====== COMMON OR BASE STYLES USED ACROSS MULTIPLE OBJECTS ======
 
@@ -138,7 +140,7 @@ export const bannerStyles = {
   heroContainer: (theme) => ({
     ...bannerContainerBase(theme),
     height: '350px',
-    borderRadius: '8px 8px 0 0px',
+    borderRadius: 2,
     overflow: 'hidden',
   }),
 
@@ -246,64 +248,142 @@ export const formStyles = {
 
 // ===== DASHBOARD STYLES =====
 export const dashboardStyles = {
-  container: (theme) => ({
-    width: '100%',
-    maxWidth: '1800px',
-    mx: 'auto',
-    px: { xs: 2, sm: 4 },
-    display: 'flex',
-    alignItems: 'center',
+  dashboardWrapper: (theme) => ({
+    display: { xs: 'block', md: 'flex' },
+    flexDirection: { xs: 'column', md: 'row' },
+    width: '100vw',
+    minHeight: '100vh',
+    gap: 0,
+    overflow: { xs: 'auto', md: 'hidden' },
+    bgcolor: 'background.default',
+    overflowX: 'hidden',
+    overflowY: 'auto',
+    scrollbarColor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(255,255,255,0.2) transparent'
+        : 'rgba(0,0,0,0.1) transparent',
+    "&:hover": {
+      scrollbarColor: 
+        theme.palette.mode === 'dark'
+          ? 'rgba(255,255,255,0.25) transparent'
+          : 'rgba(0,0,0,0.15) transparent',
+    },
+    '&::-webkit-scrollbar-track': {
+      backgroundColor: 'transparent',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor:
+        theme.palette.mode === 'dark'
+          ? 'rgba(255,255,255,0.2)'
+        : 'rgba(0,0,0,0.1)',
+      borderRadius: 4,
+    },
+    '&::-webkit-scrollbar-thumb:hover': {
+      backgroundColor:
+        theme.palette.mode === 'dark'
+          ? 'rgba(255,255,255,0.25)'
+        : 'rgba(0,0,0,0.15)',
+    },
+
+    // Overriding component scrollbar style by class name
+    '.docxEditorContainer': {
+      scrollbarColor:'rgba(0,0,0,0.25) transparent',
+    }
   }),
 
-  mainWrapper: (theme, { headerHeight }) => ({
+  LeftPanelWrapper: (theme) => ({
+    position: { xs: 'relative ', md: 'relative' },
+    zIndex: 2,
+    width: { xs: '100%', md: 380 },
+    minWidth: 380,
+    p: 0,
+    borderRight: { xs: '0', md: '1px solid' },
+    borderColor: { xs: 'divider', md: 'divider' },
+    bgcolor: "background.paper",
+
+    // overflowX: 'hidden',
+    // overflowY: 'auto',
+    // transition: 'all 0.3s ease',
+    // scrollbarColor:
+    //   theme.palette.mode === 'dark'
+    //     ? 'rgba(255,255,255,0) transparent'
+    //     : 'rgba(0,0,0,0) transparent',
+    // "&:hover": {
+    //   scrollbarColor: 
+    //     theme.palette.mode === 'dark'
+    //       ? 'rgba(255,255,255,0.25) transparent'
+    //       : 'rgba(0,0,0,0.15) transparent',
+    // },
+  }),
+
+  headerContainer: (theme) => ({
+    m: 0,
+    p: 0,
+  }),
+
+  mainWrapper: (theme) => ({
     display: 'flex',
     flexDirection: 'column',
-    flexGrow: 1,
-    height: `calc(100vh - ${headerHeight}px)`,
-    overflow: 'auto',
+    zIndex: 1,
+    position: 'relative',
+    width: '100%',
+    maxWidth: '2400px',
+    minHeight: '100vh',
+    gap: { xs: 1, sm: 2, md: 3 },
+    overflowX: 'hidden',
+    overflowY: 'auto',
+    transition: 'all 0.3s ease',
   }),
 
   contentWrapper: {
     display: 'flex',
-    flexDirection: { xs: 'column', md: 'row' },
-    gap: 3,
-    mx: 'auto',
-    px: { xs: 1, sm: 2, md: 4 },
-    width: '100%',
-    maxWidth: '1800px',
+    flexDirection: 'column',
+    // gap: 3,
+    px: { xs: 1, sm: 2, md: 3 },
+
     flexGrow: 1,
-    overflow: 'visible',
-    position: 'relative',
   },
 
   mainContent: {
-    flexGrow: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 3,
-    minHeight: 'auto',
-    width: '100%',
-    minWidth: 0,
-    overflow: 'visible',
+    // flexGrow: 1,
+    // display: 'flex',
+    // flexDirection: 'column',
+    // gap: 3,
+    // minHeight: 'auto',
+    // width: '100%',
+    // minWidth: 0,
+    // overflow: 'visible',
   },
 
   contentPaper: {
-    flexGrow: 1,
-    borderRadius: 2,
-    bgcolor: 'transparent',
-    border: 'none',
-    overflow: 'visible',
-    position: 'relative',
-    width: '100%',
-    minWidth: 0,
+    // flexGrow: 1,
+    // borderRadius: 2,
+    // bgcolor: 'transparent',
+    // border: 'none',
+    // overflow: 'visible',
+    // position: 'relative',
+    // width: '100%',
+    // minWidth: 0,
   },
 
+  container: (theme) => ({
+    // width: '100%',
+    // maxWidth: '1800px',
+    // mx: 'auto',
+    // px: { xs: 2, sm: 4 },
+    // display: 'flex',
+    // alignItems: 'center',
+  }),
+
+  footerContainer: (theme) => ({
+  }),
+
   loadingContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-    minHeight: 400,
+    // display: 'flex',
+    // alignItems: 'center',
+    // justifyContent: 'center',
+    // height: '100%',
+    // minHeight: 400,
   },
 };
 
@@ -312,7 +392,8 @@ export const toolContentWrapperStyles = {
     minWidth: 0,
     width: '100%',
     overflowX: 'auto',
-    borderRadius: '8px 0px 8px 8px',
+    // borderRadius: '8px 0px 8px 8px',
+    borderRadius: 2,
     backgroundColor:
       theme.palette.mode === 'dark'
         ? 'rgba(13, 25, 43, 0.7)'
@@ -327,8 +408,10 @@ export const toolContentWrapperStyles = {
         : '0 2px 8px rgba(0, 0, 0, 0.05)',
   }),
   content: {
-    p: { xs: 2.5, sm: 3.5 },
-    '&:last-child': { pb: { xs: 2.5, sm: 3.5 } },
+    // p: { xs: 2.5, sm: 3.5 },
+    // '&:last-child': { pb: { xs: 2.5, sm: 3.5 } },
+    p: 1,
+    '&:last-child': { pb: 1 },
     overflowWrap: 'break-word',
   },
 };
@@ -384,15 +467,20 @@ export const dropdownStyles = {
   },
 
   listItemIcon: {
-    minWidth: 36,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    // minWidth: 36,
+    // display: 'flex',
+    // alignItems: 'center',
+    // justifyContent: 'center',
   },
 };
 
 // ===== TOOL-SPECIFIC STYLES =====
 export const toolStyles = {
+  toolPageWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 3,
+  },
   container: {
     width: '100%',
     maxWidth: '100%',
@@ -497,8 +585,9 @@ export const settingsStyles = {
   container: (theme) => ({
     display: 'flex',
     flexDirection: 'column',
-    gap: 3,
+    gap: 4,
     py: 1,
+    overflow: 'hidden',
   }),
 
   formLabel: {
@@ -519,7 +608,7 @@ export const settingsStyles = {
 
   helperText: (theme) => ({
     color: 'text.secondary',
-    fontSize: '0.75rem',
+    // fontSize: '0.75rem',
   }),
 
   // row was originally: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }
@@ -564,11 +653,31 @@ export const toolSettingsCommonStyles = {
     '& .MuiFormControlLabel-label': { ml: 2 },
   },
   sliderContainer: {
-    px: 2,
-    mt: 1,
-    mb: 1,
+    width: '90%',
+    mx: 'auto',
+    // px: 2,
+    // mt: 1,
+    // mb: 1,
+    
   },
   slider: {
+    width: '100%',
+    mx: 'auto',
+    '& .MuiSlider-markLabel': {
+      whiteSpace: 'nowrap',
+      // maxWidth: 'calc(100% / 3)', // optional — constrain label width per mark
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+    },
+    '& .MuiSlider-markLabel[data-index="0"]': {
+      transform: 'translateX(0%)', // left-align first label
+      textAlign: 'left',
+    },
+    '& .MuiSlider-markLabel[data-index="2"]': {
+      transform: 'translateX(-100%)', // right-align last label
+      textAlign: 'right',
+    },
+
     '& .MuiSlider-markLabel': {
       fontSize: '0.75rem',
     },
@@ -629,7 +738,8 @@ export const sensitivityScoreStyles = {
     my: 1,
   },
   weightGrid: {
-    mb: 1,
+    // mb: 1,
+    py: 2,
   },
   weightLabel: (theme) => ({
     fontSize: theme.typography.caption.fontSize,
@@ -682,30 +792,31 @@ export const sensitivityScoreStyles = {
 
 export const govHeaderStyles = {
   outerContainer: {
-    width: '100vw',
+    width: '100%',
     position: 'relative',
-    left: '50%',
-    right: '50%',
-    marginLeft: '-50vw',
-    marginRight: '-50vw',
+    p: 1,
+    px: { xs: 1, sm: 2, md: 3 },
     background: (theme) =>
       theme.palette.mode === 'light'
-        ? `linear-gradient(to left, ${alpha(
-            theme.palette.primary.light,
-            0.15
-          )} 0%, 
-           ${alpha(theme.palette.primary.light, 0.1)} 30%, 
-           rgba(255,255,255,1) 80%)`
+        // ? `linear-gradient(to left, ${alpha(
+        //     theme.palette.primary.light,
+        //     0.15
+        //   )} 0%, 
+        //    ${alpha(theme.palette.primary.light, 0.1)} 30%, 
+        //    rgba(255,255,255,1) 80%)`
+        // : `linear-gradient(to left, hsl(210, 100%, 12%) 0%, 
+        //    hsl(210, 100%, 8%) 70%, 
+        //    rgba(0,0,0,1) 85%)`,
+        ? theme.palette.primary.light
         : `linear-gradient(to left, hsl(210, 100%, 12%) 0%, 
            hsl(210, 100%, 8%) 70%, 
            rgba(0,0,0,1) 85%)`,
     borderBottom: '1px solid',
     borderColor: '#DC4D01',
-    py: 2,
-    boxShadow: (theme) =>
-      theme.palette.mode === 'light'
-        ? '0 2px 4px rgba(0,0,0,0.03)'
-        : '0 2px 6px rgba(0,0,0,0.2)',
+    // boxShadow: (theme) =>
+    //   theme.palette.mode === 'light'
+    //     ? '0 2px 4px rgba(0,0,0,0.03)'
+    //     : '0 2px 6px rgba(0,0,0,0.2)',
   },
   container: {
     width: '100%',
@@ -715,13 +826,11 @@ export const govHeaderStyles = {
         : '#333333',
   },
   content: {
-    maxWidth: 1800,
     width: '100%',
     mx: 'auto',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    px: 3.5,
   },
   logoContainer: {
     flexGrow: 1,
@@ -731,7 +840,7 @@ export const govHeaderStyles = {
   },
   logo: {
     height: 55,
-    maxHeight: '80px',
+    maxHeight: '50px',
     width: 'auto',
     transition: 'transform 0.2s ease',
     '&:hover': {
@@ -740,13 +849,13 @@ export const govHeaderStyles = {
   },
   departmentTitle: (theme) => ({
     display: { xs: 'none', md: 'block' },
-    ml: 2,
+    ml: 3,
     color:
       theme.palette.mode === 'dark'
         ? theme.palette.text.primary
         : dfoColors.darkBlue,
-    fontWeight: 500,
-    fontSize: '1rem',
+    // fontWeight: 500,
+    fontSize: '0.85rem',
     letterSpacing: '0.01em',
   }),
   languageButton: (theme) => ({
@@ -776,6 +885,34 @@ export const govHeaderStyles = {
       transform: 'translateY(0)',
     },
   }),
+};
+
+export const userProfileStyles = {
+  profileSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+    // borderColor: 'divider',
+    // p: 2,
+    // mt: 'auto',
+    overflow: 'hidden',
+  },
+  avatar: {
+    width: 32,
+    height: 32
+  },
+  userInfo: {
+    flexGrow: 1,
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
+    pr: 1
+  },
+  userName: {
+    fontWeight: 500
+  },
+  userEmail: {
+    color: 'text.secondary'
+  },
 };
 
 // ===== CUSTOM SWITCH STYLES =====
@@ -902,179 +1039,264 @@ export const colorModeIconDropdownStyles = {
 // ===== AI TOOLS DROPDOWN STYLES =====
 export const aiToolsDropdownStyles = {
   select: (theme) => ({
-    bgcolor: 'background.default',
-    border: '1px solid',
-    borderColor: 'divider',
-    boxShadow: 1,
-    py: 4,
-    '&:hover': {
-      borderColor: 'primary.main',
-      bgcolor: 'background.paper',
-    },
-    '&.Mui-focused': {
-      borderColor: 'primary.main',
-      bgcolor: 'background.paper',
-      boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.25)}`,
-    },
-    '& .MuiPaper-root': {
-      bgcolor: 'background.paper',
-    },
-    '& .MuiMenuItem-root': {
-      py: 2,
-      px: 2,
-      minHeight: '48px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      textAlign: 'center',
-      '&:hover': {
-        bgcolor: 'action.hover',
-      },
-      '&.Mui-selected': {
-        bgcolor: 'action.selected',
-        '&:hover': {
-          bgcolor: 'action.hover',
-        },
-      },
-    },
-    borderRadius: '8px',
-    fontFamily: '"Lato", "Noto Sans", sans-serif',
-    '& .MuiSelect-select': {
-      display: 'flex',
-      alignItems: 'center',
-      padding: '20px',
-      minHeight: '60px',
-      whiteSpace: 'normal',
-      fontSize: '0.97rem',
-    },
+    // bgcolor: 'background.default',
+    // border: '1px solid',
+    // borderColor: 'divider',
+    // boxShadow: 1,
+    py: 3,
+    mt: { md: -1 },
+    // '&:hover': {
+    //   borderColor: 'primary.main',
+    //   bgcolor: 'background.paper',
+    // },
+    // '&.Mui-focused': {
+    //   borderColor: 'primary.main',
+    //   bgcolor: 'background.paper',
+    //   boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.25)}`,
+    // },
+    // '& .MuiPaper-root': {
+    //   bgcolor: 'background.paper',
+    // },
+    // '& .MuiMenuItem-root': {
+    //   py: 2,
+    //   px: 2,
+    //   minHeight: '48px',
+    //   display: 'flex',
+    //   alignItems: 'center',
+    //   justifyContent: 'center',
+    //   textAlign: 'center',
+    //   '&:hover': {
+    //     bgcolor: 'action.hover',
+    //   },
+    //   '&.Mui-selected': {
+    //     bgcolor: 'action.selected',
+    //     '&:hover': {
+    //       bgcolor: 'action.hover',
+    //     },
+    //   },
+    // },
+    // borderRadius: '8px',
+    // fontFamily: '"Lato", "Noto Sans", sans-serif',
+    // '& .MuiSelect-select': {
+    //   display: 'flex',
+    //   alignItems: 'center',
+    //   padding: '20px',
+    //   minHeight: '60px',
+    //   whiteSpace: 'normal',
+    //   fontSize: '0.97rem',
+    // },
   }),
   menuItem: {
-    py: 2,
-    px: 2,
-    minHeight: '48px',
-    '&:hover': {
-      bgcolor: 'action.hover',
-    },
-    '& .MuiTypography-root': {
-      whiteSpace: 'normal',
-      fontSize: '1rem',
-    },
+    py: 1,
+    // px: 2,
+    // minHeight: '48px',
+    // '&:hover': {
+    //   bgcolor: 'action.hover',
+    // },
+    // '& .MuiTypography-root': {
+    //   whiteSpace: 'normal',
+    //   fontSize: '1rem',
+    // },
+    // display: 'flex',
+    // flexDirection: 'row',
+    // alignItems: 'stretch',
+  },
+  menuItemHome: {
+    py: 1,
+    gap: 1,
+  },
+  selectionBox: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   listItemIcon: {
-    minWidth: 36,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    // minWidth: 22,
+    // display: 'flex',
+    // alignItems: 'center',
+    // justifyContent: 'center',
   },
   subheader: (theme) => ({
+    p: 0,
     py: 1,
-    px: 2,
-    fontWeight: 700,
-    bgcolor:
-      theme.palette.mode === 'dark'
-        ? theme.palette.background.paper
-        : theme.palette.common.white,
-    color:
-      theme.palette.mode === 'dark'
-        ? theme.palette.text.primary
-        : '#26374A',
+    fontSize: '0.875rem',
+    // py: 1,
+    // px: 2,
+    // fontWeight: 700,
+    // bgcolor:
+    //   theme.palette.mode === 'dark'
+    //     ? theme.palette.background.paper
+    //     : theme.palette.common.white,
+    // color:
+    //   theme.palette.mode === 'dark'
+    //     ? theme.palette.text.primary
+    //     : '#26374A',
+    color: 'text.secondary'
   }),
 };
 
 export const staticToolListStyles = {
   paper: (theme) => ({
-    mt: 0,
-    mb: 0,
-    height: '100%',
-    flexGrow: 1,
+    // mt: 0,
+    // mb: 0,
+    // height: '100%',
+    // flexGrow: 1,
+    // display: 'flex',
+    // flexDirection: 'column',
+    // overflow: 'auto',
+    // borderRadius: '4px',
+    // border: `1px solid ${theme.palette.divider}`,
+    // boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
     display: 'flex',
     flexDirection: 'column',
-    overflow: 'auto',
-    borderRadius: '4px',
-    border: `1px solid ${theme.palette.divider}`,
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+    height: '100%',
+    bgcolor: 'background.paper',
+    px: 3,
+    overflow: 'hidden',
   }),
   header: (theme) => ({
-    p: 2,
-    borderBottom: '1px solid',
-    borderColor: 'divider',
-    backgroundColor:
-      theme.palette.mode === 'dark'
-        ? alpha(theme.palette.primary.dark, 0.25)
-        : alpha(theme.palette.primary.light, 0.15),
+    py: 3,
+    // borderBottom: '1px solid',
+    // borderColor: 'divider',
+    // backgroundColor:
+    //   theme.palette.mode === 'dark'
+    //     ? alpha(theme.palette.primary.dark, 0.25)
+    //     : alpha(theme.palette.primary.light, 0.15),
+    flexShrink: 0,
   }),
   headerContent: (theme) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    '& .MuiTypography-root': {
-      color:
-        theme.palette.mode === 'dark' ? 'text.primary' : '#26374A',
-    },
+    // display: 'flex',
+    // flexDirection: 'column',
+    // '& .MuiTypography-root': {
+    //   color:
+    //     theme.palette.mode === 'dark' ? 'text.primary' : '#26374A',
+    // },
   }),
   titleContainer: {
     display: 'flex',
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 1,
+    gap: 2,
   },
   title: (theme) => ({
-    fontWeight: 600,
-    color:
-      theme.palette.mode === 'dark' ? 'text.primary' : '#26374A',
-    mb: 0,
+    // fontWeight: 600,
+    // color:
+    //   theme.palette.mode === 'dark' ? 'text.primary' : '#26374A',
   }),
   subtitle: {
     color: 'text.secondary',
     fontWeight: 400,
     ml: '28px',
   },
-  listItem: {
-    py: 2,
-    px: 2,
-    minHeight: '48px',
-    borderLeft: '3px solid transparent',
+  listContentWrapper: (theme) => ({
+    // display: 'flex',
+    // flexDirection: 'column',
+    // alignItems: 'stretch',
+    flexGrow: 1,
+    overflowX: 'hidden',
+    overflowY: 'auto',
+    transition: 'all 0.3s ease',
+    scrollbarColor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(255,255,255,0) transparent'
+        : 'rgba(0,0,0,0) transparent',
+    "&:hover": {
+      scrollbarColor: 
+        theme.palette.mode === 'dark'
+          ? 'rgba(255,255,255,0.25) transparent'
+          : 'rgba(0,0,0,0.15) transparent',
+    },
+    // compensate right padding so scrollbar hugs paper edge
+    mr: -3,
+    pr: 3,
+  }),
+  listWrapper: (theme) => ({
+    mb: 3,
+  }),
+  listItemButton: (theme) => ({
+    // Overrides  MUI default list item
+    '&.MuiListItemButton-root': {
+      p: 0,
+      py: 1,
+      px: 2,
+    },
+    // minHeight: '48px',
+    // borderLeft: '3px solid transparent',
     transition: 'all 0.2s ease-in-out',
     '&:hover': {
-      bgcolor: 'action.hover',
-      borderLeftColor: 'primary.main',
+      bgcolor: 
+        theme.palette.mode === 'dark' ? 
+          'primary.dark' : 
+          dfoColors.lightGray,     
     },
-  },
+  }),
   subheader: (theme) => ({
-    py: 1,
-    pb: 0.5,
+    p: 0,
+    pb: 2,
     fontSize: '0.875rem',
-    lineHeight: '1.8rem',
-    borderTop: '1px solid',
-    borderColor: 'divider',
-    bgcolor: 'background.paper',
-    color: 'text.primary',
-    fontWeight: 600,
-    marginBottom: 0,
+    // lineHeight: '1.8rem',
+    // borderTop: '1px solid',
+    // borderColor: 'divider',
+    // bgcolor: 'background.paper',
+    // color: 'text.primary',
+    // fontWeight: 600,
+    // marginBottom: 0,
+    color: 'text.secondary'
   }),
 };
 
-export const homePageStyles = (theme) => ({
-  container: {
-    maxWidth: 800,
-    mt: 4,
-    mx: 'left',
+export const homePageStyles = {
+  homePageWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 3,
   },
-  paper: {
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 3,
+  },
+  paper: (theme) => ({
     p: 3,
     borderRadius: 2,
     border: `1px solid ${theme.palette.divider}`,
     boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-  },
+  }),
   heading: {
     mb: 2,
-    fontWeight: 600,
+    // fontWeight: 600,
+    // color: theme.palette.mode === 'dark' ? theme.palette.common.white : '#26374A',
+    // fontFamily: '"Lato", "Noto Sans", sans-serif',
+    // fontWeight: 600,
+    // fontSize: '1.75rem',
+    // mb: 3,
+    // lineHeight: 1.3
   },
-  body: {
-    lineHeight: 1.6,
-  },
-  alert: {
-    mt: 3,
-  },
-});
+  body: (theme) => ({
+    // fontFamily: '"Lato", "Noto Sans", sans-serif',
+    fontSize: '1rem',
+    // color: theme.palette.mode === 'dark' ? theme.palette.grey[300] : theme.palette.grey[800],
+    lineHeight: 1.8,
+    mb: 1,
+    // '& strong': {
+    //   fontWeight: 600,
+    //   color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.dark,
+    // },
+    whiteSpace: 'pre-line'  // Properly handles the line breaks in the text
+  }),
+  alert: (theme) => ({
+    // mt: 3,
+    borderRadius: 2,
+    '& .MuiAlert-icon': {
+      color: theme.palette.warning.main,
+      alignSelf: 'center'
+    },
+    // '& .MuiAlert-message': {
+    //   fontFamily: '"Lato", "Noto Sans", sans-serif',
+    //   fontWeight: 500
+    // }
+  }),
+}
 
 export const frenchTranslationStyles = (theme) => ({
   container: {},
@@ -1363,23 +1585,21 @@ export const termsModalStyles = {
 export const footerStyles = {
   container: (theme) => ({
     width: '100%',
-    background:
-      theme.palette.mode === 'light'
-        ? `linear-gradient(to right, ${alpha(
-            theme.palette.primary.light,
-            0.15
-          )} 0%, 
-           ${alpha(theme.palette.primary.light, 0.1)} 30%, 
-           rgba(255,255,255,1) 80%)`
-        : `linear-gradient(to right, hsl(210, 100%, 12%) 0%, 
-           hsl(210, 100%, 8%) 30%, 
-           rgba(0,0,0,1) 85%)`,
-    borderTop: `1px solid ${alpha(dfoColors.orange, 0.75)}`,
-    py: 2,
-    px: 3,
-    marginTop: 'auto',
+    // background:
+    //   theme.palette.mode === 'light'
+    //     ? `linear-gradient(to right, ${alpha(
+    //         theme.palette.primary.light,
+    //         0.15
+    //       )} 0%, 
+    //        ${alpha(theme.palette.primary.light, 0.1)} 30%, 
+    //        rgba(255,255,255,1) 80%)`
+    //     : `linear-gradient(to right, hsl(210, 100%, 12%) 0%, 
+    //        hsl(210, 100%, 8%) 30%, 
+    //        rgba(0,0,0,1) 85%)`,
+    // borderTop: `1px solid ${alpha(dfoColors.orange, 0.75)}`,
+    p: 1,
+    px: { xs: 1, sm: 2, md: 3 },
     position: 'relative',
-    paddingBottom: '20px',
   }),
 
   content: {
@@ -1400,8 +1620,7 @@ export const footerStyles = {
     flexWrap: 'wrap',
   },
   copyrightText: (theme) => ({
-    fontFamily: "'Lato', sans-serif",
-    fontWeight: 500,
+    // fontWeight: 500,
     fontSize: '0.85rem',
     color:
       theme.palette.mode === 'light'
@@ -1409,7 +1628,6 @@ export const footerStyles = {
         : theme.palette.text.primary,
   }),
   updatedText: (theme) => ({
-    fontFamily: "'Lato', sans-serif",
     fontSize: '0.8rem',
     color:
       theme.palette.mode === 'light'
@@ -1435,18 +1653,17 @@ export const footerStyles = {
     alignItems: 'center',
     position: 'relative',
     zIndex: 1,
-    pr: 1,
   },
   logo: {
     height: '40px',
-    maxWidth: '160px',
+    maxWidth: '120px',
     objectFit: 'contain',
     objectPosition: 'center',
     display: 'block',
-    filter: (theme) =>
-      theme.palette.mode === 'light'
-        ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.05))'
-        : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+    // filter: (theme) =>
+    //   theme.palette.mode === 'light'
+    //     ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.05))'
+    //     : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
   },
   termsButton: (theme) => ({
     textTransform: 'none',
@@ -1583,6 +1800,7 @@ export const csvAnalyzerStyles = {
   headerContainer: {
     mb: 2,
     display: 'flex',
+    flexDirection: 'row',
     alignItems: 'center',
   },
   demoStepsContainer: (theme) => ({
@@ -1869,6 +2087,7 @@ export default {
   tool: toolStyles,
   settings: settingsStyles,
   govHeader: govHeaderStyles,
+  userProfile: userProfileStyles,
   customSwitch: customSwitchStyles,
   menuButton: menuButtonStyles,
   optionsMenu: optionsMenuStyles,

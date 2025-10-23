@@ -3,6 +3,7 @@ export { default as ColorModeIconDropdown } from './ColorModeIconDropdown';
 export { GoogleIcon, FacebookIcon, SitemarkIcon } from './CustomIcons';
 export { default as CustomSwitch } from './CustomSwitch';
 export { default as MenuButton } from './MenuButton';
+export { default as UserProfile } from './UserProfile';
 export { default as OptionsMenu } from './OptionsMenu';
 export { default as TermsAndConditions } from './TermsAndConditions';
 export { default as TermsModal } from './TermsModal';

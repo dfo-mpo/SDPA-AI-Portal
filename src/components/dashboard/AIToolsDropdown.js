@@ -14,6 +14,8 @@ import {
   ListItemIcon,
   ListItemText,
   FormControl,
+  Typography,
+  Box
 } from '@mui/material';
 import { Home, AlertCircle } from 'lucide-react';
 import { useTheme } from '@mui/material/styles';
@@ -49,32 +51,77 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
         renderValue={(selected) => {
           if (!selected) {
             return (
-              <ListItemText
-                primary={translations.home}
-                secondary={translations.selectTool}
-              />
+              <>
+                <ListItemText
+                  primary={translations.home}
+                  secondary={translations.selectTool}
+                />
+              </>
             );
           }
           // Look up the translation for the selected tool name and allow wrapping
           return (
-            <div style={{ whiteSpace: 'normal' }}>
-              {translations.tools[selected] || selected}
-            </div>
+            <Box style={{ 
+              ...aiToolsDropdownStyles.selectionBox,
+              whiteSpace: 'normal' 
+            }}>
+              {/* <ListItemIcon sx={aiToolsDropdownStyles.listItemIcon}>
+                <Home size={20} />
+              </ListItemIcon> */}
+              <ListItemText>
+                <Typography variant="body1">
+                  {translations.tools[selected] || selected}
+                </Typography>
+              </ListItemText>
+            </Box>
           );
         }}
-        sx={aiToolsDropdownStyles.select}
+        sx={{
+          ...aiToolsDropdownStyles.select,
+          width: { md: 'calc(100% - 40px)' },
+        }}
+        MenuProps={{
+          PaperProps: {
+            sx: {
+              p: 2,
+            },
+          },
+          MenuListProps: {
+            sx: {
+              p: 0,
+            },
+          },
+        }}
       >
         {/* Reset / Back to Portal Home option */}
-        <MenuItem value="" sx={aiToolsDropdownStyles.menuItem}>
+        <MenuItem value="" sx={aiToolsDropdownStyles.menuItemHome}>
           <ListItemIcon sx={aiToolsDropdownStyles.listItemIcon}>
-            <Home size={18} />
+            {/* <Home size={20} /> */}
+            <Box
+              component='img'
+              src={theme.palette.mode === 'dark' 
+                ? '/assets/AI_Portal_Icon_dark.png' 
+                : '/assets/AI_Portal_Icon.png'}
+              alt='Home icon'
+              sx={{
+                width: 'auto',
+                height: 24,
+                display: 'inline-block',
+                verticalAlign: 'middle',
+                pr: 2,
+              }}
+            />
           </ListItemIcon>
           <ListItemText
-            primary={translations.home}
-            primaryTypographyProps={{ fontWeight: 500 }}
-          />
+            // primary={translations.home}
+            // primaryTypographyProps={{ fontWeight: 500 }}
+          >
+            <Typography variant="h6" >
+              {/* {translations.home} */}
+              {translations.title}
+            </Typography>
+          </ListItemText>
         </MenuItem>
-
         {/* Categories & their items */}
         {Object.entries(TOOL_CATEGORIES).map(([category, tools]) => {
           const visibleTools = tools.filter(tool => tool.showInDropdown !== false);
@@ -82,7 +129,7 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
           if (visibleTools.length === 0) return null;
 
           return [
-            <ListSubheader key={category} sx={aiToolsDropdownStyles.subheader}>
+            <ListSubheader disableSticky key={category} sx={aiToolsDropdownStyles.subheader}>
               {translations.categories[category] || category}
             </ListSubheader>,
             ...tools.map((tool) => {
@@ -94,6 +141,7 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
                 <MenuItem
                   key={tool.name}
                   value={tool.name}
+                  disabled={isDisabled}
                   sx={{
                     ...aiToolsDropdownStyles.menuItem,
                     ...(isDisabled && {
@@ -117,14 +165,14 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
                   </ListItemIcon>
                   <ListItemText
                     primary={translations.tools[tool.name] || tool.name}
-                    primaryTypographyProps={{ 
-                      noWrap: false,
-                      sx: { 
-                        wordBreak: 'break-word',
-                        whiteSpace: 'normal',
-                        ...(isDisabled && { fontStyle: 'italic' })
-                      }
-                    }}
+                    // primaryTypographyProps={{ 
+                    //   noWrap: false,
+                    //   sx: { 
+                    //     wordBreak: 'break-word',
+                    //     whiteSpace: 'normal',
+                    //     ...(isDisabled && { fontStyle: 'italic' })
+                    //   }
+                    // }}
                   />
                 </MenuItem>
               );

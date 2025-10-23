@@ -34,7 +34,7 @@ export default function GovHeader({ setHeaderHeight }) {
   const headerTranslations = getLayoutTranslations('header', language);
   const headerRef = useRef(null);
   const theme = useTheme();
-const styles = useComponentStyles('govHeader');
+  const styles = useComponentStyles('govHeader');
 
 
   // Measure header height and pass it to parent component
@@ -64,7 +64,7 @@ const styles = useComponentStyles('govHeader');
               style={styles.logo} 
             />
             <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', height: '100%' }}>
-              <Divider orientation="vertical" sx={{ height: 28, mx: 2 }} />
+              <Divider orientation="vertical" sx={{ height: 20 }} />
               <Typography sx={styles.departmentTitle}>
                 {headerTranslations.department}
               </Typography>
