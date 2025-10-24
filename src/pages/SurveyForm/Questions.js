@@ -11,6 +11,7 @@ import TooltipWord from "./TooltipWord";
  * - `label` (string): The display name shown to the user.
  * - `type` (string): Defines the form input type. Supported values:
  *     - "text": Single-line text input.
+ *       - "maxlength": The number of character limit. Value must be a number.
  *     - "textarea": Multi-line text area input.
  *     - "radio": Single-choice selection (uses `options` array).
  *     - "multiselect": Multiple-choice selection. Supports optional entry.
@@ -51,6 +52,7 @@ export const Questions = [
     name: "project_title",
     label: "Use Case Title",
     type: "text",
+    maxlength: "20",
     description: "Enter a short, cleat name that describes this use case."
   },
   {
@@ -94,17 +96,15 @@ export const Questions = [
   },
   { 
     name: "fisheries_and_aquaculture", 
-    label: "", 
+    label: "Fisheries and Aquaculture", 
     type: "multiselect", 
     options: ["Sustainable management of Canadian fisheries", "Sustainable aquaculture", "Safe access to harbours", "Protection from unlawful exploitation", "Improved scientific advice for fisheries", "Indigenous outcomes in fisheries/aquaculture"], 
-    description: "Fisheries and Aquaculture" 
   },
   { 
     name: "aquatic_ecosystems", 
-    label: "", 
+    label: "Aquatic Ecosystems", 
     type: "multiselect", 
     options: ["Protection of oceans and ecosystems", "Science for ecosystem decision-making", "Indigenous outcomes in ecosystem protection"], 
-    description: "Aquatic Ecosystems" 
   },
   { 
     name: "justification_for_strategic_alignment", 
