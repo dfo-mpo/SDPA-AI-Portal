@@ -156,17 +156,6 @@ import {
       actionText: 'Coming Soon'
       // disabled: true
     },
-
-    // Optical Character Recognition Tools
-    PDF_EXTRACTION_TOOL: {
-      id: 'pdf-extraction-tool',
-      name: 'PDF Extraction Tool',
-      category: 'Optical Character Recognition',
-      icon: FileSearch,
-      backgroundImage: '/assets/OCR.gif',
-      actionText: 'Coming Soon'
-      // disabled: true
-    },
     // Data Analytics, AI and ML Intake Form
     // DATA_INTAKE_FORM: {
     //   id: 'data-intake-form',
@@ -199,16 +188,16 @@ import {
       showInDropdown: false,
       // showInDemo: false,
     },
-    ML_MODELS: {
-      id: 'ml-tools',
-      name: 'Repositories - TEST',
-      category: 'ML Models',
-      icon: Loader, // placeholder for page; needs to be changed
-      backgroundImage: '/assets/csv-analyzer-banner.jpg', // placeholder for page; needs to be changed
-      actionText: 'Open Form', // placeholder for page; needs to be changed
-      showInDropdown: false,
-      // disabled: true
-    },
+    // ML_MODELS: {
+    //   id: 'ml-tools',
+    //   name: 'Repositories - TEST',
+    //   category: 'ML Models',
+    //   icon: Loader, // placeholder for page; needs to be changed
+    //   backgroundImage: '/assets/csv-analyzer-banner.jpg', // placeholder for page; needs to be changed
+    //   actionText: 'Open Form', // placeholder for page; needs to be changed
+    //   showInDropdown: false,
+    //   // disabled: true
+    // },
   };
   
   /**
@@ -234,8 +223,7 @@ import {
       TOOLS.WEBSCRAPE
     ],
     'Optical Character Recognition': [
-      TOOLS.DOCUMENT_OCR,
-      TOOLS.PDF_EXTRACTION_TOOL
+      TOOLS.DOCUMENT_OCR
     ],
     'AI, ML and Data Analytics Use-Case': [
       TOOLS.DATA_INTAKE_FORM,
@@ -243,9 +231,9 @@ import {
     'Statistical and ML Algorithms Guide': [
       TOOLS.DOCX_EDITOR,
     ],
-    'ML Models': [
-      TOOLS.ML_MODELS,
-    ]
+    // 'ML Models': [
+    //   TOOLS.ML_MODELS,
+    // ]
   };
   
   /**
