@@ -28,8 +28,7 @@ import {
   PIIRedactor,
   SensitivityScore,
   FrenchTranslation,
-  DocumentOCR,
-  MLModelsRepo,
+  // MLModelsRepo,
   WebScraper,
   PDFExtractionTool
 } from '../pages/tools';
@@ -126,12 +125,11 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
     'PII Redactor': PIIRedactor,
     'Sensitivity Score Calculator': SensitivityScore,
     'French Translation': FrenchTranslation,
-    'Document OCR': DocumentOCR,
+    'Document OCR': PDFExtractionTool,
     'Form': SurveyForm,
     'Document': DocxEditor,
-    "Repositories - TEST" : MLModelsRepo,
+    // "Repositories - TEST" : MLModelsRepo,
     'Web Scraper' : WebScraper,
-    'PDF Extraction Tool' : PDFExtractionTool
   };
 
   const getToolComponent = (toolName) => {
