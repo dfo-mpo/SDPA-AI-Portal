@@ -18,3 +18,5 @@ export { ScaleAgeing } from './ScaleAgeing';
 export { SensitivityScore } from './SensitivityScore';
 export { DocumentOCR } from './DocumentOCR';
 export { MLModelsRepo } from "./MLModelsRepo/Dashboard";
+export { PDFExtractionTool } from "./PDFExtractionTool";
+export { WebScraper } from "./WebScraper";

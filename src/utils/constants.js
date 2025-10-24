@@ -143,13 +143,24 @@ import {
       icon: FileSearch,
       backgroundImage: '/assets/OCR.gif',
       actionText: 'Coming Soon',
-      disabled: true
+      // disabled: true
     },
 
     // Optical Character Recognition Tools
     DOCUMENT_OCR: {
       id: 'document-ocr',
       name: 'Document OCR',
+      category: 'Optical Character Recognition',
+      icon: FileSearch,
+      backgroundImage: '/assets/OCR.gif',
+      actionText: 'Coming Soon'
+      // disabled: true
+    },
+
+    // Optical Character Recognition Tools
+    PDF_EXTRACTION_TOOL: {
+      id: 'pdf-extraction-tool',
+      name: 'PDF Extraction Tool',
       category: 'Optical Character Recognition',
       icon: FileSearch,
       backgroundImage: '/assets/OCR.gif',
@@ -224,6 +235,7 @@ import {
     ],
     'Optical Character Recognition': [
       TOOLS.DOCUMENT_OCR,
+      TOOLS.PDF_EXTRACTION_TOOL
     ],
     'AI, ML and Data Analytics Use-Case': [
       TOOLS.DATA_INTAKE_FORM,
