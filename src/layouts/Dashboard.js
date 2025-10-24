@@ -29,7 +29,9 @@ import {
   SensitivityScore,
   FrenchTranslation,
   DocumentOCR,
-  MLModelsRepo
+  MLModelsRepo,
+  WebScraper,
+  PDFExtractionTool
 } from '../pages/tools';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
@@ -128,6 +130,8 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
     'Form': SurveyForm,
     'Document': DocxEditor,
     "Repositories - TEST" : MLModelsRepo,
+    'Web Scraper' : WebScraper,
+    'PDF Extraction Tool' : PDFExtractionTool
   };
 
   const getToolComponent = (toolName) => {
