@@ -96,6 +96,7 @@ export function SurveyForm() {
         label={question.label} 
         description={question.description} 
         value={answers[question.name]} 
+        maxlength={question.maxlength}
         onChange={handleChange} 
       />;
       case "textarea":
