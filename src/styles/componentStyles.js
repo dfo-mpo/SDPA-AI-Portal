@@ -300,20 +300,6 @@ export const dashboardStyles = {
     borderRight: { xs: '0', md: '1px solid' },
     borderColor: { xs: 'divider', md: 'divider' },
     bgcolor: "background.paper",
-
-    // overflowX: 'hidden',
-    // overflowY: 'auto',
-    // transition: 'all 0.3s ease',
-    // scrollbarColor:
-    //   theme.palette.mode === 'dark'
-    //     ? 'rgba(255,255,255,0) transparent'
-    //     : 'rgba(0,0,0,0) transparent',
-    // "&:hover": {
-    //   scrollbarColor: 
-    //     theme.palette.mode === 'dark'
-    //       ? 'rgba(255,255,255,0.25) transparent'
-    //       : 'rgba(0,0,0,0.15) transparent',
-    // },
   }),
 
   headerContainer: (theme) => ({
@@ -1039,71 +1025,14 @@ export const colorModeIconDropdownStyles = {
 // ===== AI TOOLS DROPDOWN STYLES =====
 export const aiToolsDropdownStyles = {
   select: (theme) => ({
-    // bgcolor: 'background.default',
-    // border: '1px solid',
-    // borderColor: 'divider',
-    // boxShadow: 1,
     py: 3,
     mt: { md: -1 },
-    // '&:hover': {
-    //   borderColor: 'primary.main',
-    //   bgcolor: 'background.paper',
-    // },
-    // '&.Mui-focused': {
-    //   borderColor: 'primary.main',
-    //   bgcolor: 'background.paper',
-    //   boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.25)}`,
-    // },
-    // '& .MuiPaper-root': {
-    //   bgcolor: 'background.paper',
-    // },
-    // '& .MuiMenuItem-root': {
-    //   py: 2,
-    //   px: 2,
-    //   minHeight: '48px',
-    //   display: 'flex',
-    //   alignItems: 'center',
-    //   justifyContent: 'center',
-    //   textAlign: 'center',
-    //   '&:hover': {
-    //     bgcolor: 'action.hover',
-    //   },
-    //   '&.Mui-selected': {
-    //     bgcolor: 'action.selected',
-    //     '&:hover': {
-    //       bgcolor: 'action.hover',
-    //     },
-    //   },
-    // },
-    // borderRadius: '8px',
-    // fontFamily: '"Lato", "Noto Sans", sans-serif',
-    // '& .MuiSelect-select': {
-    //   display: 'flex',
-    //   alignItems: 'center',
-    //   padding: '20px',
-    //   minHeight: '60px',
-    //   whiteSpace: 'normal',
-    //   fontSize: '0.97rem',
-    // },
   }),
   menuItem: {
     py: 1,
-    // px: 2,
-    // minHeight: '48px',
-    // '&:hover': {
-    //   bgcolor: 'action.hover',
-    // },
-    // '& .MuiTypography-root': {
-    //   whiteSpace: 'normal',
-    //   fontSize: '1rem',
-    // },
-    // display: 'flex',
-    // flexDirection: 'row',
-    // alignItems: 'stretch',
   },
   menuItemHome: {
     py: 1,
-    gap: 1,
   },
   selectionBox: {
     display: 'flex',
@@ -1120,33 +1049,12 @@ export const aiToolsDropdownStyles = {
     p: 0,
     py: 1,
     fontSize: '0.875rem',
-    // py: 1,
-    // px: 2,
-    // fontWeight: 700,
-    // bgcolor:
-    //   theme.palette.mode === 'dark'
-    //     ? theme.palette.background.paper
-    //     : theme.palette.common.white,
-    // color:
-    //   theme.palette.mode === 'dark'
-    //     ? theme.palette.text.primary
-    //     : '#26374A',
     color: 'text.secondary'
   }),
 };
 
 export const staticToolListStyles = {
   paper: (theme) => ({
-    // mt: 0,
-    // mb: 0,
-    // height: '100%',
-    // flexGrow: 1,
-    // display: 'flex',
-    // flexDirection: 'column',
-    // overflow: 'auto',
-    // borderRadius: '4px',
-    // border: `1px solid ${theme.palette.divider}`,
-    // boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
@@ -1156,21 +1064,9 @@ export const staticToolListStyles = {
   }),
   header: (theme) => ({
     py: 3,
-    // borderBottom: '1px solid',
-    // borderColor: 'divider',
-    // backgroundColor:
-    //   theme.palette.mode === 'dark'
-    //     ? alpha(theme.palette.primary.dark, 0.25)
-    //     : alpha(theme.palette.primary.light, 0.15),
     flexShrink: 0,
   }),
   headerContent: (theme) => ({
-    // display: 'flex',
-    // flexDirection: 'column',
-    // '& .MuiTypography-root': {
-    //   color:
-    //     theme.palette.mode === 'dark' ? 'text.primary' : '#26374A',
-    // },
   }),
   titleContainer: {
     display: 'flex',
@@ -1179,9 +1075,6 @@ export const staticToolListStyles = {
     gap: 2,
   },
   title: (theme) => ({
-    // fontWeight: 600,
-    // color:
-    //   theme.palette.mode === 'dark' ? 'text.primary' : '#26374A',
   }),
   subtitle: {
     color: 'text.secondary',
@@ -1189,9 +1082,6 @@ export const staticToolListStyles = {
     ml: '28px',
   },
   listContentWrapper: (theme) => ({
-    // display: 'flex',
-    // flexDirection: 'column',
-    // alignItems: 'stretch',
     flexGrow: 1,
     overflowX: 'hidden',
     overflowY: 'auto',
@@ -1234,13 +1124,6 @@ export const staticToolListStyles = {
     p: 0,
     pb: 2,
     fontSize: '0.875rem',
-    // lineHeight: '1.8rem',
-    // borderTop: '1px solid',
-    // borderColor: 'divider',
-    // bgcolor: 'background.paper',
-    // color: 'text.primary',
-    // fontWeight: 600,
-    // marginBottom: 0,
     color: 'text.secondary'
   }),
 };
@@ -1264,37 +1147,19 @@ export const homePageStyles = {
   }),
   heading: {
     mb: 2,
-    // fontWeight: 600,
-    // color: theme.palette.mode === 'dark' ? theme.palette.common.white : '#26374A',
-    // fontFamily: '"Lato", "Noto Sans", sans-serif',
-    // fontWeight: 600,
-    // fontSize: '1.75rem',
-    // mb: 3,
-    // lineHeight: 1.3
   },
   body: (theme) => ({
-    // fontFamily: '"Lato", "Noto Sans", sans-serif',
     fontSize: '1rem',
-    // color: theme.palette.mode === 'dark' ? theme.palette.grey[300] : theme.palette.grey[800],
     lineHeight: 1.8,
     mb: 1,
-    // '& strong': {
-    //   fontWeight: 600,
-    //   color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.dark,
-    // },
     whiteSpace: 'pre-line'  // Properly handles the line breaks in the text
   }),
   alert: (theme) => ({
-    // mt: 3,
     borderRadius: 2,
     '& .MuiAlert-icon': {
       color: theme.palette.warning.main,
       alignSelf: 'center'
     },
-    // '& .MuiAlert-message': {
-    //   fontFamily: '"Lato", "Noto Sans", sans-serif',
-    //   fontWeight: 500
-    // }
   }),
 }
 

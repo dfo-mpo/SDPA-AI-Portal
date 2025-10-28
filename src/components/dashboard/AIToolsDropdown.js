@@ -65,9 +65,6 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
               ...aiToolsDropdownStyles.selectionBox,
               whiteSpace: 'normal' 
             }}>
-              {/* <ListItemIcon sx={aiToolsDropdownStyles.listItemIcon}>
-                <Home size={20} />
-              </ListItemIcon> */}
               <ListItemText>
                 <Typography variant="body1">
                   {translations.tools[selected] || selected}
@@ -96,19 +93,17 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
         {/* Reset / Back to Portal Home option */}
         <MenuItem value="" sx={aiToolsDropdownStyles.menuItemHome}>
           <ListItemIcon sx={aiToolsDropdownStyles.listItemIcon}>
-            {/* <Home size={20} /> */}
             <Box
               component='img'
               src={theme.palette.mode === 'dark' 
                 ? '/assets/AI_Portal_Icon_dark.png' 
                 : '/assets/AI_Portal_Icon.png'}
-              alt='Home icon'
+              alt='Logo'
               sx={{
                 width: 'auto',
-                height: 24,
+                height: 18,
                 display: 'inline-block',
                 verticalAlign: 'middle',
-                pr: 2,
               }}
             />
           </ListItemIcon>

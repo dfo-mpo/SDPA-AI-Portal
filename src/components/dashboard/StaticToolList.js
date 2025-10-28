@@ -76,17 +76,14 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
               src={theme.palette.mode === 'dark' 
                 ? '/assets/AI_Portal_Icon_dark.png' 
                 : '/assets/AI_Portal_Icon.png'}
-              alt='Home icon'
+              alt='Logo'
               sx={{
                 width: 'auto',
-                height: 24,
+                height: 20,
                 display: 'inline-block',
                 verticalAlign: 'middle',
               }}
             />
-            {/* <Box>
-              <Home size={20} />
-            </Box> */}
             <Typography 
               variant="h6" 
               sx={staticToolListStyles.title}
@@ -95,12 +92,6 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
               {translations.title}
             </Typography>
           </Box>
-          {/* <Typography
-            variant="body2"
-            sx={staticToolListStyles.subtitle}
-          >
-            {translations.selectTool}
-          </Typography> */}
         </Box>
       </Box>
       
