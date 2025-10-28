@@ -8,9 +8,10 @@ export const en = {
     categories: {
       "Computer Vision": "Computer Vision",
       "Large Language Models": "Large Language Models",
-      "AI, ML and Data Analytics Use-Case": "AI, ML and Data Analytics Use-Case",
+      "AI Inventory Form": "AI Inventory Form",
       "Statistical and ML Algorithms Guide": "Statistical and ML Algorithms Guide",
-      "ML Models": "ML Models"
+      "Model Repo": "Model Repo",
+      "AI Store": "AI Store"
     },
     tools: {
       "Electronic Monitoring": "Electronic Monitoring",
@@ -28,7 +29,10 @@ export const en = {
       "Web Scraper": "Web Scraper",
       "Document OCR": "Document OCR",
       "Data Analytics, AI and ML Intake Form": "Data Analytics, AI and ML Intake Form",
-      "Repositories - TEST" : "Repositories - TEST"
+      "Form": "Form",
+      "Document": "Document",
+      "Models" : "Models",
+      "Models, APIs, Tools and Services": "Models, APIs, Tools and Services"
     }
   };
   
@@ -39,9 +43,10 @@ export const en = {
       "Computer Vision": "Vision par ordinateur",
       "Large Language Models": "Modèles de langage avancés",
       "Optical Character Recognition": "Reconnaissance optique de caractères",
-      "AI, ML and Data Analytics Use-Case": "Cas d'utilisation de l'IA, de l'apprentissage automatique et de l'analyse de données",
+      "AI Inventory Form": "Formulaire d'inventaire de l'IA",
       "Statistical and ML Algorithms Guide": "Guide des algorithmes statistiques et d'apprentissage automatique",
-      "ML Models": "Modèles d'apprentissage automatique"
+      "Model Repo": "Modèles d'apprentissage automatique",
+      "AI Store": "Magasin d'IA"
     },
     tools: {
       "Electronic Monitoring": "Surveillance électronique",
@@ -59,6 +64,9 @@ export const en = {
       "Web Scraper": "Racloir Web",
       "Document OCR": "ROC de document",
       "Data Analytics, AI and ML Intake Form": "Formulaire d'admission pour l'analyse de données, l'IA et le ML",
-      "Repositories - TEST" : "Répertoires - TEST"
+      "Form": "Formulaire",
+      "Document": "Document",
+      "Models" : "Modèles",
+      "Models, APIs, Tools and Services": "Modèles, API, outils et services"
     }
   };
