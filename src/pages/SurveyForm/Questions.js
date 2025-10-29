@@ -50,7 +50,7 @@ export const Questions = [
   },
   {
     name: "project_title",
-    label: "Use Case Title",
+    label: "Project Title",
     type: "text",
     maxlength: "20",
     description: "Enter a short, cleat name that describes this use case."
@@ -71,7 +71,7 @@ export const Questions = [
     name: "who_is_affected",
     label: "",
     type: "textarea",
-    description: "Who is affected by this problem? (Departments, teams, partners, stakeholders, public, etc.)"
+    description: "Who would benefit from or be affected by this solution (e.g., internal teams, scientists, Indigenous communities, officers, Canadians)?"
   },
   { 
     name: "areas_of_impact_on_business", 
@@ -81,13 +81,106 @@ export const Questions = [
     description: "Try to estimate how it would affect time, cost, revenue, customer satisfaction, etc.", 
     includeOtherOptions: true 
   },
-  { 
-    name: "priority_level", 
-    label: "Priority Level", 
-    type: "radio", 
-    options: ["Low", "Medium", "High"], 
-    description: "The level of urgency or importance assigned to the project." 
+  // { 
+  //   name: "priority_level", 
+  //   label: "Priority Level", 
+  //   type: "radio", 
+  //   options: ["Low", "Medium", "High"], 
+  //   description: "The level of urgency or importance assigned to the project." 
+  // },
+  
+  // TBS Questions
+  {
+    name: "tbs_service_inventory_id",
+    label: "TBS Service Inventory ID",
+    type: "text",
+    description: "Identifies the unique number assigned to a service in the GC Service Inventory. Leave blank if not applicable"
   },
+  {
+    name: "tbs_government_organization",
+    label: "TBS Government Organization (Fisheries and Oceans Canada)",
+    type: "text",
+    description: "Identifies the department or agency responsible for the AI system"
+  },
+  {
+    name: "tbs_ai_system_primary_users",
+    label: "TBS AI system primary users",
+    type: "text",
+    description: "Identifies whether the primary users of the AI system are GC employees, members of the public, both, or neither "
+  },
+  {
+    name: "tbs_developed_by",
+    label: "TBS Developed By",
+    type: "text",
+    description: "Identifies the developer of the system. If more than one option applies but parts of system were procured, please choose \"vendor\" and state vendor name in column H. Choose \"other\" for systems involving non-vendor external developers (e.g.,academia, civil society) "
+  },
+  {
+    name: "tbs_vendor_name",
+    label: "TBS Vendor name",
+    type: "text",
+    description: "Provides the name of the vendor from whom the AI system was procured. If no vendor, state \"Not applicable\" "
+  },
+  {
+    name: "tbs_status_date",
+    label: "TBS status date",
+    type: "text",
+    description: "Identifies the calendar year the AI system entered this status: e.g., if pilot began in 2021, or system was retired in 2019 "
+  },
+  {
+    name: "tbs_ai_system_capabilities",
+    label: "TBS AI system capabilities",
+    type: "text",
+    description: "Identifies the capabilities of the AI system. Max 300 characters "
+  },
+  {
+    name: "tbs_automated_decision_system",
+    label: "TBS Automated decision system",
+    type: "text",
+    description: "Identifies whether the AI system makes administrative decisions or related assessments about clients. For information on definition of an automated decision system, please see Directive on Automated Decision Making "
+  },
+  {
+    name: "tbs_algorithmic_impact_assessment",
+    label: "TBS Algorithmic impact assessment",
+    type: "text",
+    description: "Provides the unique number assigned to completed Algorithmic Impact Assessments (AIA) on the Open Government Portal. If this does not apply, state \"Not applicable.\" "
+  },
+  {
+    name: "tbs_data_sources",
+    label: "TBS data sources",
+    type: "text",
+    description: "Describes the sources of the data used to train and as inputs for the AI system. Give names of datasets if available, or describe type and source of data used. "
+  },
+  {
+    name: "tbs_involves_personal_information",
+    label: "TBS involves personal information",
+    type: "text",
+    description: "Identifies whether the AI system uses or creates personal information",
+  },
+  {
+    name: "tbs_personal_information_banks",
+    label: "TBS personal information banks",
+    type: "text",
+    description: "Identifies the Personal Information Banks associated with the activity. If no PIB exists, please state \"Not applicable\" "
+  },
+  {
+    name: "tbs_notification_of_ai",
+    label: "TBS Notification of AI",
+    type: "text",
+    description: "Identifies whether users are notified that they are interacting with an AI system "
+  },
+  {
+    name: "tbs_access_to_information_request",
+    label: "TBS Access to information request",
+    type: "text",
+    description: "Identifies any access to information request number relating to the AI system "
+  },
+  {
+    name: "tbs_system_results",
+    label: "TBS system results",
+    type: "text",
+    description: "Describes the expected or actual results of the implementation of the AI system. Max 500 characters including spaces "
+  },
+
   { 
     name: "strategic_alignment", 
     label: "Strategic Alignment to DFO", 
@@ -127,9 +220,15 @@ export const Questions = [
   },
   { 
     name: "tools_needed_for_work", 
-    label: "Optional: What tools/services do you currently use to fulfil this project", 
+    label: "What tools/services do you currently use to fulfil this project", 
     type: "toolSelection", 
     options: [
+      {
+        id: "None",
+        label: "None - still in ideation/planning",
+        boldTitle: true,
+        includeOtherOptions: false
+      },
       {
         id: "data_pipelines",
         label: "Data Pipelines/Platforms",
@@ -268,12 +367,12 @@ export const Questions = [
   },
 
 
-  { 
-    name: "project_area", 
-    label: "Select the focus areas of your current or planned projects", 
-    type: "multiselect", 
-    options: ["Data Analytics", "Artificial Intelligence (AI)"] 
-  },
+  // { 
+  //   name: "project_area", 
+  //   label: "Select the focus areas of your current or planned projects", 
+  //   type: "multiselect", 
+  //   options: ["Data Analytics", "Artificial Intelligence (AI)"] 
+  // },
   {
     name: "success_outcomes",
     label: "",
@@ -281,20 +380,27 @@ export const Questions = [
     description: "If AI was selected, what outcome would success look like for addressing your business problem with AI? (Try to make this measurable: faster processes, better decisions, more sales, etc.)",
     required: false
   },
-  {
-    name: "ai_capability_used",
-    label: "AI Capability Used",
-    type: "multiselect",
-    options: ["Estimate (e.g., effort, time, cost)", "Forecast (e.g., trends, ocean conditions)", "Compare (e.g., rank or score options)", "Detect (e.g., patterns, anomalies)", "Identify (e.g., classify images or signals)", "Discover (e.g., find new patterns or clusters)", "Generate (e.g., summaries, recommendations)", "Act (e.g., automate responses or control systems)"],
-    description: "Select the main type of AI functionality this idea applies:",
-    includeOtherOptions: true 
+  // {
+  //   name: "ai_capability_used",
+  //   label: "AI Capability Used",
+  //   type: "multiselect",
+  //   options: ["Estimate (e.g., effort, time, cost)", "Forecast (e.g., trends, ocean conditions)", "Compare (e.g., rank or score options)", "Detect (e.g., patterns, anomalies)", "Identify (e.g., classify images or signals)", "Discover (e.g., find new patterns or clusters)", "Generate (e.g., summaries, recommendations)", "Act (e.g., automate responses or control systems)"],
+  //   description: "Select the main type of AI functionality this idea applies:",
+  //   includeOtherOptions: true 
+  // },
+  { 
+    name: "phase", 
+    label: "Phase", 
+    type: "radio", 
+    options: ["Ideation/Planning", "Proof of Concept", "Pilot / Proof of Value (i.e., field test)", "Production"], 
+    description: "Indicates the current maturity or stage of the project." 
   },
   { 
     name: "status", 
     label: "Status", 
     type: "radio", 
-    options: ["Ideation/Planning", "Proof of Concept", "Pilot", "Production"], 
-    description: "Indicates the current maturity or stage of the project." 
+    options: ["To-do", "In Progress", "Delivered", "Pause", "Blocked", "Closed "], 
+    description: "" 
   },
   { 
     name: "data_annotation_support", 
@@ -326,14 +432,14 @@ export const Questions = [
     description: "Indicates whether the data used in this project has been formally assessed for sensitivity." 
   },
 
-  {
-    name: "risks_area",
-    label: "",
-    type: "multiselect",
-    options: ["Privacy or data protection", "Fairness or bias", "Transparency or explainability", "Indigenous data sovereignty", "Environmental impact", "Legal or regulatory ris"],
-    description: "Select all applicable areas of concern",
-    includeOtherOptions: true
-  },
+  // {
+  //   name: "risks_area",
+  //   label: "",
+  //   type: "multiselect",
+  //   options: ["Privacy or data protection", "Fairness or bias", "Transparency or explainability", "Indigenous data sovereignty", "Environmental impact", "Legal or regulatory ris"],
+  //   description: "Select all applicable areas of concern",
+  //   includeOtherOptions: true
+  // },
   {
     name: "risks_level",
     label: "Justification for Risk Level",
@@ -356,7 +462,23 @@ export const SectionGroups = {
       "business_problem",
       "who_is_affected",
       "areas_of_impact_on_business",
-      "priority_level",
+      // "priority_level",
+      "tbs_service_inventory_id",
+      "tbs_government_organization",
+      "tbs_ai_system_primary_users",
+      "tbs_developed_by",
+      "tbs_vendor_name",
+      "tbs_status_date",
+      "tbs_ai_system_capabilities",
+      "tbs_automated_decision_system",
+      "tbs_algorithmic_impact_assessment",
+      "tbs_data_sources",
+      "tbs_involves_personal_information",
+      "tbs_personal_information_banks",
+      "tbs_notification_of_ai",
+      "tbs_access_to_information_request",
+      "tbs_system_results",
+      
       "strategic_alignment",
       "fisheries_and_aquaculture",
       "aquatic_ecosystems",
@@ -379,9 +501,10 @@ export const SectionGroups = {
   aiMlQuestions: {
     label: "Data Science, ML and AI",
     questions: [
-      "project_area", 
+      // "project_area", 
       "success_outcomes",
-      "ai_capability_used",
+      // "ai_capability_used",
+      "phase", 
       "status", 
       "data_annotation_support",
       "time_sensitive",
@@ -397,7 +520,7 @@ export const SectionGroups = {
   risks: {
     label: "Risks",
     questions: [
-      "risks_area",
+      // "risks_area",
       "risks_level"
     ],
   },

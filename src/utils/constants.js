@@ -13,7 +13,8 @@ import {
   Languages,
   FileSearch,
   ClipboardList,
-  Loader
+  Store,
+  BrainCircuit 
 } from 'lucide-react';
   
 
@@ -107,7 +108,8 @@ import {
       category: 'Large Language Models',
       icon: Brain,
       backgroundImage: '/assets/pdf-chatbot-banner.jpg',
-      actionText: 'Upload Document'
+      actionText: 'Upload Document',
+      showInDemo:false
     },
     PII_REDACTOR: {
       id: 'pii-redactor',
@@ -133,7 +135,8 @@ import {
       category: 'Large Language Models',
       icon: Languages,
       backgroundImage: '/assets/french-translation-banner.jpg',
-      actionText: 'Upload Document'
+      actionText: 'Upload Document',
+      showInDemo:false
     },
 
     WEBSCRAPE: {
@@ -142,8 +145,8 @@ import {
       category: 'Large Language Models',
       icon: FileSearch,
       backgroundImage: '/assets/OCR.gif',
-      actionText: 'Coming Soon',
-      // disabled: true
+      actionText: 'Scrape Website',
+      showInDemo:false
     },
 
     // Optical Character Recognition Tools
@@ -153,30 +156,26 @@ import {
       category: 'Optical Character Recognition',
       icon: FileSearch,
       backgroundImage: '/assets/OCR.gif',
-      actionText: 'Coming Soon'
-      // disabled: true
+      actionText: 'Upload Document',
+      showInDemo:false
     },
-    // Data Analytics, AI and ML Intake Form
-    // DATA_INTAKE_FORM: {
-    //   id: 'data-intake-form',
-    //   name: 'Data Analytics, AI and ML Intake Form',
-    //   category: 'Standalone Tools', // Using a category for organization but it won't be displayed
-    //   icon: ClipboardList,
-    //   backgroundImage: '/assets/clipboard.jpg',
-    //   // actionText: 'Coming Soon',
-    //   actionText: 'Open Form',
-    //   externalUrl: 'https://ds-use-case-survey-hsb9ffb8htbyh7cd.canadacentral-01.azurewebsites.net/',
-    //   disabled: true, // change to false when form is ready
-    //   showInDropdown: false // Add this flag to indicate it should not appear in dropdown
-    // }
+    ML_MODELS: {
+      id: 'ml-tools',
+      name: 'Models',
+      category: 'Model Repo',
+      icon: BrainCircuit,
+      backgroundImage: '/assets/csv-analyzer-banner.jpg',
+      actionText: 'Coming Soon',
+      disabled: true
+    },
     DATA_INTAKE_FORM: {
       id: 'data-intake-form',
       name: 'Form',
-      category: 'AI, ML and Data Analytics Use-Case',
+      category: 'AI Inventory Form',
       icon: ClipboardList,
       backgroundImage: '/assets/clipboard.gif',
       actionText: 'Open Form',
-      showInDropdown: false
+      // showInDropdown: false
     },
     DOCX_EDITOR: {
       id: 'docx-editor',
@@ -184,20 +183,18 @@ import {
       category: 'Statistical and ML Algorithms Guide',
       icon: ClipboardList,
       backgroundImage: '/assets/clipboard.gif',
-      actionText: 'Open Form',
-      showInDropdown: false,
-      // showInDemo: false,
+      actionText: 'Open Document',
+      // showInDropdown: false
     },
-    // ML_MODELS: {
-    //   id: 'ml-tools',
-    //   name: 'Repositories - TEST',
-    //   category: 'ML Models',
-    //   icon: Loader, // placeholder for page; needs to be changed
-    //   backgroundImage: '/assets/csv-analyzer-banner.jpg', // placeholder for page; needs to be changed
-    //   actionText: 'Open Form', // placeholder for page; needs to be changed
-    //   showInDropdown: false,
-    //   // disabled: true
-    // },
+    AI_STORE: {
+      id: 'ai-store',
+      name: 'Models, APIs, Tools and Services',
+      category: 'AI Store',
+      icon: Store,
+      backgroundImage: '/assets/csv-analyzer-banner.jpg',
+      actionText: 'Coming Soon',
+      disabled: true
+    },
   };
   
   /**
@@ -225,15 +222,18 @@ import {
     'Optical Character Recognition': [
       TOOLS.DOCUMENT_OCR
     ],
-    'AI, ML and Data Analytics Use-Case': [
+    'Model Repo': [
+      TOOLS.ML_MODELS,
+    ],
+    'AI Inventory Form': [
       TOOLS.DATA_INTAKE_FORM,
     ],
     'Statistical and ML Algorithms Guide': [
       TOOLS.DOCX_EDITOR,
     ],
-    // 'ML Models': [
-    //   TOOLS.ML_MODELS,
-    // ]
+    'AI Store': [
+      TOOLS.AI_STORE,
+    ]
   };
   
   /**

@@ -227,33 +227,39 @@ export default function ToolSelectionQuestion({
                 onChange={() => toggleCategory(category.id)} 
                 className="form-checkbox h-4 w-4 text-black cursor-pointer flex-shrink-0"
               />
-              {category.label}
+              {category.boldTitle ? (
+                <strong>{category.label}</strong>
+              ) : category.label}
             </label>
             {selectedCategories[category.id] && (
-              <div className="mx-2 mt-2 px-6 space-y-2 border-l">
-                {category.options.map((option) => (
-                  <label key={option} className="flex items-start gap-2 font-medium cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedCategoryOptions[category.id]?.selected.has(option) || false}
-                      onChange={() => toggleOption(category.id, option)}
-                      className="form-checkbox mt-1 h-4 w-4 text-black cursor-pointer flex-shrink-0"
-                    />
-                    {option}
-                  </label>
-                ))}
-                <div className="mt-2">
-                  <label className="block text-sm text-black dark:text-white">
-                    <span className="block">Other {category.label}:</span>
-                    <input 
-                      type="text" 
-                      value={selectedCategoryOptions[category.id]?.other || ""} 
-                      onChange={(e) => handleCategoryOtherChange(category.id, e)}
-                      className="mt-1 p-2 w-full border rounded-md focus:outline-none"
-                    />
-                  </label>
+              (category.options?.length > 0 || category.includeOtherOptions !== false) && (
+                <div className="mx-2 mt-2 px-6 space-y-2 border-l">
+                  {category.options && category.options.map((option) => (
+                    <label key={`${category.id}-${option}`} className="flex items-start gap-2 font-medium cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedCategoryOptions[category.id]?.selected.has(option) || false}
+                        onChange={() => toggleOption(category.id, option)}
+                        className="form-checkbox mt-1 h-4 w-4 text-black cursor-pointer flex-shrink-0"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                  {category.includeOtherOptions !== false && (
+                    <div className="mt-2">
+                      <label className="block text-sm text-black dark:text-white">
+                        <span className="block">Other {category.label}:</span>
+                        <input 
+                          type="text" 
+                          value={selectedCategoryOptions[category.id]?.other || ""} 
+                          onChange={(e) => handleCategoryOtherChange(category.id, e)}
+                          className="mt-1 p-2 w-full border rounded-md focus:outline-none"
+                        />
+                      </label>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )
             )}
           </div>
         ))}
