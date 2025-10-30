@@ -1,50 +1,105 @@
 import axios from 'axios';
 
 const API = 'http://localhost:4000/api'; // or use your proxy/env
+const BASE = "http://localhost:8000/api";
 
 /* ---------- Models ----------
 - CRUD Operations for models
 */
 
+// ---- helpers ----
+async function getJSON(url, { signal } = {}) {
+  const res = await fetch(url, { signal });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function fetchModels({ signal } = {}) {
+  // [{ name, description, latest_version, latest_stage }]
+  return getJSON(`${BASE}/models`, { signal });
+}
+
+async function fetchModelVersions(name, { signal } = {}) {
+  // [ { name, version, current_stage, description, tags, ... } ]
+  return getJSON(`${BASE}/models/${encodeURIComponent(name)}/versions`, { signal });
+}
+
+function newestVersion(versions) {
+  if (!Array.isArray(versions) || versions.length === 0) return null;
+  // backend tries to sort, but we’ll be safe on the client too
+  return [...versions].sort((a, b) => (Number(b.version) || 0) - (Number(a.version) || 0))[0];
+}
+
+function toTagArray(tagsObj) {
+  if (!tagsObj || typeof tagsObj !== "object") return [];
+  // convert {k:v} -> ["k:v"]
+  return Object.entries(tagsObj).map(([k, v]) => `${k}:${v}`);
+}
+
 // ---------- List All Models ----------
 export async function listModels() {
-  const { data } = await axios.get(`${API}/models`);
-  return (data.items || []).map(x => ({
-    id: x.id,
-    name: x.name,
-    description: x.description || '',
-    tags: x.tags || [],
-    version: x.version || '1.0.0',
-    updatedAt: x.updatedAt,
-    downloads: x.downloads || 0,
-    sizeMB: x.sizeMB || 0,
-    private: !!x.private,
-    sourcePath: x.sourcePath
-  }));
+  const base = await fetchModels();
+  const enriched = await Promise.all(
+    base.map(async (m) => {
+      try {
+        const versions = await fetchModelVersions(m.name);
+        const newest = newestVersion(versions);
+
+        const description =
+          (newest && (newest.description || (newest.tags && (newest.tags.description || newest.tags.summary)))) ||
+          m.description ||
+          "";
+
+        return {
+          id: m.name,
+          name: m.name,
+          description,
+          latestVersion: m.latest_version || (newest && newest.version) || null,
+          latestStage: m.latest_stage || (newest && newest.current_stage) || null,
+          tags: newest ? toTagArray(newest.tags) : [],
+          _versions: versions,
+        };
+      } catch {
+        // If versions fetch fails, still return a minimal card
+        return {
+          id: m.name,
+          name: m.name,
+          description: m.description || "",
+          latestVersion: m.latest_version || null,
+          latestStage: m.latest_stage || null,
+          tags: [],
+          _versions: [],
+        };
+      }
+    })
+  );
+
+  // Sort alphabetically by name
+  enriched.sort((a, b) => a.name.localeCompare(b.name));
+  return enriched;
 }
 
 // ---------- List All Uploads ----------
 export async function listUploads(userId) {
-  if (!userId) return [];
-  const { data } = await axios.get(`${API}/uploads`, { params: { userId } });
-  return (data.items || []).map(x => ({
-    id: x.id,
-    name: x.name,
-    description: x.description || '',
-    tags: x.tags || [],
-    version: x.version || '1.0.0',
-    updatedAt: x.updatedAt,
-    downloads: x.downloads || 0,
-    sizeMB: x.sizeMB || 0,
-    private: !!x.private,
-    sourcePath: x.sourcePath
-  }));
+  // Return an empty list to keep UI stable (or map from models if you wish)
+  return [];
 }
 
 // ---------- Get a Model
 export async function getModel(id, { userId } = {}) {
-  const { data } = await axios.get(`${API}/models/${encodeURIComponent(id)}`, { params: { userId } });
-  return data;
+  const versions = await fetchModelVersions(id);
+  const newest = newestVersion(versions);
+
+  return {
+    id,
+    name: id,
+    description:
+      (newest && (newest.description || (newest.tags && (newest.tags.description || newest.tags.summary)))) || "",
+    latestVersion: newest ? newest.version : null,
+    latestStage: newest ? newest.current_stage : null,
+    versions,
+    tags: newest ? toTagArray(newest.tags) : [],
+  };
 }
 
 // ---------- Create New Model
