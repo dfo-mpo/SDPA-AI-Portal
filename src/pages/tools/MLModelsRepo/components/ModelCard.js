@@ -4,7 +4,7 @@ import { Card, CardContent, Stack, Typography, Chip } from "@mui/material";
 export default function ModelCard({ item, onClick }) {
   const status = item.private ? "Private" : "Public";
   const statusColor = item.private ? "error" : "success";
-
+  const chipSx = { height: 22, "& .MuiChip-label": { px: 1 } };
   return (
     <Card
       variant="outlined"
@@ -37,6 +37,11 @@ export default function ModelCard({ item, onClick }) {
           >
             {item.name}
           </Typography>
+          <Chip
+            size="small"
+            label={`v${item.version ?? "?"}`}
+            sx={{ ...chipSx, fontWeight: 600 }}
+          />
           <Chip size="small" color={statusColor} variant="outlined" label={status} sx={{ ml: "auto" }} />
         </Stack>
 
@@ -61,8 +66,17 @@ export default function ModelCard({ item, onClick }) {
           ))}
         </Stack>
 
+        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+          {(item.flavors || []).slice(0, 4).map((t) => (
+            <Chip key={t} size="small" label={t} />
+          ))}
+        </Stack>
+
         <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-          v{item.version} • {item.updatedAt} • {item.sizeMB ?? 0} MB • {item.downloads} downloads
+          Type: {item.type}
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+          {item.createdOn}
         </Typography>
       </CardContent>
     </Card>
