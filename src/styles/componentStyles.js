@@ -984,6 +984,40 @@ export const optionsMenuStyles = {
   },
 };
 
+// ===== OPTIONS MENU STYLES =====
+export const logInButtonStyles = {
+  logInButton: (theme) => ({
+    color: 
+      theme.palette.mode === 'light'
+      ? theme.palette.primary.light
+      : theme.palette.text.primary,
+    borderRadius: '8px',
+    padding: '4px 12px',
+    border: '1px solid',
+    borderColor: 
+      theme.palette.mode === 'light'
+      ? 'theme.palette.divider'
+      : theme.palette.text.primary,
+    backgroundColor:
+      theme.palette.mode === 'light'
+        ? 'rgba(5, 7, 10, 1)'
+        : 'rgba(0, 0, 0, 0.3)',
+    transition: 'all 0.2s ease',
+    textTransform: 'none',
+    '&:hover': {
+      backgroundColor:
+        theme.palette.mode === 'light'
+          ? 'rgba(5, 7, 10, 0.9)'
+          : 'rgba(0, 0, 0, 0.5)',
+      transform: 'translateY(-1px)',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+    },
+    '&:active': {
+      transform: 'translateY(0)',
+    },
+  }),
+};
+
 // ===== COLOR MODE ICON DROPDOWN STYLES =====
 export const colorModeIconDropdownStyles = {
   iconButton: (theme) => ({
@@ -1956,6 +1990,7 @@ export default {
   customSwitch: customSwitchStyles,
   menuButton: menuButtonStyles,
   optionsMenu: optionsMenuStyles,
+  logInButton: logInButtonStyles,
   colorModeIconDropdown: colorModeIconDropdownStyles,
   aiToolsDropdown: aiToolsDropdownStyles,
   staticToolList: staticToolListStyles,

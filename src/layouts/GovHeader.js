@@ -15,7 +15,7 @@ import {
   Divider, 
   useTheme 
 } from '@mui/material';
-import { ColorModeIconDropdown } from '../components/common';
+import { ColorModeIconDropdown, LogInButton } from '../components/common';
 import TranslateIcon from '@mui/icons-material/Translate';
 import { useLanguage, useAuth } from '../contexts';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
@@ -29,7 +29,11 @@ import { trackEvent } from '../utils/analytics';
  * @param {Function} props.setHeaderHeight - Callback to set header height
  * @returns {JSX.Element} The rendered component
  */
-export default function GovHeader({ setHeaderHeight }) {
+export default function GovHeader({ 
+  setHeaderHeight, 
+  onLogout,
+  onLogin,
+}) {
   const { language, toggleLanguage } = useLanguage();
   const headerTranslations = getLayoutTranslations('header', language);
   const headerRef = useRef(null);
@@ -85,6 +89,9 @@ export default function GovHeader({ setHeaderHeight }) {
               {language === 'en' ? 'Français' : 'English'}
             </Button>
             <ColorModeIconDropdown />
+            {!isAuth && (
+              <LogInButton onLogout={onLogout} onLogin={onLogin} />
+            )}
           </Stack>
         </Stack>
       </Box>

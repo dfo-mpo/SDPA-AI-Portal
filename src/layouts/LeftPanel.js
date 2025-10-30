@@ -283,9 +283,11 @@ export default function NewLeftPanel({
         )}
       </Box>
 
-      <Box sx={styles.userProfileWrapper}>
-        <UserProfile onLogout={onLogout} onLogin={onLogin} />
-      </Box>
+      {isAuth && (
+        <Box sx={styles.userProfileWrapper}>
+          <UserProfile onLogout={onLogout} onLogin={onLogin} />
+        </Box>
+      )}
     </Paper>
   );
 }

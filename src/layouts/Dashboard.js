@@ -229,7 +229,11 @@ export default function Dashboard({ onLogout, onLogin }) {
 
   const renderHeader = (
     <Box sx={styles.headerContainer}>
-      <GovHeader setHeaderHeight={setHeaderHeight} />
+      <GovHeader 
+        setHeaderHeight={setHeaderHeight} 
+        onLogout={onLogout}
+        onLogin={onLogin}
+      />
     </Box>
   );
 
