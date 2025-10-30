@@ -30,7 +30,7 @@ function AppContent() {
   const { handleLogout: termsLogout, declineTerms } = useTerms();
   const { language } = useLanguage();
   const appTranslations = getLayoutTranslations('app', language);
-  const { instance, accounts } = useMsal();
+  const { inProgress, instance, accounts } = useMsal();
   const [previousAccount, setPreviousAccount] = useState(null);
   const [loggingIn, setLogginIn] = useState(false);
   const user = accounts[0] ?? null;
@@ -138,6 +138,11 @@ function AppContent() {
   useEffect(() => {
     if(user != null) setLogginIn(false);
   }, [user]);
+
+  // Prevent flicker while MSAL is in progress
+  if (inProgress !== 'none') {
+    return;
+  }
 
   return(
     <AuthContext.Provider value={isAuthenticated}>
