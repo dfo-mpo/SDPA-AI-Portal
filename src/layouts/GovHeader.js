@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { ColorModeIconDropdown } from '../components/common';
 import TranslateIcon from '@mui/icons-material/Translate';
-import { useLanguage } from '../contexts';
+import { useLanguage, useAuth } from '../contexts';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 import { getLayoutTranslations } from '../translations/layout';
 import { trackEvent } from '../utils/analytics';
@@ -35,7 +35,7 @@ export default function GovHeader({ setHeaderHeight }) {
   const headerRef = useRef(null);
   const theme = useTheme();
   const styles = useComponentStyles('govHeader');
-
+  const isAuth = useAuth();
 
   // Measure header height and pass it to parent component
   useEffect(() => {

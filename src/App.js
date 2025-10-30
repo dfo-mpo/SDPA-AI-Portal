@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AppTheme from './styles/AppTheme';
 import { SignIn, msalInstance } from './components/auth';
-import { LanguageProvider, ToolSettingsProvider, TermsProvider } from './contexts';
+import { LanguageProvider, ToolSettingsProvider, TermsProvider, AuthContext } from './contexts';
 import { TermsModalContainer } from './components/common';
 import { CssBaseline, Box } from '@mui/material';
 import { Dashboard } from './layouts';
@@ -140,31 +140,33 @@ function AppContent() {
   }, [user]);
 
   return(
-    !loggingIn ?
-    <>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100vh',
-          overflow: 'hidden',
-          bgcolor: 'background.default',
-        }}
-      >
-        <Dashboard onLogout={handleLogout} onLogin={loginPageContent} isAuth={isAuthenticated} />
-        {/* Terms Modal for authenticated users - pass isAuth=true */}
-        <TermsModalContainer variant="full" isAuth={true} />
-      </Box>
-    </>
-    :
-    <>
-      <SignIn onLogin={handleLogin} cancelLogin={cancelLogin}/>
-      {/* Terms Modal for login screen - pass isAuth=false (default) */}
-      <TermsModalContainer variant="full" />
-    </>
+    <AuthContext.Provider value={isAuthenticated}>
+      {
+        !loggingIn ?
+        <>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100vh',
+              overflow: 'hidden',
+              bgcolor: 'background.default',
+            }}
+          >
+            <Dashboard onLogout={handleLogout} onLogin={loginPageContent} />
+            {/* Terms Modal for authenticated users - pass isAuth=true */}
+            <TermsModalContainer variant="full" isAuth={true} />
+          </Box>
+        </>
+        :
+        <>
+          <SignIn onLogin={handleLogin} cancelLogin={cancelLogin}/>
+          {/* Terms Modal for login screen - pass isAuth=false (default) */}
+          <TermsModalContainer variant="full" />
+        </>
+      }
+    </AuthContext.Provider>
   )
-
-  
 }
 
 /**

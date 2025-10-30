@@ -19,18 +19,17 @@ import {
 } from '@mui/material';
 import { Home, AlertCircle } from 'lucide-react';
 import { useTheme } from '@mui/material/styles';
-import { useLanguage } from '../../contexts';
+import { useLanguage, useAuth } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { TOOL_CATEGORIES } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
-import { useIsAuthenticated } from '@azure/msal-react';
 
 export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
   const { language } = useLanguage();
   const theme = useTheme();
   const translations = getToolTranslations("aiToolsDropdown", language);
   const aiToolsDropdownStyles = useComponentStyles('aiToolsDropdown');
-  const isAuth = useIsAuthenticated();
+  const isAuth = useAuth();
 
   /**
    * Handle change in dropdown selection

@@ -5,7 +5,7 @@ import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { getFooterTranslations } from '../../translations/components/footer';
 
 
-function Footer({ headerHeight }) { // Accept headerHeight as prop
+function Footer() { // Accept headerHeight as prop
   const theme = useTheme();
   const { language } = useLanguage();
   const { openTermsModal } = useTerms();

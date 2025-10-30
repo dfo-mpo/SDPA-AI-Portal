@@ -15,7 +15,7 @@ import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import { GovHeader, LeftPanel } from '.';
 import { getToolByName, getParam, getAllParams, updateURLParams } from '../utils';
 import { HomePage, DocxEditor, SurveyForm } from '../pages';
-import { useLanguage } from '../contexts';
+import { useLanguage, useAuth } from '../contexts';
 import { Footer, TermsModalContainer } from '../components/common';
 import { getLayoutTranslations } from '../translations/layout'
 import {
@@ -35,7 +35,7 @@ import {
 } from '../pages/tools';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
-export default function Dashboard({ onLogout, onLogin, isAuth }) {
+export default function Dashboard({ onLogout, onLogin }) {
   // Store the selected tool name
   const [selectedTool, setSelectedTool] = useState('');
   const [headerHeight, setHeaderHeight] = useState(80); // Default to 80px, dynamically updated
@@ -50,6 +50,9 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
 
   // Use the styling hook with the dashboard style collection
   const styles = useComponentStyles('dashboard', { headerHeight });
+
+  // Use auth context for log in validation
+  const isAuth = useAuth();
 
   // Matches "Md" size (above 'md' breakpoint)
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
@@ -250,10 +253,8 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
         <LeftPanel 
           selectedTool={selectedTool} 
           onSelectTool={handleToolSelect}  
-          headerHeight={headerHeight}
           isHomePage={isHomePage}
           onLogout={onLogout}
-          isAuth={isAuth}
           onLogin={onLogin}
           isMdUp={isMdUp}
           showLeftPanel={showLeftPanel}
@@ -290,7 +291,7 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
 
         {/* Footer with subtle spacing above */}
         <Box sx={styles.footerContainer}>
-          <Footer headerHeight={headerHeight} />
+          <Footer />
         </Box>
       </Box>
       
@@ -302,8 +303,5 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
 
 Dashboard.propTypes = {
   /** Callback function for logout action */
-  onLogout: PropTypes.func,
-
-  /** Whether in user is signed in */
-  isAuth: PropTypes.bool.isRequired,
+  onLogout: PropTypes.func
 };

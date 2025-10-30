@@ -22,11 +22,10 @@ import {
 } from '@mui/material';
 import { Home, AlertCircle, ExternalLink } from 'lucide-react';
 import { TOOL_CATEGORIES } from '../../utils';
-import { useLanguage } from '../../contexts';
+import { useLanguage, useAuth } from '../../contexts';
 import { getToolTranslations } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { trackEvent } from '../../utils/analytics';
-import { useIsAuthenticated } from '@azure/msal-react';
 
 /**
  * Static tool list for the portal home page
@@ -42,7 +41,7 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
   const translations = getToolTranslations("aiToolsDropdown", language);
   const staticToolListStyles = useComponentStyles('staticToolList');
   const dropdownStyles = useComponentStyles('dropdown');
-  const isAuth = useIsAuthenticated();
+  const isAuth = useAuth();
 
   // Translations for "Temporarily unavailable" tooltip
   const unavailableTooltip = {

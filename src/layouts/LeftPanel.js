@@ -28,7 +28,7 @@ import { Settings, Home } from 'lucide-react';
 import { AIToolsDropdown, StaticToolList } from '../components/dashboard';
 import { UserProfile } from '../components/common';
 import { getLayoutTranslations } from '../translations/layout';
-import { useLanguage } from '../contexts';
+import { useLanguage, useAuth } from '../contexts';
 import { trackEvent } from '../utils/analytics';
 
 // Import our custom hooks and styles
@@ -55,7 +55,6 @@ import { BorderTop } from '@mui/icons-material';
  * @param {Object} props - Component props
  * @param {string} [props.selectedTool] - Currently selected tool
  * @param {Function} props.onSelectTool - Callback when a tool is selected
- * @param {number} props.headerHeight - Height of the application header
  * @param {boolean} props.isHomePage - Whether currently on home page
  * @param {Function} [props.onLogout] - Callback for logout action
  * @returns {JSX.Element} The rendered component
@@ -73,6 +72,7 @@ export default function NewLeftPanel({
   // const styles = useComponentStyles('leftPanel');
   const { language } = useLanguage();
   const panelTranslations = getLayoutTranslations('leftPanel', language);
+  const isAuth = useAuth();
 
   // Map tool names to their corresponding settings components
   const toolSettings = {
@@ -296,9 +296,6 @@ NewLeftPanel.propTypes = {
   
   /** Callback function when a tool is selected */
   onSelectTool: PropTypes.func.isRequired,
-  
-  /** Height of the application header in pixels */
-  headerHeight: PropTypes.number.isRequired,
   
   /** Whether currently on home page */
   isHomePage: PropTypes.bool.isRequired,
