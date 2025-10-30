@@ -33,5 +33,3 @@ src/components/auth/authConfig.js
 
 # venv 
 backend/.venv/
-src/setupProxy.js
-src/services/apiService.js

@@ -57,7 +57,7 @@ export function SurveyForm() {
       return;
     }
 
-    const res = await fetch("/server/storeResponse", {
+    const res = await fetch("/api/storeResponse", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ answers }),
