@@ -174,7 +174,6 @@ docker push <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1-demo
 # DFO PSSI AI Portal
 ## Description
 The DFO PSSI AI Portal is a web application equipped with a suite of AI and computer vision tools designed for document interaction and analysis. This application enables users to leverage powerful AI capabilities directly through their web browser. Built using FastAPI/Uvicorn, Python, CSS, HTML, React, and JavaScript.
-The DFO PSSI AI Portal is a web application equipped with a suite of AI and computer vision tools designed for document interaction and analysis. This application enables users to leverage powerful AI capabilities directly through their web browser. Built using FastAPI/Uvicorn, Python, CSS, HTML, React, and JavaScript.
 
 ## Tools Included
 - **AI ChatBot**: Allows real-time conversations with PDF documents, making it suitable for general inquiries and simple prompts.
