@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import { Questions, SectionGroups } from "./Questions";
+import Subtitle from "./Subtitle";
 import InputField from "./InputField";
 import TextArea from "./TextArea";
 import SelectBox from "./SelectBox";
@@ -83,12 +84,19 @@ export function SurveyForm() {
   // this helper function is used to render each question type with their respective fields
   const renderQuestion = (question) => {
     switch (question.type) {
+      case "subtitle":
+        return <Subtitle 
+        name={question.name} 
+        label={question.label} 
+        description={question.description} 
+      />;
       case "text":
         return <InputField 
         name={question.name} 
         label={question.label} 
         description={question.description} 
         value={answers[question.name]} 
+        maxlength={question.maxlength}
         onChange={handleChange} 
       />;
       case "textarea":
@@ -187,7 +195,7 @@ export function SurveyForm() {
     <div className="min-h-screen flex flex-col items-center justify-center p-10">
       <div className="max-w-5xl w-full">
         <div className="text-center mb-6 px-6">
-          <h1 className="text-4xl font-extrabold text-black dark:text-white mb-3">Essential Tools and Services for Data Analytics, AI, and ML Projects</h1>
+          <h1 className="text-4xl font-extrabold text-black dark:text-white mb-3">Intake Form AI Use-cases - Inventory and Backlogged</h1>
           <div className="text-sm text-black dark:text-white">
             This form is meant to be use as guide to support business users in articulating and imagining the potential of using Data, Artificial Intelligence, and Machine Learning to improve productivity, efficiencies, and generate value for program and service delivery, operations, and other business processes. It is meant to help users determine the value and potential of new data innovation from a value proposition, scalability, and sustainability lens rather than a technical implementation perspective. Complete responses will help regional management along with Data and AI Scientist determine how feasible a solution could be.
           </div>
@@ -227,7 +235,11 @@ export function SurveyForm() {
                 {section.questions
                   .map(question => Questions.find(q => q.name === question))
                   .filter(Boolean)
-                  .map(renderQuestion)}
+                  .map(q => (
+                    <div key={q.name}>
+                      {renderQuestion(q)}
+                    </div>
+                  ))}
               </div>
             )}
           </div>

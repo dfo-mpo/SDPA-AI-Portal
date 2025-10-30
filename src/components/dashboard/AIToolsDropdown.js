@@ -118,7 +118,10 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
         </MenuItem>
         {/* Categories & their items */}
         {Object.entries(TOOL_CATEGORIES).map(([category, tools]) => {
-          const visibleTools = tools.filter(tool => tool.showInDropdown !== false);
+          const visibleTools = tools.filter(tool => {
+            const isHideInDemo = tool.showInDemo === false && !isAuth;
+            return tool.showInDropdown !== false && !isHideInDemo;
+          });
 
           if (visibleTools.length === 0) return null;
 
@@ -126,11 +129,9 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
             <ListSubheader disableSticky key={category} sx={aiToolsDropdownStyles.subheader}>
               {translations.categories[category] || category}
             </ListSubheader>,
-            ...tools.map((tool) => {
+            ...visibleTools.map((tool) => {
               const IconComponent = tool.icon;
               const isDisabled = tool.disabled;
-              const isHideInDemo = tool.showInDemo === false && !isAuth;
-              if (isHideInDemo) return null;
               return (
                 <MenuItem
                   key={tool.name}

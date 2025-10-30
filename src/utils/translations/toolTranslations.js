@@ -23,7 +23,8 @@ export function getToolTranslations(toolName, language) {
     'pdfChatbot': 'pdfChatbot',
     'piiRedactor': 'piiRedactor',
     'sensitivityScore': 'sensitivityScore',
-    'frenchTranslator': 'frenchTranslation'
+    'frenchTranslator': 'frenchTranslation',
+    'mlModelsRepo' : 'mlModelsRepo'
   };
   
   // Get the translated tool name
