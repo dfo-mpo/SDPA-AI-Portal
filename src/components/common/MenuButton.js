@@ -34,7 +34,7 @@ const styles = useComponentStyles('menuButton');
       invisible={!showBadge}
       sx={styles.badge}
     >
-      <IconButton size="small" {...props}>
+      <IconButton size="small" {...props} sx={{borderColor: 'auto'}}>
         {children}
       </IconButton>
     </Badge>

@@ -5,7 +5,7 @@ import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { getFooterTranslations } from '../../translations/components/footer';
 
 
-function Footer({ headerHeight }) { // Accept headerHeight as prop
+function Footer() { // Accept headerHeight as prop
   const theme = useTheme();
   const { language } = useLanguage();
   const { openTermsModal } = useTerms();
@@ -27,14 +27,7 @@ function Footer({ headerHeight }) { // Accept headerHeight as prop
   return (
     <Box
       component="footer"
-      sx={{
-        ...footerStyles.container,
-        position: 'sticky',
-        bottom: 0,  // Ensure it stays at the bottom
-        left: 0,
-        right: 0,
-        zIndex: 10
-      }}
+      sx={footerStyles.container}
     >
       <Box sx={footerStyles.content}>
         {/* Left-Side: Horizontal Row of items */}

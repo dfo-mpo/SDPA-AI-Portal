@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AppTheme from './styles/AppTheme';
 import { SignIn, msalInstance } from './components/auth';
-import { LanguageProvider, ToolSettingsProvider, TermsProvider } from './contexts';
+import { LanguageProvider, ToolSettingsProvider, TermsProvider, AuthContext } from './contexts';
 import { TermsModalContainer } from './components/common';
 import { CssBaseline, Box } from '@mui/material';
 import { Dashboard } from './layouts';
@@ -30,7 +30,7 @@ function AppContent() {
   const { handleLogout: termsLogout, declineTerms } = useTerms();
   const { language } = useLanguage();
   const appTranslations = getLayoutTranslations('app', language);
-  const { instance, accounts } = useMsal();
+  const { inProgress, instance, accounts } = useMsal();
   const [previousAccount, setPreviousAccount] = useState(null);
   const [loggingIn, setLogginIn] = useState(false);
   const user = accounts[0] ?? null;
@@ -139,32 +139,39 @@ function AppContent() {
     if(user != null) setLogginIn(false);
   }, [user]);
 
-  return(
-    !loggingIn ?
-    <>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100vh',
-          overflow: 'hidden',
-          bgcolor: 'background.default',
-        }}
-      >
-        <Dashboard onLogout={handleLogout} onLogin={loginPageContent} isAuth={isAuthenticated} />
-        {/* Terms Modal for authenticated users - pass isAuth=true */}
-        <TermsModalContainer variant="full" isAuth={true} />
-      </Box>
-    </>
-    :
-    <>
-      <SignIn onLogin={handleLogin} cancelLogin={cancelLogin}/>
-      {/* Terms Modal for login screen - pass isAuth=false (default) */}
-      <TermsModalContainer variant="full" />
-    </>
-  )
+  // Prevent flicker while MSAL is in progress
+  if (inProgress !== 'none') {
+    return;
+  }
 
-  
+  return(
+    <AuthContext.Provider value={isAuthenticated}>
+      {
+        !loggingIn ?
+        <>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100vh',
+              overflow: 'hidden',
+              bgcolor: 'background.default',
+            }}
+          >
+            <Dashboard onLogout={handleLogout} onLogin={loginPageContent} />
+            {/* Terms Modal for authenticated users - pass isAuth=true */}
+            <TermsModalContainer variant="full" isAuth={true} />
+          </Box>
+        </>
+        :
+        <>
+          <SignIn onLogin={handleLogin} cancelLogin={cancelLogin}/>
+          {/* Terms Modal for login screen - pass isAuth=false (default) */}
+          <TermsModalContainer variant="full" />
+        </>
+      }
+    </AuthContext.Provider>
+  )
 }
 
 /**

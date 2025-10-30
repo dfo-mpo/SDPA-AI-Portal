@@ -31,8 +31,8 @@ function AppTheme(props) {
       palette: {
         primary: {
           main: dfoColors.darkBlue,
-          light: '#3F5773',
-          dark: '#1A2736',
+          light: dfoColors.white,
+          dark: dfoColors.darkBlue,
           contrastText: dfoColors.white,
         },
         secondary: {
@@ -46,8 +46,10 @@ function AppTheme(props) {
           paper: mode => mode === 'dark' ? '#1E1E1E' : dfoColors.lightGray,
         },
         text: {
-          primary: mode => mode === 'dark' ? dfoColors.white : dfoColors.darkBlue,
-          secondary: mode => mode === 'dark' ? dfoColors.lightGray : dfoColors.darkGray,
+          // primary: mode => mode === 'dark' ? dfoColors.white : dfoColors.darkBlue,
+          // secondary: mode => mode === 'dark' ? dfoColors.lightGray : dfoColors.darkGray,
+          primary: 'hsl(220, 35%, 3%)',
+          secondary: dfoColors.darkGray,
         },
       },
       
