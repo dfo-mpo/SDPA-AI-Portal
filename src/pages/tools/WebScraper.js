@@ -19,6 +19,29 @@ import {
 
 const API_BASE = "http://localhost:8000";
 
+function makeFileNameFromUrl(u, suffix) {
+  try {
+    const { hostname, pathname } = new URL(u.trim());
+    const safePath = pathname.replace(/[^a-z0-9\-_.]+/gi, "-").replace(/^-+|-+$/g, "");
+    const base = safePath ? `${hostname}${safePath}` : hostname;
+    return `parsed_${base || "result"}${suffix ? `_${suffix}` : ""}.txt`;
+  } catch {
+    return `parsed_result.txt`;
+  }
+}
+
+function downloadTextFile(filename, text) {
+  const blob = new Blob([text ?? ""], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export function WebScraper() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [url, setUrl] = useState("");
@@ -30,6 +53,8 @@ export function WebScraper() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [scrapeStatus, setScrapeStatus] = useState({ type: null, msg: "" });
   const [parseStatus, setParseStatus] = useState({ type: null, msg: "" });
+  const [downloadHref, setDownloadHref] = useState(null);
+  const [downloadingParsed, setDownloadingParsed] = useState(false);
 
   async function handleScrape() {
     setErrorMsg(null);
@@ -58,6 +83,8 @@ export function WebScraper() {
       if (!data || !data.session_id) throw new Error("No session_id returned");
       
       setSessionId(data.session_id);
+      setDownloadHref(`${API_BASE}/api/scrape/${data.session_id}/combined.txt`);
+
       setScrapeStatus({
         type: "success",
         msg: "Successfully scraped. Now enter prompts and click Parse.",
@@ -158,7 +185,7 @@ export function WebScraper() {
           {/* LEFT: inputs */}
           <Grid item xs={12} md={6}>
           {/* URL input + Scrape button*/}
-            <Typography variant="h4" fontWeight={700}>Inputs</Typography>
+            <Typography variant="h4" fontWeight={700}>Input URL</Typography>
             <Box
               sx={{
                 mt: 2,
@@ -195,14 +222,49 @@ export function WebScraper() {
               </Button>
             </Box>
 
-            {/* Scrape status banner */}
             {scrapeStatus.type && (
-              <Alert severity={scrapeStatus.type} sx={{ mt: 1.5, maxWidth: 430 }}>
+              <Alert
+                severity={scrapeStatus.type}
+                sx={{
+                  mt: 2,
+                  mx: "auto",
+                  maxWidth: 720,
+                  alignItems: "center",
+                  borderLeft: 6,
+                  borderLeftColor: (theme) =>
+                    scrapeStatus.type === "success"
+                      ? theme.palette.success.main
+                      : scrapeStatus.type === "error"
+                      ? theme.palette.error.main
+                      : theme.palette.info.main,
+                }}
+                action={
+                  scrapeStatus.type === "success" && downloadHref ? (
+                    <Button
+                      component="a"
+                      href={downloadHref}
+                      variant="contained"
+                      size="small"
+                      sx={{ fontWeight: 700 }}
+                    >
+                      Download Data (.txt)
+                    </Button>
+                  ) : null
+                }
+              >
+                <AlertTitle sx={{ fontWeight: 800, mb: 0 }}>
+                  {scrapeStatus.type === "success"
+                    ? "Scrape complete"
+                    : scrapeStatus.type === "error"
+                    ? "Scrape failed"
+                    : "Working…"}
+                </AlertTitle>
                 {scrapeStatus.msg}
               </Alert>
             )}
+            
             <Box sx={{ mt: 3 }} />
-
+            <Typography variant="h4" fontWeight={700}>Parse</Typography>
             {/* Prompt input + Parse button */}
             <Box
               sx={{
@@ -250,11 +312,51 @@ export function WebScraper() {
 
             {/* Parse status banner */}
             {parseStatus.type && (
-              <Alert severity={parseStatus.type} sx={{ mt: 1.5, maxWidth: 430
-               }}>
-                {parseStatus.msg}
-              </Alert>
-            )}
+            <Alert
+              severity={parseStatus.type}
+              sx={{
+                mt: 1.5,
+                maxWidth: 720,
+                alignItems: "center",
+                borderLeft: 6,
+                borderLeftColor: (theme) =>
+                  parseStatus.type === "success"
+                    ? theme.palette.success.main
+                    : parseStatus.type === "error"
+                    ? theme.palette.error.main
+                    : theme.palette.info.main,
+              }}
+              action={
+                parseStatus.type === "success" && parsedOutput ? (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    disabled={downloadingParsed}
+                    onClick={() => {
+                      try {
+                        setDownloadingParsed(true);
+                        downloadTextFile(makeFileNameFromUrl(url, "parsed"), parsedOutput);
+                      } finally {
+                        setDownloadingParsed(false);
+                      }
+                    }}
+                    sx={{ fontWeight: 700 }}
+                  >
+                    {downloadingParsed ? "Preparing…" : "Download Result (.txt)"}
+                  </Button>
+                ) : null
+              }
+            >
+              <AlertTitle sx={{ fontWeight: 800, mb: 0 }}>
+                {parseStatus.type === "success"
+                  ? "Parse complete"
+                  : parseStatus.type === "error"
+                  ? "Parse failed"
+                  : "Working…"}
+              </AlertTitle>
+              {parseStatus.msg}
+            </Alert>
+          )}
 
           </Grid>
       
@@ -308,7 +410,7 @@ export function WebScraper() {
         aria-label="Open instructions"
         title="Open instructions"
       >
-        {"<"}
+        {"?"}
       </Button>
 
       {/* Right sliding instructions drawer */}

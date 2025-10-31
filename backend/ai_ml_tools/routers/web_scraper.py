@@ -1,5 +1,6 @@
 # Imports
 from fastapi import APIRouter
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from typing import Dict, List
 import uuid
@@ -13,6 +14,7 @@ from chromadb.config import Settings
 router = APIRouter(prefix="/api", tags=["web-scraper"])
 
 _memory: Dict[str, List[str]] = {}
+_combined_text: Dict[str, str] = {}
 
 PERSIST_DIR = "chroma_store"
 COLLECTION  = "web_chunks_v6"
@@ -68,6 +70,7 @@ def api_scrape(req: ScrapeReq):
 
     session_id = str(uuid.uuid4())
     _memory[session_id] = chunks
+    _combined_text[session_id] = text
 
     added = upsert_chunks_into_vector_db(chunks, req.url)
 
@@ -77,6 +80,14 @@ def api_scrape(req: ScrapeReq):
         "chunk_count": len(chunks),
         "embedded_count": added,
     }
+
+@router.get("/scrape/{session_id}/combined.txt")
+def download_combined_text(session_id: str):
+    txt = _combined_text.get(session_id)
+    if not txt:
+        return PlainTextResponse("No combined text for this session.", status_code=404)
+    headers = {"Content-Disposition": f'attachment; filename="combined_{session_id}.txt"'}
+    return PlainTextResponse(txt, media_type="text/plain", headers=headers)
 
 # Parse POST request
 @router.post("/parse")
