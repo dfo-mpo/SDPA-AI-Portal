@@ -282,7 +282,7 @@ export function WebScraper() {
                   value={selectedPresetUrl || null}
                   onInputChange={(_, v) => {
                     setUrl(v || "");
-                    // If you type something not in presets, treat it as new URL
+                    // If user types something not in presets, treat it as new URL
                     if (!knownUrls.includes(v || "")) {
                       setSelectedPresetUrl(null);
                       setSessionId(null);
@@ -413,6 +413,21 @@ export function WebScraper() {
                           textTransform: "none",
                           fontWeight: 600,
                         }}
+                      >
+                        Download Scraped Data
+                      </Button>
+                    </Box>
+                  )}
+
+                  {selectedPresetUrl && (
+                    <Box sx={{ mt: 1.5, maxWidth: 720, mx: "auto" }}>
+                      <Button
+                        component="a"
+                        href={`${API_BASE}/api/combined-by-url?url=${encodeURIComponent(selectedPresetUrl)}`}
+                        variant="outlined"
+                        size="small"
+                        startIcon={<Download size={16} />}
+                        sx={{ textTransform: "none", fontWeight: 600 }}
                       >
                         Download Scraped Data
                       </Button>

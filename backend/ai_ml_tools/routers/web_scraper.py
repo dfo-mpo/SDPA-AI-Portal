@@ -1,5 +1,5 @@
 # Imports
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from typing import Dict, List
@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api", tags=["web-scraper"])
 
 _memory: Dict[str, List[str]] = {}
 _combined_text: Dict[str, str] = {}
+_session_url: Dict[str, str] = {}
 
 PERSIST_DIR = "chroma_store"
 COLLECTION  = "web_chunks_v6"
@@ -165,6 +166,7 @@ def api_scrape(req: ScrapeReq):
     cached = _url_cached(req.url)
     if cached:
         session_id = str(uuid.uuid4())
+        _session_url[session_id] = req.url
         _memory[session_id] = []
         _combined_text[session_id] = ""
         return {
@@ -181,6 +183,7 @@ def api_scrape(req: ScrapeReq):
     chunks = split_dom_content(text)
 
     session_id = str(uuid.uuid4())
+    _session_url[session_id] = req.url
     _memory[session_id] = chunks
     _combined_text[session_id] = text
 
@@ -219,14 +222,32 @@ def api_parse_by_url(req: ParseByUrlReq):
 # ----- GET Requests -----
 @router.get("/scrape/{session_id}/combined.txt")
 def download_combined_text(session_id: str):
-    '''Returns the raw combined scraped text for a session as a downloadable .txt file.'''
+    '''Returns the raw combined scraped text for a fresh scrape as a downloadable .txt file.'''
     txt = _combined_text.get(session_id)
     if not txt:
         return PlainTextResponse("No combined text for this session.", status_code=404)
-    headers = {"Content-Disposition": f'attachment; filename="combined_{session_id}.txt"'}
+    url = _session_url.get(session_id, "")
+    if url:
+        base = hashlib.sha1(url.encode("utf-8")).hexdigest()[:12]
+        filename = f'combined_{base}.txt'
+    else:
+        filename = f'combined_{session_id}.txt'
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
     return PlainTextResponse(txt, media_type="text/plain", headers=headers)
 
 @router.get("/presets")
 def api_list_presets():
     '''Returns a list of cached URLs (presets) discovered in the vector store.'''
     return {"status": "ok", "presets": _list_presets()}
+
+@router.get("/combined-by-url")
+def download_combined_text_by_url(url: str = Query(..., description="Previously scraped URL")):
+    """Return the combined scraped text for a cached URL (joined chunks) as a downloadable .txt."""
+    chunks = _get_chunks_by_url(url)
+    if not chunks:
+        return PlainTextResponse("No cached text for this URL. Scrape it first.", status_code=404)
+    combined = "\n\n".join(chunks)
+    base = hashlib.sha1(url.encode("utf-8")).hexdigest()[:12]
+    filename = f'combined_{base}.txt'
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return PlainTextResponse(combined, media_type="text/plain", headers=headers)
