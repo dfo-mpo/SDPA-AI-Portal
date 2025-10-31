@@ -96,21 +96,26 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
       
       <Box sx={staticToolListStyles.listContentWrapper}>
         {/* Categories and Tools */}
-        {Object.entries(TOOL_CATEGORIES).map(([category, tools]) => (
+        {Object.entries(TOOL_CATEGORIES).map(([category, tools]) => {
+          const visibleTools = tools.filter(tool => {
+            const isHideInDemo = tool.showInDemo === false && !isAuth;
+            return !isHideInDemo;
+          });
+
+          if (visibleTools.length === 0) return null;
+          
+          return (
           <Box key={category} sx={staticToolListStyles.listWrapper}>
             {/* Check if the category should be displayed in demo mode */}
-            {(isAuth || tools.some(tool => tool.showInDemo !== false)) && (
-              <ListSubheader disableSticky sx={staticToolListStyles.subheader}>
-                {translations.categories[category] || category}
-              </ListSubheader>
-            )}
+            <ListSubheader disableSticky sx={staticToolListStyles.subheader}>
+              {translations.categories[category] || category}
+            </ListSubheader>
             
             <List disablePadding sx={{ p: 0, m: 0, }}>
-              {tools.map((tool) => {
+              {visibleTools.map((tool) => {
                 const IconComponent = tool.icon;
                 const isDisabled = tool.disabled;
                 const isExternalLink = !!tool.externalUrl;
-                const isHideInDemo = tool.showInDemo === false && !isAuth;
                 // Determine appropriate tooltip
                 let tooltipText = "";
                 if (isDisabled) {
@@ -120,7 +125,6 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
                 } else if (isExternalLink) {
                   tooltipText = externalLinkTooltip[language] || externalLinkTooltip.en;
                 }
-                if (isHideInDemo) return null;
                 return (
                   <ListItem key={tool.name} disablePadding>
                     <Tooltip 
@@ -207,7 +211,7 @@ export default function StaticToolList({ onToolSelect, selectedTool }) {
               })}
             </List>
           </Box>
-        ))}
+        )})}
       </Box>
     </Paper>
   );
