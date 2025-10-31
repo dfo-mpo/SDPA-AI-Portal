@@ -3,19 +3,12 @@
  */
 
 import React, { useState } from "react";
-import { Grid } from "@mui/material";
 import {
-  Paper,
-  Stack,
-  Alert,
-  AlertTitle,
-  TextField,
-  Button,
-  Drawer,
-  Divider,
-  Typography,
-  Box,
+  Paper, Stack, Alert, AlertTitle, TextField, Button,
+  Drawer, Divider, Typography, Box, Collapse, CircularProgress,
+  Stepper, Step, StepLabel, LinearProgress
 } from "@mui/material";
+import { ChevronDown, ChevronUp, Download } from "lucide-react";
 
 const API_BASE = "http://localhost:8000";
 
@@ -55,12 +48,31 @@ export function WebScraper() {
   const [parseStatus, setParseStatus] = useState({ type: null, msg: "" });
   const [downloadHref, setDownloadHref] = useState(null);
   const [downloadingParsed, setDownloadingParsed] = useState(false);
+  const [openSections, setOpenSections] = useState({
+    input: true,
+    parse: false,
+    result: false,
+  });
+  const [step, setStep] = useState("input");
+  const STEP_INDEX = { input: 0, parse: 1, result: 2 };
+  const TOTAL_STEPS = 3;
+  const ACTIVE_STEP =
+  step === "result" && parseStatus.type === "success"
+    ? TOTAL_STEPS
+    : STEP_INDEX[step];
+  const safeToggle = (key) => {
+    if (STEP_INDEX[key] <= STEP_INDEX[step]) {
+      setOpenSections((s) => ({ ...s, [key]: !s[key] }));
+    }
+  };
 
   async function handleScrape() {
     setErrorMsg(null);
     setParsedOutput("");
     setSessionId(null);
     setParseStatus({ type: null, msg: "" });
+    setStep("input");
+    setOpenSections({ input: true, parse: false, result: false });
 
     if (!url.trim()) {
       setErrorMsg("Please enter a URL.");
@@ -84,6 +96,8 @@ export function WebScraper() {
       
       setSessionId(data.session_id);
       setDownloadHref(`${API_BASE}/api/scrape/${data.session_id}/combined.txt`);
+      setStep("parse");
+      setOpenSections({ input: false, parse: true, result: false });
 
       setScrapeStatus({
         type: "success",
@@ -129,8 +143,9 @@ export function WebScraper() {
       const data = await res.json();
 
       setParsedOutput((data && data.result) || "");
-      setParseStatus({ type: "success", msg: "Parse complete. See the result on the right." });
-
+      setParseStatus({ type: "success", msg: "Parse complete. See the result below." });
+      setStep("result");
+      setOpenSections({ input: false, parse: false, result: true });
     } catch (e) {
       setErrorMsg((e && e.message) || "Parse failed");
       setParseStatus({ type: "error", msg: "Parse failed. Refine your prompt and try again." });
@@ -162,7 +177,6 @@ export function WebScraper() {
           </p>
         </Stack>
 
-        {/* Disclaimer banner */}
         <Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
           <AlertTitle>Disclaimer</AlertTitle>
           This scraper is for <strong>demonstration purposes only</strong> and is{" "}
@@ -175,220 +189,281 @@ export function WebScraper() {
 
         <Box sx={{ mt: 4 }} />
 
+        <Box sx={{ mb: 3 }}>
+          <Stepper activeStep={ACTIVE_STEP} alternativeLabel>
+            {["Enter Website URL", "Ask Questions About the Data", "View Results"].map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+
+          {(loadingScrape || loadingParse) && (
+            <LinearProgress sx={{ mt: 1 }} />
+          )}
+        </Box>
+
         {errorMsg && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {errorMsg}
           </Alert>
         )}
 
-        <Grid container spacing={3} alignItems="flex-start">
-          {/* LEFT: inputs */}
-          <Grid item xs={12} md={6}>
-          {/* URL input + Scrape button*/}
-            <Typography variant="h4" fontWeight={700}>Input URL</Typography>
+         <Box sx={{ maxWidth: 720, mx: "auto" }}>
             <Box
+              onClick={() => safeToggle("input")}
               sx={{
-                mt: 2,
-                mx: "auto",
-                maxWidth: 720,
+                cursor: "pointer",
                 display: "flex",
-                gap: 1.5,
                 alignItems: "center",
+                justifyContent: "space-between",
+                p: 1.2,
+                borderRadius: 1,
+                bgcolor: "grey.100",
+                "&:hover": { bgcolor: "grey.200" },
               }}
             >
-              <TextField
-                size="small"
-                label="Enter Website URL"
-                placeholder="https://example.com"
-                fullWidth
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-              <Button
-                onClick={handleScrape}
-                disabled={loadingScrape}
-                variant="contained"
-                color="primary"
-                size="small"
-                sx={{
-                  borderRadius: 2,
-                  textTransform: "none",
-                  px: 2.5,
-                  "&.MuiButton-contained": { color: "white" },
-                }}
-                title={!url ? "Enter a URL to enable scraping" : "Scrape content"}
-              >
-                {loadingScrape ? "Scraping..." : "Scrape"}
-              </Button>
+              <Typography variant="h4" fontWeight={700}>Enter Website URL</Typography>
+              {openSections.input ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
             </Box>
-
-            {scrapeStatus.type && (
-              <Alert
-                severity={scrapeStatus.type}
+            <Collapse in={openSections.input} timeout="auto" unmountOnExit>
+              <Box
                 sx={{
                   mt: 2,
                   mx: "auto",
                   maxWidth: 720,
+                  display: "flex",
+                  gap: 1.5,
                   alignItems: "center",
-                  borderLeft: 6,
-                  borderLeftColor: (theme) =>
-                    scrapeStatus.type === "success"
-                      ? theme.palette.success.main
-                      : scrapeStatus.type === "error"
-                      ? theme.palette.error.main
-                      : theme.palette.info.main,
                 }}
-                action={
-                  scrapeStatus.type === "success" && downloadHref ? (
-                    <Button
-                      component="a"
-                      href={downloadHref}
-                      variant="contained"
-                      size="small"
-                      sx={{ fontWeight: 700 }}
-                    >
-                      Download Data (.txt)
-                    </Button>
-                  ) : null
-                }
               >
-                <AlertTitle sx={{ fontWeight: 800, mb: 0 }}>
-                  {scrapeStatus.type === "success"
-                    ? "Scrape complete"
-                    : scrapeStatus.type === "error"
-                    ? "Scrape failed"
-                    : "Working…"}
-                </AlertTitle>
-                {scrapeStatus.msg}
-              </Alert>
-            )}
+                <TextField
+                  size="small"
+                  label="Enter Website URL"
+                  placeholder="https://example.com"
+                  fullWidth
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                />
+                <Button
+                  onClick={handleScrape}
+                  disabled={loadingScrape}
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    px: 2.5,
+                    "&.MuiButton-contained": { color: "white" },
+                  }}
+                  title={!url ? "Enter a URL to enable scraping" : "Scrape content"}
+                >
+                  {loadingScrape ? "Scraping..." : "Scrape"}
+                </Button>
+              </Box>
+            </Collapse>     
+              {scrapeStatus.type && (
+                <>
+                  <Alert
+                    severity={scrapeStatus.type}
+                    icon={scrapeStatus.type === "info" ? <CircularProgress size={18} /> : undefined}
+                    sx={{
+                      mt: 2,
+                      mx: "auto",
+                      maxWidth: 720,
+                      alignItems: "center",
+                    }}
+                  >
+                    <AlertTitle sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.95rem' }}>
+                      {scrapeStatus.type === "success"
+                        ? "✓ Scrape complete"
+                        : scrapeStatus.type === "error"
+                        ? "Scrape failed"
+                        : "Working…"}
+                    </AlertTitle>
+                    <Typography variant="body2">{scrapeStatus.msg}</Typography>
+                  </Alert>
+                  
+                  {scrapeStatus.type === "success" && downloadHref && (
+                    <Box sx={{ mt: 1.5, maxWidth: 720, mx: "auto" }}>
+                      <Button
+                        component="a"
+                        href={downloadHref}
+                        variant="outlined"
+                        size="small"
+                        startIcon={<Download size={16} />}
+                        sx={{ 
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Download Scraped Data
+                      </Button>
+                    </Box>
+                  )}
+                </>
+              )}
             
             <Box sx={{ mt: 3 }} />
-            <Typography variant="h4" fontWeight={700}>Parse</Typography>
-            {/* Prompt input + Parse button */}
             <Box
+              onClick={() => safeToggle("parse")}
               sx={{
-                mt: 2,
-                mx: "auto",
-                maxWidth: 720,
+                cursor: "pointer",
                 display: "flex",
-                gap: 1.5,
-                alignItems: "flex-start",
+                alignItems: "center",
+                justifyContent: "space-between",
+                mt: 3,
+                p: 1.2,
+                borderRadius: 1,
+                bgcolor: "grey.100",
+                "&:hover": { bgcolor: "grey.200" },
               }}
-              >
-              <TextField
-                size="small"
-                label="Ask a question or describe what to extract"
-                placeholder="e.g., Extract a table with columns: Name | Title | City..."
-                fullWidth
-                multiline
-                minRows={5}
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                sx={{
-                  '& .MuiInputBase-root': {
-                    height: 125,
-                    alignItems: "flex-start",
-                  },
-                }}
-              />
-              <Button
-                onClick={handleParse}
-                disabled={!sessionId || loadingParse}
-                variant="contained"
-                color="primary"
-                size="small"
-                sx={{
-                  borderRadius: 2,
-                  textTransform: "none",
-                  px: 2.5,
-                  "&.MuiButton-contained": { color: "white" },
-                }}
-                title={!sessionId ? "Scrape first to enable parsing" : "Parse content"}
-              >
-                {loadingParse ? "Parsing..." : "Parse"}
-              </Button>
+            >
+              <Typography variant="h4" fontWeight={700}>Ask Questions About the Data</Typography>
+              {openSections.parse ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
             </Box>
 
-            {/* Parse status banner */}
-            {parseStatus.type && (
-            <Alert
-              severity={parseStatus.type}
-              sx={{
-                mt: 1.5,
-                maxWidth: 720,
-                alignItems: "center",
-                borderLeft: 6,
-                borderLeftColor: (theme) =>
-                  parseStatus.type === "success"
-                    ? theme.palette.success.main
-                    : parseStatus.type === "error"
-                    ? theme.palette.error.main
-                    : theme.palette.info.main,
-              }}
-              action={
-                parseStatus.type === "success" && parsedOutput ? (
-                  <Button
-                    variant="contained"
-                    size="small"
-                    disabled={downloadingParsed}
-                    onClick={() => {
-                      try {
-                        setDownloadingParsed(true);
-                        downloadTextFile(makeFileNameFromUrl(url, "parsed"), parsedOutput);
-                      } finally {
-                        setDownloadingParsed(false);
-                      }
-                    }}
-                    sx={{ fontWeight: 700 }}
-                  >
-                    {downloadingParsed ? "Preparing…" : "Download Result (.txt)"}
-                  </Button>
-                ) : null
-              }
-            >
-              <AlertTitle sx={{ fontWeight: 800, mb: 0 }}>
-                {parseStatus.type === "success"
-                  ? "Parse complete"
-                  : parseStatus.type === "error"
-                  ? "Parse failed"
-                  : "Working…"}
-              </AlertTitle>
-              {parseStatus.msg}
-            </Alert>
-          )}
-
-          </Grid>
-      
-          {/* RIGHT: parsed output */}
-          <Grid item xs={12} md={6}>
-          <Typography variant="h4" fontWeight={700}>Result</Typography>
-            {parsedOutput ? (
+            <Collapse in={openSections.parse} timeout="auto" unmountOnExit>
               <Box
                 sx={{
-                  maxHeight: 360,
-                  overflow: "auto",
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "break-word",
-                  lineHeight: 1.45,
-                  p: 1,
-                  backgroundColor: "white",
-                  borderRadius: 1,
-                  border: "1px solid",
-                  borderColor: "divider",
+                  mt: 2,
+                  mx: "auto",
+                  maxWidth: 720,
+                  display: "flex",
+                  gap: 1.5,
+                  alignItems: "flex-start",
                 }}
-              >
-                {parsedOutput}
+                >
+                <TextField
+                  size="small"
+                  label="Ask a question or describe what to extract"
+                  placeholder="e.g., Extract a table with columns: Name | Title | City..."
+                  fullWidth
+                  multiline
+                  minRows={5}
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  sx={{
+                    '& .MuiInputBase-root': {
+                      height: 125,
+                      alignItems: "flex-start",
+                    },
+                  }}
+                />
+                <Button
+                  onClick={handleParse}
+                  disabled={!sessionId || loadingParse}
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    px: 2.5,
+                    "&.MuiButton-contained": { color: "white" },
+                  }}
+                  title={!sessionId ? "Scrape first to enable parsing" : "Parse content"}
+                >
+                  {loadingParse ? "Parsing..." : "Parse"}
+                </Button>
               </Box>
-            ) : (
-              <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Parsed output will appear here after you click <b>Parse</b>.
-              </Typography>
-            )}
-        </Grid>
-      </Grid>
+            </Collapse>
+              {parseStatus.type && (
+                <>
+                  <Alert
+                    severity={parseStatus.type}
+                    icon={parseStatus.type === "info" ? <CircularProgress size={18} /> : undefined}
+                    sx={{
+                      mt: 1.5,
+                      maxWidth: 720,
+                      alignItems: "center",
+                    }}
+                  >
+                    <AlertTitle sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.95rem' }}>
+                      {parseStatus.type === "success"
+                        ? "✓ Parse complete"
+                        : parseStatus.type === "error"
+                        ? "Parse failed"
+                        : "Working…"}
+                    </AlertTitle>
+                    <Typography variant="body2">{parseStatus.msg}</Typography>
+                  </Alert>
 
-      {/* Tiny right-edge arrow tab */}
+                  {parseStatus.type === "success" && parsedOutput && (
+                    <Box sx={{ mt: 1.5, maxWidth: 720 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        disabled={downloadingParsed}
+                        startIcon={<Download size={16} />}
+                        onClick={() => {
+                          try {
+                            setDownloadingParsed(true);
+                            downloadTextFile(makeFileNameFromUrl(url, "parsed"), parsedOutput);
+                          } finally {
+                            setDownloadingParsed(false);
+                          }
+                        }}
+                        sx={{ 
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {downloadingParsed ? "Preparing…" : "Download Parsed Result"}
+                      </Button>
+                    </Box>
+                  )}
+                </>
+              )}
+
+          <Box sx={{ mt: 3 }} />
+
+          <Box
+            onClick={() => safeToggle("result")}
+            sx={{
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              p: 1.2,
+              borderRadius: 1,
+              bgcolor: "grey.100",
+              "&:hover": { bgcolor: "grey.200" },
+            }}
+          >
+            <Typography variant="h4" fontWeight={700}>View Results</Typography>
+            {openSections.result ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
+          </Box>
+
+          <Box sx={{ mt: 2 }} />
+
+          <Collapse in={openSections.result} timeout="auto" unmountOnExit>
+              {parsedOutput ? (
+                <Box
+                  sx={{
+                    maxHeight: 360,
+                    overflow: "auto",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    lineHeight: 1.45,
+                    p: 1,
+                    backgroundColor: "white",
+                    borderRadius: 1,
+                    border: "1px solid",
+                    borderColor: "divider",
+                  }}
+                >
+                  {parsedOutput}
+                </Box>
+              ) : (
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  Parsed output will appear here after you click <b>Parse</b>.
+                </Typography>
+              )}
+            </Collapse>
+      </Box>
+
       <Button
         onClick={() => setDrawerOpen(true)}
         variant="contained"
@@ -413,7 +488,6 @@ export function WebScraper() {
         {"?"}
       </Button>
 
-      {/* Right sliding instructions drawer */}
       <Drawer
         anchor="right"
         open={drawerOpen}
@@ -454,9 +528,9 @@ export function WebScraper() {
             Example Prompts
           </Typography>
           <Typography variant="body2" sx={{ mt: 1.5 }}>
-            • “Return the single <b>name</b> with the <b>highest salary</b>.”
-            <br />• “List all <b>emails</b> found on the page, one per line.”
-            <br />• “Extract a <b>table</b> with columns: Name | Title | City.”
+            • "Return the single <b>name</b> with the <b>highest salary</b>."
+            <br />• "List all <b>emails</b> found on the page, one per line."
+            <br />• "Extract a <b>table</b> with columns: Name | Title | City."
           </Typography>
 
           <Divider sx={{ my: 3 }} />
