@@ -2,13 +2,14 @@
  * Web Scraper
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Paper, Stack, Alert, AlertTitle, TextField, Button,
   Drawer, Divider, Typography, Box, Collapse, CircularProgress,
   Stepper, Step, StepLabel, LinearProgress
 } from "@mui/material";
-import { ChevronDown, ChevronUp, Download } from "lucide-react";
+import { ChevronDown, ChevronUp, Download} from "lucide-react";
+import Autocomplete from "@mui/material/Autocomplete";
 
 const API_BASE = "http://localhost:8000";
 
@@ -48,6 +49,13 @@ export function WebScraper() {
   const [parseStatus, setParseStatus] = useState({ type: null, msg: "" });
   const [downloadHref, setDownloadHref] = useState(null);
   const [downloadingParsed, setDownloadingParsed] = useState(false);
+  const [presets, setPresets] = useState([]);
+  const [selectedPresetUrl, setSelectedPresetUrl] = useState(null);
+  const parseSectionRef = useRef(null);
+  const knownUrls = useMemo(
+    () => (presets?.map((p) => p?.url || p)?.filter(Boolean) || []),
+    [presets]
+  );
   const [openSections, setOpenSections] = useState({
     input: true,
     parse: false,
@@ -130,14 +138,31 @@ export function WebScraper() {
     setParseStatus({ type: "info", msg: "Parsing… analyzing the scraped content." });
 
     try {
-      const res = await fetch(`${API_BASE}/api/parse`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          parse_description: question,
-          session_id: sessionId,
-        }),
-      });
+      let res;
+      if (selectedPresetUrl) {
+        res = await fetch(`${API_BASE}/api/parse-by-url`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: selectedPresetUrl,
+            parse_description: question,
+          }),
+        });
+      } else {
+        if (!sessionId) {
+          setErrorMsg("Nothing scraped yet. Please scrape first or select a preset.");
+          setLoadingParse(false);
+          return;
+        }
+        res = await fetch(`${API_BASE}/api/parse`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            parse_description: question,
+            session_id: sessionId,
+          }),
+        });
+      }
 
       if (!res.ok) throw new Error(`Parse failed (${res.status})`);
       const data = await res.json();
@@ -153,6 +178,17 @@ export function WebScraper() {
       setLoadingParse(false);
     }
   }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/presets`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setPresets(data?.presets || []);
+      } catch {}
+    })();
+  }, []);
 
   return (
       <Paper
@@ -237,31 +273,111 @@ export function WebScraper() {
                   alignItems: "center",
                 }}
               >
-                <TextField
-                  size="small"
-                  label="Enter Website URL"
-                  placeholder="https://example.com"
+                <Autocomplete
                   fullWidth
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
+                  freeSolo
+                  disablePortal
+                  options={knownUrls}
+                  inputValue={url}
+                  value={selectedPresetUrl || null}
+                  onInputChange={(_, v) => {
+                    setUrl(v || "");
+                    // If you type something not in presets, treat it as new URL
+                    if (!knownUrls.includes(v || "")) {
+                      setSelectedPresetUrl(null);
+                      setSessionId(null);
+                      setStep("input");
+                      setOpenSections({ input: true, parse: false, result: false });
+                      setScrapeStatus({ type: null, msg: "" });
+                    }
+                  }}
+                  onChange={(_, v) => {
+                    // Selecting a preset from the dropdown
+                    const val = v || "";
+                    setUrl(val);
+                    if (val && knownUrls.includes(val)) {
+                      setSelectedPresetUrl(val);
+                      setSessionId("__VECTOR__"); // user can parse immediately
+                      setStep("parse");
+                      setOpenSections({ input: false, parse: true, result: false });
+                      setScrapeStatus({
+                        type: "success",
+                        msg: "Preset selected. You can parse immediately without scraping.",
+                      });
+                      setTimeout(() => {
+                        parseSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }, 0);
+                    } else {
+                      setSelectedPresetUrl(null);
+                    }
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      label="Enter or select a previously scraped URL"
+                      placeholder="https://example.com"
+                      fullWidth
+                      sx={{
+                        "& .MuiAutocomplete-popupIndicator, & .MuiAutocomplete-clearIndicator": {
+                          padding: 0,
+                          margin: 0,
+                          background: "transparent !important",
+                          border: "none !important",
+                          boxShadow: "none !important",
+                          "&:hover": {
+                            background: "transparent !important",
+                            border: "none !important",
+                            boxShadow: "none !important",
+                          },
+                        },
+                      }}
+                    />
+                  )}
+                  PaperComponent={(props) => (
+                    <Paper
+                      {...props}
+                      elevation={3}
+                      sx={{
+                        bgcolor: "#ffffff",
+                        borderRadius: 1,
+                        border: "1px solid",
+                        borderColor: "divider",
+                      }}
+                    />
+                  )}
+                  componentsProps={{ listbox: { sx: { bgcolor: "#ffffff" } } }}
                 />
+
                 <Button
                   onClick={handleScrape}
-                  disabled={loadingScrape}
                   variant="contained"
                   color="primary"
                   size="small"
+                  disabled={loadingScrape || !url || !!selectedPresetUrl}
                   sx={{
                     borderRadius: 2,
                     textTransform: "none",
                     px: 2.5,
                     "&.MuiButton-contained": { color: "white" },
                   }}
-                  title={!url ? "Enter a URL to enable scraping" : "Scrape content"}
+                  title={
+                    !url
+                      ? "Enter a URL to enable scraping"
+                      : selectedPresetUrl
+                      ? "Already scraped — jump to Parse"
+                      : "Scrape content"
+                  }
                 >
                   {loadingScrape ? "Scraping..." : "Scrape"}
                 </Button>
               </Box>
+              <Typography
+                variant="caption"
+                sx={{ display: "block", mt: 1, ml: 0.5, color: "text.secondary" }}
+              >
+                Type a new URL and click Scrape - or select a previously scraped URL to jump directly to parsing.
+              </Typography>
             </Collapse>     
               {scrapeStatus.type && (
                 <>
@@ -307,6 +423,7 @@ export function WebScraper() {
             
             <Box sx={{ mt: 3 }} />
             <Box
+              ref={parseSectionRef}
               onClick={() => safeToggle("parse")}
               sx={{
                 cursor: "pointer",
