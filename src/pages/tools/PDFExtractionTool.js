@@ -2,10 +2,10 @@
  * PDF Extraction Tool
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Paper, Stack, Alert, AlertTitle, TextField, Button, Drawer, Divider,
-  Typography, Box, Stepper, Step, StepLabel, LinearProgress, Collapse, Chip, CircularProgress
+  Typography, Box, Stepper, Step, StepLabel, LinearProgress, Collapse, Chip
 } from "@mui/material";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -21,15 +21,24 @@ export function PDFExtractionTool() {
   const [fieldsOpen, setFieldsOpen] = useState(false);
   const [fields, setFields] = useState([]);
   const [newField, setNewField] = useState("");
+  const [pdfStatus, setPdfStatus] = useState(null);
+  const [schemaStatus, setSchemaStatus] = useState(null);
+  const [presetStatus, setPresetStatus] = useState(null);
+  const [manualStatus, setManualStatus] = useState(null);
 
   /* Functions */
   function handleFileInput(e) {
     const picked = Array.from(e.target.files || []);
     if (!picked.length) return;
     const map = new Map(files.map((f) => [fileKey(f), f]));
-    for (const f of picked) map.set(fileKey(f), f);
+    let added = 0;
+    for (const f of picked) { if (!map.has(fileKey(f))) added++; map.set(fileKey(f), f); }
     setFiles(Array.from(map.values()));
     e.target.value = "";
+    setPdfStatus(added
+      ? { type: "success", msg: `Added ${added} PDF${added>1?"s":""}.` }
+      : { type: "info", msg: "No new PDFs (duplicates ignored)." }
+    );
   }
 
   function removeFileAt(index) {
@@ -55,12 +64,18 @@ export function PDFExtractionTool() {
         }
       }
       if (incoming.length) {
-        const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
-        const merged = [...fields, ...incoming.filter((x) => !seen.has(x.toLowerCase().trim()))];
-        setFields(merged);
+        const seen = new Set(fields.map((x)=>x.toLowerCase().trim()));
+        const unique = incoming.filter((x)=>!seen.has(x.toLowerCase().trim()));
+        setFields((prev)=>[...prev, ...unique]);
+        setSchemaStatus({
+          type: "success",
+          msg: `Schema loaded: ${incoming.length} field${incoming.length>1?"s":""} (${unique.length} new).`
+        });
+      } else {
+        setSchemaStatus({ type: "info", msg: "No fields detected in schema." });
       }
     } catch {
-      
+      setSchemaStatus({ type: "error", msg: "Failed to parse schema. Check file format." });
     } finally {
       e.target.value = "";
     }
@@ -70,12 +85,15 @@ export function PDFExtractionTool() {
     const v = (newField || "").trim();
     if (!v) return;
     const exists = fields.some((x) => x.toLowerCase().trim() === v.toLowerCase());
-    if (!exists) setFields((prev) => [...prev, v]);
+    if (exists) setManualStatus({ type: "info", msg: `Field “${v}” already exists.` });
+    else { setFields((prev)=>[...prev, v]); setManualStatus({ type: "success", msg: `Added field: “${v}”.` }); }
     setNewField("");
   }
-  
+
   function clearFields() {
+    if (!fields.length) { setManualStatus({ type: "info", msg: "No fields to clear." }); return; }
     setFields([]);
+    setManualStatus({ type: "success", msg: "All fields cleared." });
   }
 
   useEffect(() => {
@@ -230,6 +248,18 @@ export function PDFExtractionTool() {
               ))}
             </Box>
           )}
+
+          {/* PDF Upload Alert Status (Success, info or faiilure) */}
+          {pdfStatus && (
+            <Alert severity={pdfStatus.type} sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
+              <AlertTitle sx={{ fontWeight: 600 }}>
+                {pdfStatus.type === "success" ? "✓ PDF(s) added"
+                  : pdfStatus.type === "error" ? "Upload failed" : "Notice"}
+              </AlertTitle>
+              {pdfStatus.msg}
+            </Alert>
+          )}
+
           
           {/* PDF viewer */}
           <Box sx={{ mt: 2 }}>
@@ -293,6 +323,20 @@ export function PDFExtractionTool() {
               </Typography>
             </Box>
 
+            {/* Schema Upload Alert Status (Success, info or faiilure) */}
+            {schemaStatus && (
+              <Alert
+                severity={schemaStatus.type}
+                sx={{ mt: 1 }}
+              >
+                <AlertTitle sx={{ fontWeight: 600 }}>
+                  {schemaStatus.type === "success" ? "✓ Schema loaded"
+                    : schemaStatus.type === "error" ? "Schema error" : "Working…"}
+                </AlertTitle>
+                {schemaStatus.msg}
+              </Alert>
+            )}
+
             {/* OR divider */}
             <Divider sx={{ my: 2 }}>
               <Typography variant="caption" color="text.secondary">OR</Typography>
@@ -314,7 +358,12 @@ export function PDFExtractionTool() {
                   onClick={() => {
                     const preset = ["Paper Title","Authors","Publication Year","Abstract","Methodology","Results","Conclusion"];
                     const seen = new Set(fields.map(x => x.toLowerCase().trim()));
-                    setFields(prev => [...prev, ...preset.filter(p => !seen.has(p.toLowerCase().trim()))]);
+                    const toAdd = preset.filter(p => !seen.has(p.toLowerCase().trim()));
+                    setFields(prev => [...prev, ...toAdd]);
+                    setPresetStatus({
+                      type: "success",
+                      msg: `Research Paper Preset added: ${preset.length} fields (${toAdd.length} new).`
+                    });
                   }}
                 >
                   Research Paper
@@ -326,7 +375,12 @@ export function PDFExtractionTool() {
                   onClick={() => {
                     const preset = ["Document Title","Company Name","Date","Executive Summary","Key Findings","Recommendations"];
                     const seen = new Set(fields.map(x => x.toLowerCase().trim()));
-                    setFields(prev => [...prev, ...preset.filter(p => !seen.has(p.toLowerCase().trim()))]);
+                    const toAdd = preset.filter(p => !seen.has(p.toLowerCase().trim()));
+                    setFields(prev => [...prev, ...toAdd]);
+                    setPresetStatus({
+                      type: "success",
+                      msg: `Business Document Preset added: ${preset.length} fields (${toAdd.length} new).`
+                    });
                   }}
                 >
                   Business Document
@@ -338,13 +392,32 @@ export function PDFExtractionTool() {
                   onClick={() => {
                     const preset = ["Invoice Number","Invoice Date","Subtotal","Taxes","Total Amount Due","Currency","Payment Terms"];
                     const seen = new Set(fields.map(x => x.toLowerCase().trim()));
-                    setFields(prev => [...prev, ...preset.filter(p => !seen.has(p.toLowerCase().trim()))]);
+                    const toAdd = preset.filter(p => !seen.has(p.toLowerCase().trim()));
+                    setFields(prev => [...prev, ...toAdd]);
+                    setPresetStatus({
+                      type: "success",
+                      msg: `Invoice Preset added: ${preset.length} fields (${toAdd.length} new).`
+                    });
                   }}
                 >
                   Invoice
                 </Button>
               </Box>
             </Box>
+
+            {/* Preset Alert Status (Success, info or faiilure) */}
+            {presetStatus && (
+              <Alert
+                severity={presetStatus.type}
+                sx={{ mt: 1 }}
+              >
+                <AlertTitle sx={{ fontWeight: 600 }}>
+                  {presetStatus.type === "success" ? "✓ Preset applied"
+                    : presetStatus.type === "error" ? "Preset error" : "Working…"}
+                </AlertTitle>
+                {presetStatus.msg}
+              </Alert>
+            )}
 
             {/* OR divider */}
             <Divider sx={{ my: 2 }}>
@@ -380,6 +453,17 @@ export function PDFExtractionTool() {
                 </Button>
               </Box>
 
+               {/* Divider */}
+              <Divider sx={{ my: 4 }}>
+              </Divider>
+
+               {/* Extracted Fields list */}
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+                <Typography variant="subtitle1" fontWeight={700}>
+                  Extracted Fields
+                </Typography>
+              </Box>
+
               {fields.length > 0 ? (
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                   {fields.map((f, i) => (
@@ -396,6 +480,21 @@ export function PDFExtractionTool() {
                   No fields yet. Upload a schema, select a preset, or add manually.
                 </Typography>
               )}
+
+              {/* Manual Upload Alert Status (Success, info or faiilure) */}
+              {manualStatus && (
+                <Alert
+                  severity={manualStatus.type}
+                  sx={{ mt: 1 }}
+                >
+                  <AlertTitle sx={{ fontWeight: 600 }}>
+                    {manualStatus.type === "success" ? "✓ Field updated"
+                      : manualStatus.type === "error" ? "Field error" : "Working…"}
+                  </AlertTitle>
+                  {manualStatus.msg}
+                </Alert>
+              )}
+
             </Box>
           </Box>
         </Collapse>
