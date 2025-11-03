@@ -355,98 +355,6 @@ export const Questions = [
     description: "Describe any potential risks",
     required: false
   },
-
-  // TBS Questions
-  {
-    name: "tbs_service_inventory_id",
-    label: "TBS Service Inventory ID",
-    type: "text",
-    description: "Identifies the unique number assigned to a service in the GC Service Inventory. Leave blank if not applicable"
-  },
-  {
-    name: "tbs_government_organization",
-    label: "TBS Government Organization (Fisheries and Oceans Canada)",
-    type: "text",
-    description: "Identifies the department or agency responsible for the AI system"
-  },
-  {
-    name: "tbs_ai_system_primary_users",
-    label: "TBS AI system primary users",
-    type: "text",
-    description: "Identifies whether the primary users of the AI system are GC employees, members of the public, both, or neither "
-  },
-  {
-    name: "tbs_developed_by",
-    label: "TBS Developed By",
-    type: "text",
-    description: "Identifies the developer of the system. If more than one option applies but parts of system were procured, please choose \"vendor\" and state vendor name in column H. Choose \"other\" for systems involving non-vendor external developers (e.g.,academia, civil society) "
-  },
-  {
-    name: "tbs_vendor_name",
-    label: "TBS Vendor name",
-    type: "text",
-    description: "Provides the name of the vendor from whom the AI system was procured. If no vendor, state \"Not applicable\" "
-  },
-  {
-    name: "tbs_status_date",
-    label: "TBS status date",
-    type: "text",
-    description: "Identifies the calendar year the AI system entered this status: e.g., if pilot began in 2021, or system was retired in 2019 "
-  },
-  {
-    name: "tbs_ai_system_capabilities",
-    label: "TBS AI system capabilities",
-    type: "text",
-    description: "Identifies the capabilities of the AI system. Max 300 characters "
-  },
-  {
-    name: "tbs_automated_decision_system",
-    label: "TBS Automated decision system",
-    type: "text",
-    description: "Identifies whether the AI system makes administrative decisions or related assessments about clients. For information on definition of an automated decision system, please see Directive on Automated Decision Making "
-  },
-  {
-    name: "tbs_algorithmic_impact_assessment",
-    label: "TBS Algorithmic impact assessment",
-    type: "text",
-    description: "Provides the unique number assigned to completed Algorithmic Impact Assessments (AIA) on the Open Government Portal. If this does not apply, state \"Not applicable.\" "
-  },
-  {
-    name: "tbs_data_sources",
-    label: "TBS data sources",
-    type: "text",
-    description: "Describes the sources of the data used to train and as inputs for the AI system. Give names of datasets if available, or describe type and source of data used. "
-  },
-  {
-    name: "tbs_involves_personal_information",
-    label: "TBS involves personal information",
-    type: "text",
-    description: "Identifies whether the AI system uses or creates personal information",
-  },
-  {
-    name: "tbs_personal_information_banks",
-    label: "TBS personal information banks",
-    type: "text",
-    description: "Identifies the Personal Information Banks associated with the activity. If no PIB exists, please state \"Not applicable\" "
-  },
-  {
-    name: "tbs_notification_of_ai",
-    label: "TBS Notification of AI",
-    type: "text",
-    description: "Identifies whether users are notified that they are interacting with an AI system "
-  },
-  {
-    name: "tbs_access_to_information_request",
-    label: "TBS Access to information request",
-    type: "text",
-    description: "Identifies any access to information request number relating to the AI system "
-  },
-  {
-    name: "tbs_system_results",
-    label: "TBS system results",
-    type: "text",
-    description: "Describes the expected or actual results of the implementation of the AI system. Max 500 characters including spaces "
-  },
 ];
 
 // this is used to keep track of the questions we want to render for each section
@@ -509,25 +417,5 @@ export const SectionGroups = {
       // "risks_area",
       "risks_level"
     ],
-  },
-  tbs: {
-    label: "Treasury Board of Canada Secretariat (TBS) Questionnaire",
-    questions: [
-      "tbs_service_inventory_id",
-      "tbs_government_organization",
-      "tbs_ai_system_primary_users",
-      "tbs_developed_by",
-      "tbs_vendor_name",
-      "tbs_status_date",
-      "tbs_ai_system_capabilities",
-      "tbs_automated_decision_system",
-      "tbs_algorithmic_impact_assessment",
-      "tbs_data_sources",
-      "tbs_involves_personal_information",
-      "tbs_personal_information_banks",
-      "tbs_notification_of_ai",
-      "tbs_access_to_information_request",
-      "tbs_system_results",
-    ]
   }
 };
