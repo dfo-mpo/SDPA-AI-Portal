@@ -485,7 +485,7 @@ export const SectionGroups = {
     ],
   },
   aiMlQuestions: {
-    label: "Data Science, ML and AI",
+    label: "Artificial Intelligence (AI)",
     questions: [
       // "project_area", 
       "success_outcomes",
