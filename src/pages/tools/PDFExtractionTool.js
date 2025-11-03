@@ -2,26 +2,47 @@
  * PDF Extraction Tool
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Paper,
-  Stack,
-  Alert,
-  AlertTitle,
-  TextField,
-  Button,
-  Drawer,
-  Divider,
-  Typography,
-  Box, Stepper, Step, StepLabel, LinearProgress
+  Paper, Stack, Alert, AlertTitle, TextField, Button, Drawer, Divider,
+  Typography, Box, Stepper, Step, StepLabel, LinearProgress, Collapse, Chip
 } from "@mui/material";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export function PDFExtractionTool() {
+  /* Hooks */
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
-  const [loadingScrape, setLoadingScrape] = useState(false);
-  const [loadingParse, setLoadingParse] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(true);
+  const [files, setFiles] = useState([]);
+  const fileKey = (f) => `${f.name}::${f.size}::${f.lastModified || 0}`;
+  const [previews, setPreviews] = useState([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
 
+  /* Functions */
+  function handleFileInput(e) {
+    const picked = Array.from(e.target.files || []);
+    if (!picked.length) return;
+    const map = new Map(files.map((f) => [fileKey(f), f]));
+    for (const f of picked) map.set(fileKey(f), f);
+    setFiles(Array.from(map.values()));
+    e.target.value = "";
+  }
+
+  function removeFileAt(index) {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  useEffect(() => {
+    previews.forEach((u) => URL.revokeObjectURL(u));
+    const urls = files.map((f) => URL.createObjectURL(f));
+    setPreviews(urls);
+    return () => {
+      urls.forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, [files]);
+
+  /* UI */
   return (
       <Paper
         sx={{
@@ -66,10 +87,123 @@ export function PDFExtractionTool() {
               </Step>
             ))}
           </Stepper>
-
-          {(loadingScrape || loadingParse) && <LinearProgress sx={{ mt: 1 }} />}
         </Box>
 
+      {/* Upload PDF(s) Section */}
+      <Box sx={{ maxWidth: 800, mx: "auto" }}>
+        <Box
+          onClick={() => setUploadOpen((v) => !v)}
+          sx={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            p: 1.2,
+            borderRadius: 1,
+            bgcolor: "grey.100",
+            "&:hover": { bgcolor: "grey.200" },
+          }}
+        >
+          <Typography variant="h4" fontWeight={700}>Upload PDF(s)</Typography>
+          {uploadOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </Box>
+
+        <Collapse in={uploadOpen} timeout="auto" unmountOnExit>
+          {/* Upload PDF button */}
+          <Box
+            sx={{
+              mt: 2,
+              display: "flex",
+              gap: 1.5,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <Button variant="contained" component="label" size="small" sx={{ textTransform: "none" }}>
+              Select PDF(s)
+              <input
+                hidden
+                type="file"
+                accept="application/pdf"
+                multiple
+                onChange={handleFileInput}
+              />
+            </Button>
+
+            {/* Preview selector when multiple PDFs */}
+            {files.length > 1 && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography variant="body2">Preview:</Typography>
+                <select
+                  value={currentIdx}
+                  onChange={(e) => setCurrentIdx(Number(e.target.value))}
+                  style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc" }}
+                >
+                  {files.map((f, i) => (
+                    <option key={i} value={i}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+              </Box>
+            )}
+          </Box>
+
+          {/* file count */}
+          {files.length > 0 && (
+            <Typography variant="caption" sx={{ display: "block", mt: 1, ml: 0.5, color: "text.secondary" }}>
+              {files.length} file(s) selected.
+            </Typography>
+          )}
+
+          {/* file names */}
+          {files.length > 0 && (
+            <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {files.map((f, i) => (
+                <Chip
+                  key={fileKey(f)}
+                  label={f.name}
+                  onDelete={() => removeFileAt(i)}
+                  deleteIcon={
+                    <Box component="span" sx={{ fontSize: 18, fontWeight: 800, lineHeight: 1 }}>
+                      ×
+                    </Box>
+                  }
+                  sx={{
+                    bgcolor: "background.paper",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    "& .MuiChip-label": {
+                      maxWidth: 320,
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
+                      overflow: "hidden",
+                    },
+                    "& .MuiChip-deleteIcon": { fontSize: 20 },
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+          
+          {/* PDF viewer */}
+          <Box sx={{ mt: 2 }}>
+            {previews.length > 0 ? (
+              <iframe
+                title="pdf-viewer"
+                src={previews[currentIdx]}
+                width="100%"
+                height="640"
+                style={{ border: "1px solid #ddd", borderRadius: 8 }}
+              />
+            ) : (
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                Select one or more PDFs to preview them here.
+              </Typography>
+            )}
+          </Box>
+        </Collapse>
+      </Box>
         
       {/* Tiny right-edge arrow tab */}
       <Button
