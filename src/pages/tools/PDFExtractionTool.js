@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Paper, Stack, Alert, AlertTitle, TextField, Button, Drawer, Divider,
-  Typography, Box, Stepper, Step, StepLabel, LinearProgress, Collapse, Chip
+  Typography, Box, Stepper, Step, StepLabel, LinearProgress, Collapse, Chip, CircularProgress
 } from "@mui/material";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -18,6 +18,9 @@ export function PDFExtractionTool() {
   const fileKey = (f) => `${f.name}::${f.size}::${f.lastModified || 0}`;
   const [previews, setPreviews] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [fieldsOpen, setFieldsOpen] = useState(false);
+  const [fields, setFields] = useState([]);
+  const [newField, setNewField] = useState("");
 
   /* Functions */
   function handleFileInput(e) {
@@ -31,6 +34,48 @@ export function PDFExtractionTool() {
 
   function removeFileAt(index) {
     setFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function handleSchemaUpload(e) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    try {
+      const text = await f.text();
+      let incoming = [];
+      const lower = f.name.toLowerCase();
+      if (lower.endsWith(".csv")) {
+        const first = (text.split(/\r?\n/)[0] || "").split(",");
+        incoming = first.map((h) => h.trim()).filter(Boolean);
+      } else if (lower.endsWith(".json")) {
+        const obj = JSON.parse(text);
+        if (Array.isArray(obj) && obj[0] && typeof obj[0] === "object") {
+          incoming = Object.keys(obj[0] || {});
+        } else if (obj && typeof obj === "object") {
+          incoming = Object.keys(obj);
+        }
+      }
+      if (incoming.length) {
+        const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
+        const merged = [...fields, ...incoming.filter((x) => !seen.has(x.toLowerCase().trim()))];
+        setFields(merged);
+      }
+    } catch {
+      
+    } finally {
+      e.target.value = "";
+    }
+  }
+
+  function addField() {
+    const v = (newField || "").trim();
+    if (!v) return;
+    const exists = fields.some((x) => x.toLowerCase().trim() === v.toLowerCase());
+    if (!exists) setFields((prev) => [...prev, v]);
+    setNewField("");
+  }
+  
+  function clearFields() {
+    setFields([]);
   }
 
   useEffect(() => {
@@ -201,6 +246,157 @@ export function PDFExtractionTool() {
                 Select one or more PDFs to preview them here.
               </Typography>
             )}
+          </Box>
+        </Collapse>
+      </Box>
+
+      {/* Question Fields Section */}
+      <Box sx={{ maxWidth: 800, mx: "auto", mt: 3 }}>
+        <Box
+          onClick={() => setFieldsOpen((v) => !v)}
+          sx={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            p: 1.2,
+            borderRadius: 1,
+            bgcolor: "grey.100",
+            "&:hover": { bgcolor: "grey.200" },
+          }}
+        >
+          <Typography variant="h4" fontWeight={700}>Question Fields</Typography>
+          {fieldsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </Box>
+
+        <Collapse in={fieldsOpen} timeout="auto" unmountOnExit>
+          <Box sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
+            {/* brief explaination of all the optionss */}
+            <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+              You have <b>3</b> ways to define fields. Pick one, or mix &amp; match:
+            </Typography>
+
+            {/* Option 1: Upload CSV/JSON Schema */}
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+              <Chip label="Option 1" size="small" color="primary" variant="outlined" />
+              <Typography variant="subtitle1" fontWeight={700}>
+                Upload CSV/JSON Schema
+              </Typography>
+            </Stack>
+            <Box sx={{ p: 1, mb: 2 }}>
+              <Button variant="outlined" component="label" size="small" sx={{ textTransform: "none" }}>
+                Upload CSV/JSON
+                <input hidden type="file" accept=".csv,.json" onChange={handleSchemaUpload} />
+              </Button>
+              <Typography variant="body2" sx={{ mt: .5, color: "text.secondary" }}>
+                CSV uses column headers; JSON uses object keys. New fields get merged automatically.
+              </Typography>
+            </Box>
+
+            {/* OR divider */}
+            <Divider sx={{ my: 2 }}>
+              <Typography variant="caption" color="text.secondary">OR</Typography>
+            </Divider>
+
+            {/* Option 2: Quick Add Presets */}
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+              <Chip label="Option 2" size="small" color="primary" variant="outlined" />
+              <Typography variant="subtitle1" fontWeight={700}>
+                Quick Add Presets
+              </Typography>
+            </Stack>
+            <Box sx={{ p: 1, mb: 2 }}>
+              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(160px,1fr))", gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{ textTransform: "none", minHeight: 44 }}
+                  onClick={() => {
+                    const preset = ["Paper Title","Authors","Publication Year","Abstract","Methodology","Results","Conclusion"];
+                    const seen = new Set(fields.map(x => x.toLowerCase().trim()));
+                    setFields(prev => [...prev, ...preset.filter(p => !seen.has(p.toLowerCase().trim()))]);
+                  }}
+                >
+                  Research Paper
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{ textTransform: "none", minHeight: 44 }}
+                  onClick={() => {
+                    const preset = ["Document Title","Company Name","Date","Executive Summary","Key Findings","Recommendations"];
+                    const seen = new Set(fields.map(x => x.toLowerCase().trim()));
+                    setFields(prev => [...prev, ...preset.filter(p => !seen.has(p.toLowerCase().trim()))]);
+                  }}
+                >
+                  Business Document
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{ textTransform: "none", minHeight: 44 }}
+                  onClick={() => {
+                    const preset = ["Invoice Number","Invoice Date","Subtotal","Taxes","Total Amount Due","Currency","Payment Terms"];
+                    const seen = new Set(fields.map(x => x.toLowerCase().trim()));
+                    setFields(prev => [...prev, ...preset.filter(p => !seen.has(p.toLowerCase().trim()))]);
+                  }}
+                >
+                  Invoice
+                </Button>
+              </Box>
+            </Box>
+
+            {/* OR divider */}
+            <Divider sx={{ my: 2 }}>
+              <Typography variant="caption" color="text.secondary">OR</Typography>
+            </Divider>
+
+            {/* Option 3: Manual Fields */}
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+              <Chip label="Option 3" size="small" color="primary" variant="outlined" />
+              <Typography variant="subtitle1" fontWeight={700}>
+                Manual Fields
+              </Typography>
+            </Stack>
+            <Box sx={{ p: 1, mb: 2 }}>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1, flexWrap: "wrap" }}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Add a field (e.g. 'Authors', 'Methodology')"
+                  value={newField}
+                  onChange={(e) => setNewField(e.target.value)}
+                />
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={addField}
+                  sx={{ textTransform: "none", "&.MuiButton-contained": { color: "white" } }}
+                >
+                  Add
+                </Button>
+                <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={clearFields}>
+                  Clear
+                </Button>
+              </Box>
+
+              {fields.length > 0 ? (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  {fields.map((f, i) => (
+                    <Chip
+                      key={`${f}-${i}`}
+                      label={f}
+                      onDelete={() => setFields(prev => prev.filter((_, idx) => idx !== i))}
+                      sx={{ bgcolor: "background.paper", border: "1px solid", borderColor: "divider" }}
+                    />
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  No fields yet. Upload a schema, select a preset, or add manually.
+                </Typography>
+              )}
+            </Box>
           </Box>
         </Collapse>
       </Box>
