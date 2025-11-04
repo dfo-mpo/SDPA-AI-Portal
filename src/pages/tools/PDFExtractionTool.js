@@ -2,12 +2,16 @@
  * PDF Extraction Tool
  */
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect} from "react";
 import {
   Paper, Stack, Alert, AlertTitle, TextField, Button, Drawer, Divider,
-  Typography, Box, Stepper, Step, StepLabel, LinearProgress, Collapse, Chip
+  Typography, Box, Stepper, Step, StepLabel, LinearProgress, Collapse, Chip,
+  Table, TableHead, TableRow, TableCell, TableBody, TableContainer 
 } from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
 import { ChevronDown, ChevronUp } from "lucide-react";
+
+const API_BASE = "http://localhost:8000";
 
 export function PDFExtractionTool() {
   /* Hooks */
@@ -25,6 +29,17 @@ export function PDFExtractionTool() {
   const [schemaStatus, setSchemaStatus] = useState(null);
   const [presetStatus, setPresetStatus] = useState(null);
   const [manualStatus, setManualStatus] = useState(null);
+  const [resultsOpen, setResultsOpen] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [resultsByDoc, setResultsByDoc] = useState({});
+  const [vstoreId, setVstoreId] = useState(null);
+  const [docNames, setDocNames] = useState([]);
+  const [indexing, setIndexing] = useState(false);
+  const [indexStatus, setIndexStatus] = useState(null);
+  const selectedDocName = docNames[currentIdx] || null;
+  const visibleRows = selectedDocName && resultsByDoc[selectedDocName]
+    ? resultsByDoc[selectedDocName]
+    : [];
 
   /* Functions */
   function handleFileInput(e) {
@@ -96,6 +111,111 @@ export function PDFExtractionTool() {
     setManualStatus({ type: "success", msg: "All fields cleared." });
   }
 
+  function toCsv(rows) {
+    const header = ["Field","Answer","Source","Reasoning"];
+    const escape = (v="") =>
+      `"${String(v).replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+    const lines = [header.map(escape).join(",")].concat(
+      rows.map(r => [r.field, r.answer, r.source, r.reasoning].map(escape).join(","))
+    );
+    return lines.join("\n");
+  }
+
+  function download(filename, text, mime="text/plain") {
+    const blob = new Blob([text], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function indexPdfs() {
+    if (vstoreId) return { vectorstore_id: vstoreId, processed_files: docNames };
+    if (!files.length) {
+      setPdfStatus({ type: "info", msg: "Add at least one PDF first." });
+      return;
+    }
+
+    setIndexing(true);
+    setIndexStatus(null);
+
+    try {
+      const fd = new FormData();
+      files.forEach(f => fd.append("files", f));
+
+      const r = await fetch(`${API_BASE}/api/index`, { method: "POST", body: fd });
+      if (!r.ok) throw new Error(await r.text());
+      const data = await r.json();
+
+      setVstoreId(data.vectorstore_id || null);
+      setDocNames(data.processed_files || []);
+      setIndexStatus({ type: "success", msg: `Indexed ${data.processed_files?.length || 0} file(s).` });
+      setActiveStep(1);
+      setUploadOpen(false);
+      setFieldsOpen(true);
+      return data;
+    } catch (e) {
+      setIndexStatus({ type: "error", msg: readHttpError(e) });
+      return null;
+    } finally {
+      setIndexing(false);
+    }
+  }
+
+  async function handleExtract() {
+    if (!fields.length) return;
+
+    let vsId = vstoreId;
+    let docs = docNames;
+
+    if (!vsId || !docs.length) {
+      const data = await indexPdfs();
+      if (!data) return;
+      vsId = data.vectorstore_id;
+      docs = data.processed_files || [];
+    }
+
+    if (!vsId || !docs.length) {
+      setManualStatus({ type: "error", msg: "No processed documents available to extract from." });
+      return;
+    }
+
+    setExtracting(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/extract_per_file`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vectorstore_id: vsId, fields, document_names: docs }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+
+      const grouped = {};
+      for (const r of (data.results || [])) {
+        const key = r.document || "(Unknown)";
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(r);
+      }
+
+      setResultsByDoc(grouped);
+      setResultsOpen(true);
+      setActiveStep(2);
+    } catch (e) {
+      setManualStatus({ type: "error", msg: `Extraction failed: ${readHttpError(e)}` });
+    } finally {
+      setExtracting(false);
+    }
+  }
+
+  function readHttpError(e) {
+    try {
+      const obj = JSON.parse(e.message || "{}");
+      return obj?.detail || e.message || "Request failed";
+    } catch {
+      return e.message || "Request failed";
+    }
+  }
+
   useEffect(() => {
     previews.forEach((u) => URL.revokeObjectURL(u));
     const urls = files.map((f) => URL.createObjectURL(f));
@@ -150,6 +270,7 @@ export function PDFExtractionTool() {
               </Step>
             ))}
           </Stepper>
+          {(indexing || extracting) && <LinearProgress sx={{ mt: 1 }} />}
         </Box>
 
       {/* Upload PDF(s) Section */}
@@ -453,6 +574,20 @@ export function PDFExtractionTool() {
                 </Button>
               </Box>
 
+              {/* Manual Upload Alert Status (Success, info or faiilure) */}
+              {manualStatus && (
+                <Alert
+                  severity={manualStatus.type}
+                  sx={{ mt: 1 }}
+                >
+                  <AlertTitle sx={{ fontWeight: 600 }}>
+                    {manualStatus.type === "success" ? "✓ Field updated"
+                      : manualStatus.type === "error" ? "Field error" : "Working…"}
+                  </AlertTitle>
+                  {manualStatus.msg}
+                </Alert>
+              )}
+
                {/* Divider */}
               <Divider sx={{ my: 4 }}>
               </Divider>
@@ -481,24 +616,148 @@ export function PDFExtractionTool() {
                 </Typography>
               )}
 
-              {/* Manual Upload Alert Status (Success, info or faiilure) */}
-              {manualStatus && (
-                <Alert
-                  severity={manualStatus.type}
-                  sx={{ mt: 1 }}
-                >
-                  <AlertTitle sx={{ fontWeight: 600 }}>
-                    {manualStatus.type === "success" ? "✓ Field updated"
-                      : manualStatus.type === "error" ? "Field error" : "Working…"}
-                  </AlertTitle>
-                  {manualStatus.msg}
-                </Alert>
-              )}
+              <Box sx={{ my: 2 }}>
+              </Box>
+
+              <Button
+                size="small"
+                variant="contained"
+                disabled={extracting || !fields.length || (!vstoreId && !files.length)}
+                onClick={handleExtract}
+                sx={{ textTransform: "none" }}
+              >
+                {extracting ? "Extracting…" : "Extract Information"}
+              </Button>
 
             </Box>
           </Box>
         </Collapse>
       </Box>
+
+      {/* Results Section */}
+      <Box sx={{ maxWidth: 800, mx: "auto", mt: 3 }}>
+        <Box
+          onClick={() => setResultsOpen(v => !v)}
+          sx={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            p: 1.2,
+            borderRadius: 1,
+            bgcolor: "grey.100",
+            "&:hover": { bgcolor: "grey.200" },
+          }}
+        >
+          <Typography variant="h4" fontWeight={700}>Results</Typography>
+          {resultsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </Box>
+
+        <Collapse in={resultsOpen} timeout="auto" unmountOnExit>
+          <Box sx={{ mt: 2 }}>
+            {/* action row */}
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1, flexWrap: "wrap" }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<DownloadIcon />}
+                disabled={!visibleRows.length}
+                onClick={() =>
+                  download(
+                    `extracted_${(selectedDocName || "document").replace(/[^a-z0-9._-]/gi, "_")}.csv`,
+                    toCsv(visibleRows),
+                    "text/csv"
+                  )
+                }
+                sx={{ textTransform: "none" }}
+              >
+                Download CSV
+              </Button>
+
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<DownloadIcon />}
+                disabled={!visibleRows.length}
+                onClick={() =>
+                  download(
+                    `extracted_${(selectedDocName || "document").replace(/[^a-z0-9._-]/gi, "_")}.json`,
+                    JSON.stringify(visibleRows, null, 2),
+                    "application/json"
+                  )
+                }
+                sx={{ textTransform: "none" }}
+              >
+                Download JSON
+              </Button>
+            </Box>
+
+            {/* document switcher for results */}
+            {docNames.length > 1 && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, flexWrap: "wrap" }}>
+                <Typography variant="body2">Showing results for:</Typography>
+                <select
+                  value={currentIdx}
+                  onChange={(e) => setCurrentIdx(Number(e.target.value))}
+                  style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc" }}
+                >
+                  {docNames.map((name, i) => (
+                    <option key={name} value={i}>{name}</option>
+                  ))}
+                </select>
+              </Box>
+            )}
+
+            {/* table */}
+            <Paper variant="outlined" sx={{ width: "100%", overflowX: "auto" }}>
+              <TableContainer
+                component={Paper}
+                sx={{
+                  width: "100%",
+                  maxHeight: 420,
+                  overflowY: "auto",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 1,
+                }}
+              >
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>Field</TableCell>
+                      <TableCell sx={{ fontWeight: 700, minWidth: 240 }}>Answer</TableCell>
+                      <TableCell sx={{ fontWeight: 700, minWidth: 200 }}>Source</TableCell>
+                      <TableCell sx={{ fontWeight: 700, minWidth: 320 }}>Reasoning</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {visibleRows.length ? (
+                      visibleRows.map((r, i) => (
+                        <TableRow key={i} hover>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>{r.field}</TableCell>
+                          <TableCell sx={{ wordBreak: "break-word" }}>{r.answer}</TableCell>
+                          <TableCell sx={{ wordBreak: "break-word" }}>{r.source}</TableCell>
+                          <TableCell sx={{ wordBreak: "break-word" }}>{r.reasoning}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} sx={{ color: "text.secondary" }}>
+                          {selectedDocName
+                            ? "No results for this document yet."
+                            : "Run “Extract Information” to see results here."}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+            </Paper>
+          </Box>
+        </Collapse>
+      </Box>
+
         
       {/* Tiny right-edge arrow tab */}
       <Button
