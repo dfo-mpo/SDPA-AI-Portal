@@ -68,6 +68,8 @@ export function WebScraper() {
   step === "result" && parseStatus.type === "success"
     ? TOTAL_STEPS
     : STEP_INDEX[step];
+  const canOpenParse = STEP_INDEX["parse"] <= STEP_INDEX[step];
+  const canOpenResult = STEP_INDEX["result"] <= STEP_INDEX[step];
   const safeToggle = (key) => {
     if (STEP_INDEX[key] <= STEP_INDEX[step]) {
       setOpenSections((s) => ({ ...s, [key]: !s[key] }));
@@ -441,7 +443,9 @@ export function WebScraper() {
               ref={parseSectionRef}
               onClick={() => safeToggle("parse")}
               sx={{
-                cursor: "pointer",
+                cursor: canOpenParse ? "pointer" : "not-allowed",
+                opacity: canOpenParse ? 1 : 0.6,
+                pointerEvents: canOpenParse ? "auto" : "none",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -554,7 +558,9 @@ export function WebScraper() {
           <Box
             onClick={() => safeToggle("result")}
             sx={{
-              cursor: "pointer",
+              cursor: canOpenResult ? "pointer" : "not-allowed",
+              opacity: canOpenResult ? 1 : 0.6,
+              pointerEvents: canOpenResult ? "auto" : "none",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
