@@ -6,7 +6,7 @@ import React, { useState, useEffect} from "react";
 import {
   Paper, Stack, Alert, AlertTitle, TextField, Button, Drawer, Divider,
   Typography, Box, Stepper, Step, StepLabel, LinearProgress, Collapse, Chip,
-  Table, TableHead, TableRow, TableCell, TableBody, TableContainer 
+  Table, TableHead, TableRow, TableCell, TableBody, TableContainer, CircularProgress 
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -31,11 +31,11 @@ export function PDFExtractionTool() {
   const [manualStatus, setManualStatus] = useState(null);
   const [resultsOpen, setResultsOpen] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [extractionStatus, setExtractionStatus] = useState(null);
   const [resultsByDoc, setResultsByDoc] = useState({});
   const [vstoreId, setVstoreId] = useState(null);
   const [docNames, setDocNames] = useState([]);
   const [indexing, setIndexing] = useState(false);
-  const [indexStatus, setIndexStatus] = useState(null);
   const selectedDocName = docNames[currentIdx] || null;
   const visibleRows = selectedDocName && resultsByDoc[selectedDocName]
     ? resultsByDoc[selectedDocName]
@@ -48,11 +48,13 @@ export function PDFExtractionTool() {
     const map = new Map(files.map((f) => [fileKey(f), f]));
     let added = 0;
     for (const f of picked) { if (!map.has(fileKey(f))) added++; map.set(fileKey(f), f); }
-    setFiles(Array.from(map.values()));
+    const next = Array.from(map.values());
+    setFiles(next);
     e.target.value = "";
-    setPdfStatus(added
-      ? { type: "success", msg: `Added ${added} PDF${added>1?"s":""}.` }
-      : { type: "info", msg: "No new PDFs (duplicates ignored)." }
+    setPdfStatus(
+      added
+        ? { type: "success", msg: `${next.length} uploaded` }
+        : { type: "info", msg: `${next.length} uploaded (no new; duplicates ignored)` }
     );
   }
 
@@ -137,7 +139,7 @@ export function PDFExtractionTool() {
     }
 
     setIndexing(true);
-    setIndexStatus(null);
+    setExtractionStatus({ type: "info", msg: "Indexing PDFs…" });
 
     try {
       const fd = new FormData();
@@ -149,13 +151,11 @@ export function PDFExtractionTool() {
 
       setVstoreId(data.vectorstore_id || null);
       setDocNames(data.processed_files || []);
-      setIndexStatus({ type: "success", msg: `Indexed ${data.processed_files?.length || 0} file(s).` });
       setActiveStep(1);
-      setUploadOpen(false);
-      setFieldsOpen(true);
+      openSection("fields");
       return data;
     } catch (e) {
-      setIndexStatus({ type: "error", msg: readHttpError(e) });
+      setPdfStatus({ type: "error", msg: readHttpError(e) });
       return null;
     } finally {
       setIndexing(false);
@@ -163,7 +163,10 @@ export function PDFExtractionTool() {
   }
 
   async function handleExtract() {
-    if (!fields.length) return;
+    if (!fields.length) {
+      setExtractionStatus({ type: "info", msg: "Add at least one field before extracting." });
+      return;
+    }
 
     let vsId = vstoreId;
     let docs = docNames;
@@ -176,11 +179,12 @@ export function PDFExtractionTool() {
     }
 
     if (!vsId || !docs.length) {
-      setManualStatus({ type: "error", msg: "No processed documents available to extract from." });
+      setExtractionStatus({ type: "error", msg: "No processed documents available to extract from." });
       return;
     }
 
     setExtracting(true);
+    setExtractionStatus({ type: "info", msg: "Extracting…" });
     try {
       const res = await fetch(`${API_BASE}/api/extract_per_file`, {
         method: "POST",
@@ -199,9 +203,16 @@ export function PDFExtractionTool() {
 
       setResultsByDoc(grouped);
       setResultsOpen(true);
-      setActiveStep(2);
+      openSection("results");
+      setActiveStep(3);
+
+      const docCount = Object.keys(grouped).length;
+      setExtractionStatus({
+        type: "success",
+        msg: `Extraction complete from ${docCount} document${docCount === 1 ? "" : "s"}.`,
+      });
     } catch (e) {
-      setManualStatus({ type: "error", msg: `Extraction failed: ${readHttpError(e)}` });
+      setExtractionStatus({ type: "error", msg: `Extraction failed: ${readHttpError(e)}` });
     } finally {
       setExtracting(false);
     }
@@ -216,6 +227,26 @@ export function PDFExtractionTool() {
     }
   }
 
+  function openSection(which) {
+    setUploadOpen(which === "upload");
+    setFieldsOpen(which === "fields");
+    setResultsOpen(which === "results");
+  }
+
+  function toggleSection(which) {
+    if (which === "upload") {
+      setUploadOpen((v) => !v);
+    } else if (which === "fields") {
+      // only allow opening if step unlockedd
+      if (!fieldsOpen && activeStep < 1) return;
+      setFieldsOpen((v) => !v);
+    } else if (which === "results") {
+      // Only allow opening if step unlockedd
+      if (!resultsOpen && activeStep < 2) return;
+      setResultsOpen((v) => !v);
+    }
+  }
+
   useEffect(() => {
     previews.forEach((u) => URL.revokeObjectURL(u));
     const urls = files.map((f) => URL.createObjectURL(f));
@@ -224,6 +255,13 @@ export function PDFExtractionTool() {
       urls.forEach((u) => URL.revokeObjectURL(u));
     };
   }, [files]);
+
+  useEffect(() => {
+    if (files.length > 0 && activeStep === 0) {
+      setActiveStep(1);
+      openSection("fields");
+    }
+  }, [files.length]);
 
   /* UI */
   return (
@@ -276,7 +314,7 @@ export function PDFExtractionTool() {
       {/* Upload PDF(s) Section */}
       <Box sx={{ maxWidth: 800, mx: "auto" }}>
         <Box
-          onClick={() => setUploadOpen((v) => !v)}
+          onClick={() => toggleSection("upload")}
           sx={{
             cursor: "pointer",
             display: "flex",
@@ -369,18 +407,6 @@ export function PDFExtractionTool() {
               ))}
             </Box>
           )}
-
-          {/* PDF Upload Alert Status (Success, info or faiilure) */}
-          {pdfStatus && (
-            <Alert severity={pdfStatus.type} sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
-              <AlertTitle sx={{ fontWeight: 600 }}>
-                {pdfStatus.type === "success" ? "✓ PDF(s) added"
-                  : pdfStatus.type === "error" ? "Upload failed" : "Notice"}
-              </AlertTitle>
-              {pdfStatus.msg}
-            </Alert>
-          )}
-
           
           {/* PDF viewer */}
           <Box sx={{ mt: 2 }}>
@@ -401,12 +427,27 @@ export function PDFExtractionTool() {
         </Collapse>
       </Box>
 
+      {/* PDF Upload Alert Status (Success, info or faiilure) */}
+      {pdfStatus && (
+        <Alert severity={pdfStatus.type} sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
+          <AlertTitle sx={{ fontWeight: 600 }}>
+            {pdfStatus.type === "success" ? "✓ PDFs added" :
+            pdfStatus.type === "error" ? "Upload failed" : "Notice"}
+          </AlertTitle>
+          {pdfStatus.msg}
+        </Alert>
+      )}
+
       {/* Question Fields Section */}
       <Box sx={{ maxWidth: 800, mx: "auto", mt: 3 }}>
         <Box
-          onClick={() => setFieldsOpen((v) => !v)}
+          onClick={() => {
+            if (activeStep >= 1) toggleSection("fields");
+          }}
           sx={{
-            cursor: "pointer",
+            cursor: activeStep >= 1 ? "pointer" : "not-allowed",
+            opacity:  activeStep >= 1 ? 1 : 0.6,
+            pointerEvents: activeStep >= 1 ? "auto" : "none",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -562,15 +603,12 @@ export function PDFExtractionTool() {
                   onChange={(e) => setNewField(e.target.value)}
                 />
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   size="small"
                   onClick={addField}
                   sx={{ textTransform: "none", "&.MuiButton-contained": { color: "white" } }}
                 >
                   Add
-                </Button>
-                <Button variant="outlined" size="small" sx={{ textTransform: "none" }} onClick={clearFields}>
-                  Clear
                 </Button>
               </Box>
 
@@ -616,30 +654,60 @@ export function PDFExtractionTool() {
                 </Typography>
               )}
 
-              <Box sx={{ my: 2 }}>
+              <Box sx={{ my: 2 }} />
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={extracting || !fields.length || (!vstoreId && !files.length)}
+                  onClick={handleExtract}
+                  startIcon={extracting || indexing ? <CircularProgress sx={{ color: 'common.white' }} size={16} /> : null}
+                  sx={{
+                    textTransform: "none",
+                    "&.Mui-disabled": {
+                      opacity: 1,
+                      color: "grey.600",
+                      WebkitTextFillColor: "unset",
+                    },
+                  }}
+                >
+                  {extracting || indexing ? "Extracting…" : "Extract Information"}
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={clearFields}
+                  disabled={extracting || fields.length === 0}
+                  sx={{ textTransform: "none" }}
+                >
+                  Clear
+                </Button>
               </Box>
-
-              <Button
-                size="small"
-                variant="contained"
-                disabled={extracting || !fields.length || (!vstoreId && !files.length)}
-                onClick={handleExtract}
-                sx={{ textTransform: "none" }}
-              >
-                {extracting ? "Extracting…" : "Extract Information"}
-              </Button>
-
             </Box>
           </Box>
         </Collapse>
       </Box>
 
+      {/* Extraction Alert Status (Success, info or faiilure) */}
+      {extractionStatus && (
+        <Alert severity={extractionStatus.type} sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
+          <AlertTitle sx={{ fontWeight: 600 }}>
+            {extractionStatus.type === "success" ? "✓ Extraction complete" : "Extraction error"}
+          </AlertTitle>
+          {extractionStatus.msg}
+        </Alert>
+      )}
+
       {/* Results Section */}
       <Box sx={{ maxWidth: 800, mx: "auto", mt: 3 }}>
         <Box
-          onClick={() => setResultsOpen(v => !v)}
+          onClick={() => {
+            if (activeStep >= 2) toggleSection("results");
+          }}
           sx={{
-            cursor: "pointer",
+            cursor: activeStep >= 2 ? "pointer" : "not-allowed",
+            opacity:  activeStep >= 2 ? 1 : 0.6,
+            pointerEvents: activeStep >= 2 ? "auto" : "none",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -649,7 +717,7 @@ export function PDFExtractionTool() {
             "&:hover": { bgcolor: "grey.200" },
           }}
         >
-          <Typography variant="h4" fontWeight={700}>Results</Typography>
+          <Typography variant="h4" fontWeight={700}>View Results</Typography>
           {resultsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
         </Box>
 
