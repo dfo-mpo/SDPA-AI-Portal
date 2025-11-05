@@ -200,6 +200,42 @@ def extract_jsonld(html: str) -> list:
             pass
     return out
 
+def extract_simple_meta_from_result(result, base_url: str) -> dict:
+    meta = getattr(result, "metadata", None) or getattr(result, "meta_tags", {}) or {}
+    title = (meta.get("title") or "").strip()
+    descr = (meta.get("description") or meta.get("og:description") or "").strip()
+
+    # fallback
+    soup = BeautifulSoup(getattr(result, "html", "") or "", "html.parser")
+    if not title:
+        if soup.title and soup.title.string:
+            title = soup.title.string.strip()
+        else:
+            tag = soup.select_one('meta[property="og:title" i]') or soup.select_one('meta[name="twitter:title" i]')
+            if tag:
+                title = (tag.get("content") or "").strip()
+    if not descr:
+        tag = (soup.select_one('meta[name="description" i]') or
+               soup.select_one('meta[property="og:description" i]') or
+               soup.select_one('meta[name="twitter:description" i]'))
+        if tag:
+            descr = (tag.get("content") or "").strip()
+
+    # Favicon (png/jpg/ico/svg/apple-touch)
+    fav = ""
+    candidates = []
+    for link in soup.select('link[rel*="icon" i], link[rel*="apple-touch-icon" i], link[rel="mask-icon" i]'):
+        href = (link.get("href") or "").strip()
+        if href:
+            candidates.append(urljoin(base_url, href))
+    if candidates:
+        fav = candidates[0]
+    if not fav:
+        p = urlparse(base_url)
+        fav = urljoin(f"{p.scheme}://{p.netloc}", "/favicon.ico")
+
+    return {"site_title": title, "site_description": descr, "favicon": fav}
+
 
 # ---------- Processing Helpers ----------
 def extract_body_content(html_content: str) -> str:
@@ -240,8 +276,10 @@ def scrape_website(
     canonical_seen: Set[str] = set()
     queue: List[Tuple[str, int]] = [(start_url, 0)]
     enqueued: Set[str] = {start_url}
+    site_meta = None
 
     async def _run():
+        nonlocal site_meta
         browser_cfg = BrowserConfig(
             headless=True,
             text_mode=True,
@@ -321,6 +359,8 @@ def scrape_website(
                     content_md = result.markdown
                     html = result.html
                     jsonld = extract_jsonld(html)
+                    if (site_meta is None) and result.success and (result.html):
+                        site_meta = extract_simple_meta_from_result(result, url)
 
                 except Exception as e:
                     print(f"❌ Fetch failed (crawl4ai): {url} -> {e}")
@@ -408,4 +448,5 @@ def scrape_website(
         "pages": results,
         "urls_seen": urls_seen_ordered,
         "combined_text": combined_text,
+        "site_meta": site_meta or {"site_title": "", "site_description": "", "favicon": urljoin(f"{urlparse(start_url).scheme}://{urlparse(start_url).netloc}", "/favicon.ico")}
     }

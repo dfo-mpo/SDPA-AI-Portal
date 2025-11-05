@@ -11,6 +11,7 @@ from langchain_openai import AzureOpenAIEmbeddings
 from langchain_chroma import Chroma
 from chromadb.config import Settings
 from datetime import datetime, timezone
+from urllib.parse import urlparse, urljoin
 
 router = APIRouter(prefix="/api", tags=["web-scraper"])
 
@@ -58,21 +59,26 @@ def _get_or_create_vs(emb):
     )
 
 # insert chunks into the vector store 
-def upsert_chunks_into_vector_db(chunks: list[str], source_url: str) -> int:
+def upsert_chunks_into_vector_db(chunks: list[str], source_url: str, site_meta: dict | None = None) -> int:
     '''Embeds the given text chunks, attaches metadata, and upserts them into the Chroma vector database.'''
     if not chunks:
         return 0
     emb = _build_embeddings()
     vs  = _get_or_create_vs(emb)
+    site_meta = site_meta or {}
 
     base = hashlib.sha1(source_url.encode("utf-8")).hexdigest()[:12]
     now  = datetime.now(timezone.utc).isoformat()
     ids = [f"{base}-{i}" for i in range(len(chunks))]
+    default_favicon = _host_favicon(source_url)
     metas = [{
         "source": source_url,
         "chunk_index": i,
         "doc_id": base,
         "scraped_at": now,
+        "site_title": (site_meta.get("site_title") or ""),
+        "site_description":(site_meta.get("site_description") or ""),
+        "favicon": (site_meta.get("favicon") or default_favicon),
     } for i in range(len(chunks))]
 
     vectors = emb.embed_documents(chunks)
@@ -118,21 +124,33 @@ def _list_presets() -> list[dict]:
     '''Builds a list of cached URLs with chunk counts and last-scraped timestamps, sorted newest first.'''
     emb = _build_embeddings()
     vs  = _get_or_create_vs(emb)
-    data = vs._collection.get(include=["metadatas"])
-    metas = data.get("metadatas") or []
+    metas = (vs._collection.get(include=["metadatas"]) or {}).get("metadatas") or []
 
     by_source = {}
     for m in metas:
         src = m.get("source")
         if not src:
             continue
-        info = by_source.setdefault(
-            src, {"url": src, "chunk_count": 0, "last_scraped_at": None}
-        )
+        info = by_source.setdefault(src, {
+            "url": src,
+            "chunk_count": 0,
+            "last_scraped_at": None,
+            "doc_id": m.get("doc_id", ""),
+            "title": "",
+            "description": "",
+            "favicon": _host_favicon(src),
+        })
         info["chunk_count"] += 1
         t = m.get("scraped_at")
         if t and (info["last_scraped_at"] is None or t > info["last_scraped_at"]):
             info["last_scraped_at"] = t
+
+        if not info["title"] and m.get("site_title"):
+            info["title"] = m["site_title"]
+        if not info["description"] and m.get("site_description"):
+            info["description"] = m["site_description"]
+        if (not info["favicon"]) and m.get("favicon"):
+            info["favicon"] = m["favicon"]
 
     return sorted(
         by_source.values(),
@@ -155,7 +173,12 @@ def _url_cached(source_url: str) -> dict | None:
         return {"cached": True, "doc_id": base}
     return None
 
-
+def _host_favicon(u: str) -> str:
+    try:
+        p = urlparse(u)
+        return urljoin(f"{p.scheme}://{p.netloc}", "/favicon.ico")
+    except Exception:
+        return ""
 
 # ----- POST Requests -----
 
@@ -181,13 +204,16 @@ def api_scrape(req: ScrapeReq):
     data = scrape_website(req.url)
     text = data.get("combined_text", "") or ""
     chunks = split_dom_content(text)
+    site_meta = data.get("site_meta") or {
+        "site_title": "", "site_description": "", "favicon": _host_favicon(req.url)
+    }
 
     session_id = str(uuid.uuid4())
     _session_url[session_id] = req.url
     _memory[session_id] = chunks
     _combined_text[session_id] = text
 
-    added = upsert_chunks_into_vector_db(chunks, req.url)
+    added = upsert_chunks_into_vector_db(chunks, req.url, site_meta=site_meta)
 
     return {
         "status": "ok",
@@ -196,6 +222,7 @@ def api_scrape(req: ScrapeReq):
         "embedded_count": added,
         "cache_hit": False,
         "url": req.url,
+        "site_meta": site_meta,
     }
 
 
