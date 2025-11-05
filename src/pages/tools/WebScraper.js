@@ -2,195 +2,142 @@
  * Web Scraper
  */
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Paper, Stack, Alert, AlertTitle, TextField, Button,
-  Drawer, Divider, Typography, Box, Collapse, CircularProgress,
-  Stepper, Step, StepLabel, LinearProgress
+  Paper, Stack, Alert, AlertTitle, TextField, Button, Drawer, Divider,
+  Typography, Box, Grid, Card, CardActionArea, CardContent, Avatar,
+  IconButton, Tooltip, Chip, CircularProgress, InputAdornment, Skeleton,
 } from "@mui/material";
-import { ChevronDown, ChevronUp, Download} from "lucide-react";
-import Autocomplete from "@mui/material/Autocomplete";
+import { Search, RefreshCw } from "lucide-react";
 
 const API_BASE = "http://localhost:8000";
 
-function makeFileNameFromUrl(u, suffix) {
-  try {
-    const { hostname, pathname } = new URL(u.trim());
-    const safePath = pathname.replace(/[^a-z0-9\-_.]+/gi, "-").replace(/^-+|-+$/g, "");
-    const base = safePath ? `${hostname}${safePath}` : hostname;
-    return `parsed_${base || "result"}${suffix ? `_${suffix}` : ""}.txt`;
-  } catch {
-    return `parsed_result.txt`;
-  }
+/* ---------- helper functions ---------- */
+function dateFormat(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString();
 }
 
-function downloadTextFile(filename, text) {
-  const blob = new Blob([text ?? ""], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-export function WebScraper() {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [url, setUrl] = useState("");
-  const [question, setQuestion] = useState("");
-  const [sessionId, setSessionId] = useState(null);
-  const [parsedOutput, setParsedOutput] = useState("");
-  const [loadingScrape, setLoadingScrape] = useState(false);
-  const [loadingParse, setLoadingParse] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [scrapeStatus, setScrapeStatus] = useState({ type: null, msg: "" });
-  const [parseStatus, setParseStatus] = useState({ type: null, msg: "" });
-  const [downloadHref, setDownloadHref] = useState(null);
-  const [downloadingParsed, setDownloadingParsed] = useState(false);
+function usePresets() {
   const [presets, setPresets] = useState([]);
-  const [selectedPresetUrl, setSelectedPresetUrl] = useState(null);
-  const parseSectionRef = useRef(null);
-  const knownUrls = useMemo(
-    () => (presets?.map((p) => p?.url || p)?.filter(Boolean) || []),
-    [presets]
-  );
-  const [openSections, setOpenSections] = useState({
-    input: true,
-    parse: false,
-    result: false,
-  });
-  const [step, setStep] = useState("input");
-  const STEP_INDEX = { input: 0, parse: 1, result: 2 };
-  const TOTAL_STEPS = 3;
-  const ACTIVE_STEP =
-  step === "result" && parseStatus.type === "success"
-    ? TOTAL_STEPS
-    : STEP_INDEX[step];
-  const canOpenParse = STEP_INDEX["parse"] <= STEP_INDEX[step];
-  const canOpenResult = STEP_INDEX["result"] <= STEP_INDEX[step];
-  const safeToggle = (key) => {
-    if (STEP_INDEX[key] <= STEP_INDEX[step]) {
-      setOpenSections((s) => ({ ...s, [key]: !s[key] }));
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    setErr("");
+    try {
+      const r = await fetch(`${API_BASE}/api/presets`);
+      const j = await r.json();
+      setPresets(j?.presets || []);
+    } catch (e) {
+      setErr("Failed to load presets.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  async function handleScrape() {
-    setErrorMsg(null);
-    setParsedOutput("");
-    setSessionId(null);
-    setParseStatus({ type: null, msg: "" });
-    setStep("input");
-    setOpenSections({ input: true, parse: false, result: false });
+  useEffect(() => { load(); }, []);
+  return { presets, loading, err, reload: load };
+}
 
-    if (!url.trim()) {
-      setErrorMsg("Please enter a URL.");
-      return;
-    }
+/* ---------- preset card ---------- */
+function PresetCard({ item, onRefresh, refreshing }) {
+  const title = item.title || item.site_title;
+  const fav = item.favicon
+  const descr =
+    item.description ||
+    item.site_description ||
+    (item.url ? new URL(item.url).origin : "");
 
-    setLoadingScrape(true);
-    setScrapeStatus({ type: "info", msg: "Scraping… please wait." });
+  return (
+    <Card
+      variant="outlined"
+      sx={{
+        borderRadius: 3,
+        overflow: "hidden",
+        ":hover": { boxShadow: 2 },
+      }}
+    >
+      <CardActionArea disableRipple>
+        <CardContent sx={{ p: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mb: 1 }}>
+            <Avatar
+              src={fav}
+              alt={title}
+              sx={{ width: 28, height: 28, bgcolor: "grey.100" }}
+            />
+            <Typography variant="subtitle1" fontWeight={700} noWrap title={title}>
+              {title}
+            </Typography>
+            <Box sx={{ flex: 1 }} />
+            <Tooltip title="Refresh (re-scrape)">
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={() => onRefresh(item.url)}
+                  disabled={refreshing}
+                >
+                  {refreshing ? <CircularProgress size={18} /> : <RefreshCw size={18} />}
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Box>
 
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ minHeight: 38 }}
+            noWrap
+            title={descr}
+          >
+            {descr || "No description"}
+          </Typography>
+
+          <Box sx={{ display: "flex", alignItems: "center", mt: 1.25, gap: 1 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>
+              Last scraped: {dateFormat(item.last_scraped_at)}
+            </Typography>
+          </Box>
+        </CardContent>
+      </CardActionArea>
+    </Card>
+  );
+}
+
+/* ---------- main component ---------- */
+export function WebScraper() {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const { presets, loading, err, reload } = usePresets();
+  const [q, setQ] = useState("");
+  const [refreshing, setRefreshing] = useState(() => new Set());
+
+  const filtered = useMemo(() => {
+    if (!q.trim()) return presets;
+    const needle = q.toLowerCase();
+    return presets.filter((p) =>
+      (p.title || "").toLowerCase().includes(needle) ||
+      (p.description || "").toLowerCase().includes(needle) ||
+      (p.url || "").toLowerCase().includes(needle)
+    );
+  }, [presets, q]);
+
+  const handleRefresh = async (url) => {
+    const next = new Set(refreshing); next.add(url); setRefreshing(next);
     try {
-      const res = await fetch(`${API_BASE}/api/scrape`, {
+      const r = await fetch(`${API_BASE}/api/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       });
-      
-      if (!res.ok) throw new Error(`Scrape failed (${res.status})`);
-      const data = await res.json();
-
-      if (!data || !data.session_id) throw new Error("No session_id returned");
-      
-      setSessionId(data.session_id);
-      setDownloadHref(`${API_BASE}/api/scrape/${data.session_id}/combined.txt`);
-      setStep("parse");
-      setOpenSections({ input: false, parse: true, result: false });
-
-      setScrapeStatus({
-        type: "success",
-        msg: "Successfully scraped. Now enter prompts and click Parse.",
-      });
-
+      await reload();
     } catch (e) {
-      setErrorMsg((e && e.message) || "Scrape failed");
-      setScrapeStatus({ type: "error", msg: "Scrape failed. Check the URL and try again." });
     } finally {
-      setLoadingScrape(false);
+      const n2 = new Set(refreshing); n2.delete(url); setRefreshing(n2);
     }
-  }
-
-  async function handleParse() {
-    setErrorMsg(null);
-    setParsedOutput("");
-
-    if (!sessionId) {
-      setErrorMsg("Nothing scraped yet. Please scrape first.");
-      return;
-    }
-
-    if (!question.trim()) {
-      setErrorMsg("Please enter what to extract / your question.");
-      return;
-    }
-    
-    setLoadingParse(true);
-    setParseStatus({ type: "info", msg: "Parsing… analyzing the scraped content." });
-
-    try {
-      let res;
-      if (selectedPresetUrl) {
-        res = await fetch(`${API_BASE}/api/parse-by-url`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            url: selectedPresetUrl,
-            parse_description: question,
-          }),
-        });
-      } else {
-        if (!sessionId) {
-          setErrorMsg("Nothing scraped yet. Please scrape first or select a preset.");
-          setLoadingParse(false);
-          return;
-        }
-        res = await fetch(`${API_BASE}/api/parse`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            parse_description: question,
-            session_id: sessionId,
-          }),
-        });
-      }
-
-      if (!res.ok) throw new Error(`Parse failed (${res.status})`);
-      const data = await res.json();
-
-      setParsedOutput((data && data.result) || "");
-      setParseStatus({ type: "success", msg: "Parse complete. See the result below." });
-      setStep("result");
-      setOpenSections({ input: false, parse: false, result: true });
-    } catch (e) {
-      setErrorMsg((e && e.message) || "Parse failed");
-      setParseStatus({ type: "error", msg: "Parse failed. Refine your prompt and try again." });
-    } finally {
-      setLoadingParse(false);
-    }
-  }
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/presets`);
-        if (!res.ok) return;
-        const data = await res.json();
-        setPresets(data?.presets || []);
-      } catch {}
-    })();
-  }, []);
+  };
 
   return (
       <Paper
@@ -225,383 +172,51 @@ export function WebScraper() {
           complete based on the URL. By proceeding, you confirm you have the right to access and analyze the content you provide.
         </Alert>
 
-        <Box sx={{ mt: 4 }} />
-
-        <Box sx={{ mb: 3 }}>
-          <Stepper activeStep={ACTIVE_STEP} alternativeLabel>
-            {["Enter Website URL", "Ask Questions About the Data", "View Results"].map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
-          {(loadingScrape || loadingParse) && (
-            <LinearProgress sx={{ mt: 1 }} />
-          )}
-        </Box>
-
-        {errorMsg && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {errorMsg}
-          </Alert>
-        )}
-
-         <Box sx={{ maxWidth: 720, mx: "auto" }}>
-            <Box
-              onClick={() => safeToggle("input")}
-              sx={{
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                p: 1.2,
-                borderRadius: 1,
-                bgcolor: "grey.100",
-                "&:hover": { bgcolor: "grey.200" },
-              }}
-            >
-              <Typography variant="h4" fontWeight={700}>Enter Website URL</Typography>
-              {openSections.input ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
-            </Box>
-            <Collapse in={openSections.input} timeout="auto" unmountOnExit>
-              <Box
-                sx={{
-                  mt: 2,
-                  mx: "auto",
-                  maxWidth: 720,
-                  display: "flex",
-                  gap: 1.5,
-                  alignItems: "center",
-                }}
-              >
-                <Autocomplete
-                  fullWidth
-                  freeSolo
-                  disablePortal
-                  options={knownUrls}
-                  inputValue={url}
-                  value={selectedPresetUrl || null}
-                  onInputChange={(_, v) => {
-                    setUrl(v || "");
-                    // If user types something not in presets, treat it as new URL
-                    if (!knownUrls.includes(v || "")) {
-                      setSelectedPresetUrl(null);
-                      setSessionId(null);
-                      setStep("input");
-                      setOpenSections({ input: true, parse: false, result: false });
-                      setScrapeStatus({ type: null, msg: "" });
-                    }
-                  }}
-                  onChange={(_, v) => {
-                    // Selecting a preset from the dropdown
-                    const val = v || "";
-                    setUrl(val);
-                    if (val && knownUrls.includes(val)) {
-                      setSelectedPresetUrl(val);
-                      setSessionId("__VECTOR__"); // user can parse immediately
-                      setStep("parse");
-                      setOpenSections({ input: false, parse: true, result: false });
-                      setScrapeStatus({
-                        type: "success",
-                        msg: "Preset selected. You can parse immediately without scraping.",
-                      });
-                      setTimeout(() => {
-                        parseSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }, 0);
-                    } else {
-                      setSelectedPresetUrl(null);
-                    }
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      size="small"
-                      label="Enter or select a previously scraped URL"
-                      placeholder="https://example.com"
-                      fullWidth
-                      sx={{
-                        "& .MuiAutocomplete-popupIndicator, & .MuiAutocomplete-clearIndicator": {
-                          padding: 0,
-                          margin: 0,
-                          background: "transparent !important",
-                          border: "none !important",
-                          boxShadow: "none !important",
-                          "&:hover": {
-                            background: "transparent !important",
-                            border: "none !important",
-                            boxShadow: "none !important",
-                          },
-                        },
-                      }}
-                    />
-                  )}
-                  PaperComponent={(props) => (
-                    <Paper
-                      {...props}
-                      elevation={3}
-                      sx={{
-                        bgcolor: "#ffffff",
-                        borderRadius: 1,
-                        border: "1px solid",
-                        borderColor: "divider",
-                      }}
-                    />
-                  )}
-                  componentsProps={{ listbox: { sx: { bgcolor: "#ffffff" } } }}
-                />
-
-                <Button
-                  onClick={handleScrape}
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  disabled={loadingScrape || !url || !!selectedPresetUrl}
-                  sx={{
-                    borderRadius: 2,
-                    textTransform: "none",
-                    px: 2.5,
-                    "&.MuiButton-contained": { color: "white" },
-                  }}
-                  title={
-                    !url
-                      ? "Enter a URL to enable scraping"
-                      : selectedPresetUrl
-                      ? "Already scraped — jump to Parse"
-                      : "Scrape content"
-                  }
-                >
-                  {loadingScrape ? "Scraping..." : "Scrape"}
-                </Button>
-              </Box>
-              <Typography
-                variant="caption"
-                sx={{ display: "block", mt: 1, ml: 0.5, color: "text.secondary" }}
-              >
-                Type a new URL and click Scrape - or select a previously scraped URL to jump directly to parsing.
-              </Typography>
-            </Collapse>     
-              {scrapeStatus.type && (
-                <>
-                  <Alert
-                    severity={scrapeStatus.type}
-                    icon={scrapeStatus.type === "info" ? <CircularProgress size={18} /> : undefined}
-                    sx={{
-                      mt: 2,
-                      mx: "auto",
-                      maxWidth: 720,
-                      alignItems: "center",
-                    }}
-                  >
-                    <AlertTitle sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.95rem' }}>
-                      {scrapeStatus.type === "success"
-                        ? "✓ Scrape complete"
-                        : scrapeStatus.type === "error"
-                        ? "Scrape failed"
-                        : "Working…"}
-                    </AlertTitle>
-                    <Typography variant="body2">{scrapeStatus.msg}</Typography>
-                  </Alert>
-                  
-                  {scrapeStatus.type === "success" && downloadHref && (
-                    <Box sx={{ mt: 1.5, maxWidth: 720, mx: "auto" }}>
-                      <Button
-                        component="a"
-                        href={downloadHref}
-                        variant="outlined"
-                        size="small"
-                        startIcon={<Download size={16} />}
-                        sx={{ 
-                          textTransform: "none",
-                          fontWeight: 600,
-                        }}
-                      >
-                        Download Scraped Data
-                      </Button>
-                    </Box>
-                  )}
-
-                  {selectedPresetUrl && (
-                    <Box sx={{ mt: 1.5, maxWidth: 720, mx: "auto" }}>
-                      <Button
-                        component="a"
-                        href={`${API_BASE}/api/combined-by-url?url=${encodeURIComponent(selectedPresetUrl)}`}
-                        variant="outlined"
-                        size="small"
-                        startIcon={<Download size={16} />}
-                        sx={{ textTransform: "none", fontWeight: 600 }}
-                      >
-                        Download Scraped Data
-                      </Button>
-                    </Box>
-                  )}
-                </>
-              )}
-            
-            <Box sx={{ mt: 3 }} />
-            <Box
-              ref={parseSectionRef}
-              onClick={() => safeToggle("parse")}
-              sx={{
-                cursor: canOpenParse ? "pointer" : "not-allowed",
-                opacity: canOpenParse ? 1 : 0.6,
-                pointerEvents: canOpenParse ? "auto" : "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                mt: 3,
-                p: 1.2,
-                borderRadius: 1,
-                bgcolor: "grey.100",
-                "&:hover": { bgcolor: "grey.200" },
-              }}
-            >
-              <Typography variant="h4" fontWeight={700}>Ask Questions About the Data</Typography>
-              {openSections.parse ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
-            </Box>
-
-            <Collapse in={openSections.parse} timeout="auto" unmountOnExit>
-              <Box
-                sx={{
-                  mt: 2,
-                  mx: "auto",
-                  maxWidth: 720,
-                  display: "flex",
-                  gap: 1.5,
-                  alignItems: "flex-start",
-                }}
-                >
-                <TextField
-                  size="small"
-                  label="Ask a question or describe what to extract"
-                  placeholder="e.g., Extract a table with columns: Name | Title | City..."
-                  fullWidth
-                  multiline
-                  minRows={5}
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  sx={{
-                    '& .MuiInputBase-root': {
-                      height: 125,
-                      alignItems: "flex-start",
-                    },
-                  }}
-                />
-                <Button
-                  onClick={handleParse}
-                  disabled={!sessionId || loadingParse}
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  sx={{
-                    borderRadius: 2,
-                    textTransform: "none",
-                    px: 2.5,
-                    "&.MuiButton-contained": { color: "white" },
-                  }}
-                  title={!sessionId ? "Scrape first to enable parsing" : "Parse content"}
-                >
-                  {loadingParse ? "Parsing..." : "Parse"}
-                </Button>
-              </Box>
-            </Collapse>
-              {parseStatus.type && (
-                <>
-                  <Alert
-                    severity={parseStatus.type}
-                    icon={parseStatus.type === "info" ? <CircularProgress size={18} /> : undefined}
-                    sx={{
-                      mt: 1.5,
-                      maxWidth: 720,
-                      alignItems: "center",
-                    }}
-                  >
-                    <AlertTitle sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.95rem' }}>
-                      {parseStatus.type === "success"
-                        ? "✓ Parse complete"
-                        : parseStatus.type === "error"
-                        ? "Parse failed"
-                        : "Working…"}
-                    </AlertTitle>
-                    <Typography variant="body2">{parseStatus.msg}</Typography>
-                  </Alert>
-
-                  {parseStatus.type === "success" && parsedOutput && (
-                    <Box sx={{ mt: 1.5, maxWidth: 720 }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        disabled={downloadingParsed}
-                        startIcon={<Download size={16} />}
-                        onClick={() => {
-                          try {
-                            setDownloadingParsed(true);
-                            downloadTextFile(makeFileNameFromUrl(url, "parsed"), parsedOutput);
-                          } finally {
-                            setDownloadingParsed(false);
-                          }
-                        }}
-                        sx={{ 
-                          textTransform: "none",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {downloadingParsed ? "Preparing…" : "Download Parsed Result"}
-                      </Button>
-                    </Box>
-                  )}
-                </>
-              )}
-
-          <Box sx={{ mt: 3 }} />
-
-          <Box
-            onClick={() => safeToggle("result")}
-            sx={{
-              cursor: canOpenResult ? "pointer" : "not-allowed",
-              opacity: canOpenResult ? 1 : 0.6,
-              pointerEvents: canOpenResult ? "auto" : "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              p: 1.2,
-              borderRadius: 1,
-              bgcolor: "grey.100",
-              "&:hover": { bgcolor: "grey.200" },
-            }}
-          >
-            <Typography variant="h4" fontWeight={700}>View Results</Typography>
-            {openSections.result ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
-          </Box>
-
-          <Box sx={{ mt: 2 }} />
-
-          <Collapse in={openSections.result} timeout="auto" unmountOnExit>
-              {parsedOutput ? (
-                <Box
-                  sx={{
-                    maxHeight: 360,
-                    overflow: "auto",
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                    lineHeight: 1.45,
-                    p: 1,
-                    backgroundColor: "white",
-                    borderRadius: 1,
-                    border: "1px solid",
-                    borderColor: "divider",
-                  }}
-                >
-                  {parsedOutput}
-                </Box>
-              ) : (
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Parsed output will appear here after you click <b>Parse</b>.
-                </Typography>
-              )}
-            </Collapse>
+      {/* Search Bar */}
+      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+        <TextField
+          fullWidth
+          size="medium"
+          placeholder="Search scraped sites…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search size={18} />
+              </InputAdornment>
+            ),
+          }}
+        />
       </Box>
 
+      {/* Grid */}
+      {err && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {err}
+        </Alert>
+      )}
+
+      <Grid container spacing={2}>
+        {filtered.map((item) => (
+              <Grid item xs={12} sm={6} md={4} key={item.url}>
+                <PresetCard
+                  item={item}
+                  onRefresh={handleRefresh}
+                  refreshing={refreshing.has(item.url)}
+                />
+              </Grid>
+            ))}
+        {!loading && filtered.length === 0 && (
+          <Grid item xs={12}>
+            <Typography align="center" color="text.secondary" sx={{ py: 4 }}>
+              No results. Try a different search.
+            </Typography>
+          </Grid>
+        )}
+      </Grid>
+
+      {/* Tiny right-edge arrow tab */}
       <Button
         onClick={() => setDrawerOpen(true)}
         variant="contained"
