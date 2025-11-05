@@ -43,6 +43,20 @@ function usePresets() {
   return { presets, loading, err, reload: load };
 }
 
+function isValidUrl(val) {
+  try {
+    const u = new URL((val || "").trim());
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+function urlKeyStrict(val) {
+  const u = new URL((val || "").trim());
+  const path = u.pathname.replace(/\/+$/, "");
+  return `${u.protocol}//${u.hostname.toLowerCase()}${path}${u.search}`;
+}
+
 /* ---------- preset card ---------- */
 function PresetCard({ item, onRefresh, refreshing }) {
   const title = item.title || item.site_title;
@@ -113,6 +127,8 @@ export function WebScraper() {
   const { presets, loading, err, reload } = usePresets();
   const [q, setQ] = useState("");
   const [refreshing, setRefreshing] = useState(() => new Set());
+  const [adding, setAdding] = useState(false);
+  const [addErr, setAddErr] = useState("");
 
   const filtered = useMemo(() => {
     if (!q.trim()) return presets;
@@ -136,6 +152,46 @@ export function WebScraper() {
     } catch (e) {
     } finally {
       const n2 = new Set(refreshing); n2.delete(url); setRefreshing(n2);
+    }
+  };
+
+  const existingKeys = useMemo(() => {
+    const s = new Set();
+    for (const p of presets) {
+      try { s.add(urlKeyStrict(p.url)); } catch {}
+    }
+    return s;
+  }, [presets]);
+
+  const handleAdd = async () => {
+    setAddErr("");
+    if (!isValidUrl(q)) {
+      setAddErr("Enter a valid URL that includes http:// or https://");
+      return;
+    }
+    try {
+      if (existingKeys.has(urlKeyStrict(q))) {
+        setAddErr("This URL was already scraped. Use Refresh to re-scrape.");
+        return;
+      }
+    } catch {
+      setAddErr("Invalid URL.");
+      return;
+    }
+
+    setAdding(true);
+    try {
+      await fetch(`${API_BASE}/api/scrape`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: q.trim() }),
+      });
+      setQ("");
+      await reload();
+    } catch {
+      setAddErr("Failed to start scraping. Please try again.");
+    } finally {
+      setAdding(false);
     }
   };
 
@@ -173,13 +229,16 @@ export function WebScraper() {
         </Alert>
 
       {/* Search Bar */}
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
         <TextField
           fullWidth
           size="medium"
-          placeholder="Search scraped sites…"
+          placeholder="Search scraped sites… or paste a URL"
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => { setQ(e.target.value); setAddErr(""); }}
+          onKeyDown={(e) => { if (e.key === "Enter" && !adding) handleAdd(); }}
+          error={Boolean(addErr)}
+          helperText={addErr || undefined}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -188,6 +247,23 @@ export function WebScraper() {
             ),
           }}
         />
+        <Button
+          variant="contained"
+          onClick={handleAdd}
+          disabled={adding}
+          startIcon={adding ? <CircularProgress sx={{ color: 'common.white' }} size={16} /> : null}
+          sx={{
+            textTransform: "none",
+            alignSelf: "flex-start",
+            "&.Mui-disabled": {
+              opacity: 1,
+              color: "grey.400",
+              WebkitTextFillColor: "unset",
+            },
+          }}
+        >
+          {adding ? "Scraping…" : "Add/Scrape"}
+        </Button>
       </Box>
 
       {/* Grid */}
@@ -210,7 +286,7 @@ export function WebScraper() {
         {!loading && filtered.length === 0 && (
           <Grid item xs={12}>
             <Typography align="center" color="text.secondary" sx={{ py: 4 }}>
-              No results. Try a different search.
+              No results. Try a different search or Add/Scrape this website Url.
             </Typography>
           </Grid>
         )}
