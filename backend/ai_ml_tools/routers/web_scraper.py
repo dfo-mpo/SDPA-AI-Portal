@@ -3,7 +3,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from typing import Dict, List
-import uuid
+import uuid, json, re
 from ai_ml_tools.utils.webScraper.scrape import scrape_website, split_dom_content
 from ai_ml_tools.utils.webScraper.parse import parse_with_azure_llm
 import os, hashlib
@@ -12,6 +12,8 @@ from langchain_chroma import Chroma
 from chromadb.config import Settings
 from datetime import datetime, timezone
 from urllib.parse import urlparse, urljoin
+from ai_ml_tools.utils.openai import request_openai_chat
+from fastapi import WebSocket, WebSocketDisconnect
 
 router = APIRouter(prefix="/api", tags=["web-scraper"])
 
@@ -27,14 +29,6 @@ os.environ.setdefault("ANONYMIZED_TELEMETRY", "false")
 
 # Classes
 class ScrapeReq(BaseModel):
-    url: str
-
-class ParseReq(BaseModel):
-    parse_description: str
-    session_id: str
-
-class ParseByUrlReq(BaseModel):
-    parse_description: str
     url: str
 
 
@@ -91,34 +85,37 @@ def upsert_chunks_into_vector_db(chunks: list[str], source_url: str, site_meta: 
     return len(chunks)
 
 
-def _get_chunks_by_url(source_url: str) -> list[str]:
-    '''Loads all stored text chunks for the given URL from Chroma and returns them in original order.'''
+def _load_ordered_vectors(url: str) -> tuple[list[str], list[dict]]:
+    """Return (ordered_docs, ordered_metas) for a URL from Chroma."""
     emb = _build_embeddings()
     vs  = _get_or_create_vs(emb)
-    limit = 1000
-    offset = 0
-    all_docs, all_metas = [], []
+    res = vs._collection.get(
+        where={"source": {"$eq": url}},
+        include=["documents", "metadatas"],
+        limit=10_000,
+        offset=0,
+    )
+    docs  = res.get("documents") or []
+    metas = res.get("metadatas") or []
+    if not docs:
+        raise ValueError("URL not found in vector store. Scrape it first.")
 
-    while True:
-        data = vs._collection.get(
-            where={"source": {"$eq": source_url}},
-            include=["documents", "metadatas"],
-            limit=limit,
-            offset=offset,
-        )
-        docs  = data.get("documents") or []
-        metas = data.get("metadatas") or []
-        if not docs:
-            break
-        all_docs.extend(docs)
-        all_metas.extend(metas)
-        offset += len(docs)
+    order = sorted(range(len(docs)), key=lambda i: (metas[i] or {}).get("chunk_index", i))
+    return [docs[i] for i in order], [metas[i] for i in order]
 
-    if not all_docs:
-        return []
+def _load_website_blob(url: str, cap: int = 200_000) -> str:
+    """Join ordered chunks into a single capped string for prompting."""
+    docs, _ = _load_ordered_vectors(url)
+    return ("\n\n".join(docs))[:cap]
 
-    paired = sorted(zip(all_docs, all_metas), key=lambda x: x[1].get("chunk_index", 0))
-    return [d for d, _ in paired]
+def _retrieve_relevant(url: str, query: str, k: int = 2, char_cap: int = 4000) -> str:
+    '''Retrieve most relevant chunks'''
+    emb = _build_embeddings()
+    vs  = _get_or_create_vs(emb)
+
+    docs = vs.similarity_search(query, k=k, filter={"source": url})
+    text = "\n\n".join(getattr(d, "page_content", str(d)) for d in docs)
+    return text[:char_cap]
 
 def _list_presets() -> list[dict]:
     '''Builds a list of cached URLs with chunk counts and last-scraped timestamps, sorted newest first.'''
@@ -226,26 +223,6 @@ def api_scrape(req: ScrapeReq):
     }
 
 
-# ----- POST Requests -----
-@router.post("/parse")
-def api_parse(req: ParseReq):
-    '''Runs an LLM parse request against the in-memory scraped chunks for a given session_id.'''
-    chunks = _memory.get(req.session_id)
-    if not chunks:
-        return {"status": "error", "error": "invalid session_id or nothing scraped"}
-    result = parse_with_azure_llm(chunks, req.parse_description)
-    return {"status": "ok", "result": result}
-
-@router.post("/parse-by-url")
-def api_parse_by_url(req: ParseByUrlReq):
-    '''Runs an LLM parse request using cached chunks loaded directly from Chroma by URL.'''
-    chunks = _get_chunks_by_url(req.url)
-    if not chunks:
-        return {"status": "error", "error": "URL not found in vector store. Scrape it first."}
-    result = parse_with_azure_llm(chunks, req.parse_description)
-    return {"status": "ok", "result": result}
-
-
 # ----- GET Requests -----
 @router.get("/scrape/{session_id}/combined.txt")
 def download_combined_text(session_id: str):
@@ -268,13 +245,97 @@ def api_list_presets():
     return {"status": "ok", "presets": _list_presets()}
 
 @router.get("/combined-by-url")
-def download_combined_text_by_url(url: str = Query(..., description="Previously scraped URL")):
-    """Return the combined scraped text for a cached URL (joined chunks) as a downloadable .txt."""
-    chunks = _get_chunks_by_url(url)
-    if not chunks:
-        return PlainTextResponse("No cached text for this URL. Scrape it first.", status_code=404)
-    combined = "\n\n".join(chunks)
+def download_combined_text_by_url(url: str = Query(...)):
+    try:
+        combined = _load_website_blob(url)
+    except ValueError as e:
+        return PlainTextResponse(str(e), status_code=404)
     base = hashlib.sha1(url.encode("utf-8")).hexdigest()[:12]
-    filename = f'combined_{base}.txt'
-    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    headers = {"Content-Disposition": f'attachment; filename="combined_{base}.txt"'}
     return PlainTextResponse(combined, media_type="text/plain", headers=headers)
+
+
+# ----- Web Socket Routes -----
+@router.websocket("/ws/website_chat")
+async def website_chat_min(ws: WebSocket):
+    await ws.accept()
+    try:
+        while True:
+            # Expect exactly one JSON frame with {url, message, model?, temperature?, ...}
+            payload = await ws.receive_json()
+            url = (payload.get("url") or "").strip()
+            user_msg = (payload.get("message") or "").strip()
+            model = payload.get("model", "gpt-4o-mini")
+            temperature = float(payload.get("temperature", 0.3))
+            reasoning = payload.get("reasoning_effort", "high")
+            token_limit = int(payload.get("token_limit", 100_000))
+            isAuth = bool(payload.get("isAuth", False))
+
+            if not url or not user_msg:
+                await ws.send_json({"error": "missing url or message"})
+                await ws.close()
+                return
+
+            # Build “website blob” from Chroma
+            context = _retrieve_relevant(url, user_msg, k=2, char_cap=2000)
+
+            system_prompt = (
+                    "You are a helpful assistant answering questions about a WEBSITE. "
+                    "Use ONLY the WEBSITE CONTENT provided below. "
+                    "Return VALID HTML ONLY (no markdown, no code fences). "
+                    f"Keep answers concise (≤ {400} words). "
+                    "\n\n[CONTEXT]\n"
+                    f"{context}"
+                )
+
+            chat = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_msg},
+            ]
+
+            # Stream from your existing helper
+            stream = request_openai_chat(
+                chat,
+                document_content="",
+                model=model,
+                temperature=temperature,
+                reasoning_effort=reasoning,
+                token_remaining=token_limit,
+                isAuth=isAuth,
+            )
+
+            # Forward deltas as they arrive
+            async for chunk in stream:
+                if isinstance(chunk, (bytes, bytearray)):
+                    chunk = chunk.decode("utf-8", "ignore")
+
+                if not isinstance(chunk, str):
+                    try:
+                        await ws.send_json(chunk)
+                    except Exception:
+                        pass
+                    continue
+                s = chunk.strip()
+
+                if not s or s == "[DONE]":
+                    continue
+                
+                if s.startswith("data:"):
+                    s = s[5:].lstrip()
+
+                try:
+                    payload_json = json.loads(s)
+                except Exception:
+                    continue
+
+                await ws.send_json(payload_json)
+
+            await ws.send_json({"done": True})
+    except WebSocketDisconnect:
+        return
+    except Exception as e:
+        try:
+            await ws.send_json({"error": str(e)})
+            await ws.close()
+        except Exception:
+            pass
