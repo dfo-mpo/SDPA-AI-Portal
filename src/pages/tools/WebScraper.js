@@ -6,9 +6,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Paper, Stack, Alert, AlertTitle, TextField, Button, Drawer, Divider,
   Typography, Box, Grid, Card, CardActionArea, CardContent, Avatar,
-  IconButton, Tooltip, Chip, CircularProgress, InputAdornment, Skeleton,
+  IconButton, Tooltip, CircularProgress, InputAdornment, Skeleton,
 } from "@mui/material";
-import { Search, RefreshCw } from "lucide-react";
+import { Search, RefreshCw, ArrowLeft, Send, Bot } from "lucide-react";
+import { Chip } from "@mui/material";
 
 const API_BASE = "http://localhost:8000";
 
@@ -58,7 +59,7 @@ function urlKeyStrict(val) {
 }
 
 /* ---------- preset card ---------- */
-function PresetCard({ item, onRefresh, refreshing }) {
+function PresetCard({ item, onRefresh = () => {}, refreshing, onOpen = () => {} }) {
   const title = item.title || item.site_title;
   const fav = item.favicon
   const descr =
@@ -75,7 +76,7 @@ function PresetCard({ item, onRefresh, refreshing }) {
         ":hover": { boxShadow: 2 },
       }}
     >
-      <CardActionArea disableRipple>
+      <CardActionArea disableRipple onClick={() => onOpen(item.url)}>
         <CardContent sx={{ p: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mb: 1 }}>
             <Avatar
@@ -91,7 +92,7 @@ function PresetCard({ item, onRefresh, refreshing }) {
               <span>
                 <IconButton
                   size="small"
-                  onClick={() => onRefresh(item.url)}
+                  onClick={(e) => { e.stopPropagation(); onRefresh(item.url); }}
                   disabled={refreshing}
                 >
                   {refreshing ? <CircularProgress size={18} /> : <RefreshCw size={18} />}
@@ -121,6 +122,22 @@ function PresetCard({ item, onRefresh, refreshing }) {
   );
 }
 
+// Render assistant HTML
+function renderAssistantMessage(message) {
+  let content = (message.content || "")
+    .replace(/```/g, "")
+    .replace(/^\s*html\s*/i, "")
+    .trim();
+  const style = `
+    <style>
+      table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+      table, th, td { border: 1px solid #ddd; }
+      th, td { padding: 8px; text-align: left; }
+    </style>
+  `;
+  return <div dangerouslySetInnerHTML={{ __html: style + content }} />;
+}
+
 /* ---------- main component ---------- */
 export function WebScraper() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -129,6 +146,28 @@ export function WebScraper() {
   const [refreshing, setRefreshing] = useState(() => new Set());
   const [adding, setAdding] = useState(false);
   const [addErr, setAddErr] = useState("");
+
+  // chat UI state
+  const [chatOpen, setChatOpen] = useState(false);
+  const [selectedUrl, setSelectedUrl] = useState("");
+  const [messages, setMessages] = useState([]);     // [{role, content, timestamp}]
+  const [currentMessage, setCurrentMessage] = useState("");
+  const [isResponding, setIsResponding] = useState(false);
+
+  // auto-scroll to newest message
+  const listRef = React.useRef(null);
+  useEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [messages, isResponding]);
+
+  // websocket refs
+  const wsRef = React.useRef(null);
+  const wsReadyRef = React.useRef(false);
+  const messagesRef = React.useRef(messages);
+  const lastUserMessageRef = React.useRef("");
+
+  // keep a fresh pointer to messages
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   const filtered = useMemo(() => {
     if (!q.trim()) return presets;
@@ -194,6 +233,245 @@ export function WebScraper() {
       setAdding(false);
     }
   };
+
+  const openChatForUrl = (url) => {
+    setSelectedUrl(url);
+    setChatOpen(true);
+    setMessages([{
+      role: "bot",
+      content: `Chatting over “${url}”. Ask away!`,
+      timestamp: new Date(),
+    }]);
+  };
+
+  // Send handler
+  const handleSendMessage = () => {
+    if (!currentMessage.trim() || !wsReadyRef.current || isResponding) return;
+
+    const userMsg = currentMessage;
+    setMessages(prev => [...prev, { role: "user", content: userMsg, timestamp: new Date() }]);
+    setCurrentMessage("");
+    setIsResponding(true);
+
+    // provisional assistant bubble to stream into
+    setMessages(prev => [...prev, { role: "assistant", content: "", timestamp: new Date() }]);
+    lastUserMessageRef.current = userMsg;
+
+    wsRef.current?.send(JSON.stringify({
+      url: selectedUrl,
+      message: userMsg,
+      model: "gpt-4o-mini",
+      temperature: 0.3,
+      reasoning_effort: "high",
+      token_limit: 100000,
+      isAuth: false
+    }));
+  };
+
+  // WS setup/teardown
+  useEffect(() => {
+    if (!chatOpen) return;
+
+    const wsUrl = API_BASE.replace(/^http/, "ws") + "/api/ws/website_chat";
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => { wsReadyRef.current = true; };
+
+    ws.onmessage = (ev) => {
+      let msg;
+      try { msg = JSON.parse(ev.data); } catch { return; }
+
+      if (msg.error) {
+        setIsResponding(false);
+        setMessages(prev => [...prev, { role: "error", content: msg.error, timestamp: new Date() }]);
+        return;
+      }
+
+      if (typeof msg.content === "string" && msg.content.length) {
+        // stream into the last assistant bubble
+        setMessages(prev => {
+          const next = [...prev];
+          if (!next.length || next[next.length - 1].role !== "assistant") {
+            next.push({ role: "assistant", content: "", timestamp: new Date() });
+          }
+          next[next.length - 1] = {
+            ...next[next.length - 1],
+            content: (next[next.length - 1].content || "") + msg.content
+          };
+          return next;
+        });
+      }
+
+      if (msg.done === true || msg.finish_reason !== undefined) {
+        setIsResponding(false);
+      }
+    };
+
+    ws.onerror = () => { wsReadyRef.current = false; };
+    ws.onclose  = () => { wsReadyRef.current = false; wsRef.current = null; };
+
+    return () => {
+      try { ws.close(1000, "leaving chat"); } catch {}
+      wsRef.current = null;
+      wsReadyRef.current = false;
+    };
+  }, [chatOpen]);
+
+  // Render Chat
+  if (chatOpen) {
+    return (
+      <Paper sx={{ p: { xs: 1, sm: 1, md: 2 }, mx: "auto", my: 2, maxWidth: 1100, borderRadius: 3 }}>
+        {/* Header */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+          <Button variant="text" startIcon={<ArrowLeft size={16} />} onClick={() => setChatOpen(false)}>
+            Back
+          </Button>
+          <Typography variant="h5" fontWeight={700} sx={{ ml: 0.5 }}>
+            Chat
+          </Typography>
+          <Chip
+            icon={<Bot size={14} />}
+            label={selectedUrl}
+            variant="outlined"
+            size="small"
+            sx={{ ml: 2, maxWidth: "50%", overflow: "hidden", textOverflow: "ellipsis" }}
+          />
+          <Box sx={{ flex: 1 }} />
+        </Box>
+
+        {/* Messages */}
+        <Box
+          ref={listRef}
+          sx={{
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 2,
+            p: 2,
+            background: "#fff",
+            height: { xs: 480, sm: 560 },
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: 1.25,
+          }}
+        >
+
+          {messages.map((m, i) => {
+            if (m.role === "system") {
+              return (
+                <Box key={i} sx={{ textAlign: "center", my: 1 }}>
+                  <Typography variant="caption" color="text.secondary">{m.content}</Typography>
+                </Box>
+              );
+            }
+            if (m.role === "error") {
+              return (
+                <Paper key={i} elevation={0} sx={{ p: 1.25, bgcolor: "error.light", color: "error.contrastText", maxWidth: "85%" }}>
+                  <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>{m.content}</Typography>
+                </Paper>
+              );
+            }
+
+            const isUser = m.role === "user";
+            return (
+              <Box key={i} sx={{ display: "flex", flexDirection: "column", alignItems: isUser ? "flex-end" : "flex-start" }}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 1.25,
+                    maxWidth: "85%",
+                    borderRadius: 2,
+                    ...(isUser
+                      ? {
+                          bgcolor: "primary.main",
+                          color: "primary.contrastText",
+                          position: "relative",
+                          "&::after": {
+                            content: '""',
+                            position: "absolute",
+                            bottom: 10,
+                            right: -8,
+                            width: 0,
+                            height: 0,
+                            borderTop: "8px solid transparent",
+                            borderBottom: "8px solid transparent",
+                            borderLeft: "10px solid",
+                            borderLeftColor: "primary.main",
+                          },
+                        }
+                      : {
+                          bgcolor: "grey.100",
+                          color: "text.primary",
+                          position: "relative",
+                          "&::after": {
+                            content: '""',
+                            position: "absolute",
+                            bottom: 10,
+                            left: -8,
+                            width: 0,
+                            height: 0,
+                            borderTop: "8px solid transparent",
+                            borderBottom: "8px solid transparent",
+                            borderRight: "10px solid",
+                            borderRightColor: "grey.100",
+                          },
+                        }),
+                  }}
+                >
+                  {m.role === "assistant"
+                    ? renderAssistantMessage(m)
+                    : <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>{m.content}</Typography>}
+                </Paper>
+                {m.timestamp && (
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, fontSize: "0.7rem" }}>
+                    {m.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </Typography>
+                )}
+              </Box>
+            );
+          })}
+
+          {isResponding && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary", mt: 0.5 }}>
+              <CircularProgress size={16} />
+              <Typography variant="body2">Assistant is typing…</Typography>
+            </Box>
+          )}
+        </Box>
+
+        {/* Input */}
+        <Box sx={{ mt: 1.5, display: "flex", gap: 1 }}>
+          <TextField
+            variant="outlined"
+            placeholder="Type your message…"
+            value={currentMessage}
+            onChange={(e) => setCurrentMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+            fullWidth
+            size="small"
+            multiline
+            maxRows={3}
+            disabled={isResponding}
+          />
+          <Button
+            variant="contained"
+            endIcon={isResponding ? <CircularProgress size={16} color="inherit" /> : <Send size={16} />}
+            disabled={!currentMessage.trim() || isResponding || !wsReadyRef.current}
+            onClick={handleSendMessage}
+          >
+            {isResponding ? "Sending…" : "Send"}
+          </Button>
+        </Box>
+      </Paper>
+    );
+  }
+
 
   return (
       <Paper
@@ -280,6 +558,7 @@ export function WebScraper() {
                   item={item}
                   onRefresh={handleRefresh}
                   refreshing={refreshing.has(item.url)}
+                  onOpen={openChatForUrl}
                 />
               </Grid>
             ))}
