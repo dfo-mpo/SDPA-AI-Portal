@@ -69,6 +69,24 @@ function downloadCombinedByUrl(u) {
   a.remove();
 }
 
+const COOLDOWN_DAYS = 30;
+
+function disabledUntil(iso) {
+  if (!iso) return null;
+  const now = Date.now();
+  const until = new Date(iso).getTime();
+  let ms = until - now;
+  if (ms <= 0) return "now";
+  const sec = Math.ceil(ms / 1000);
+  const days = Math.floor(sec / 86400);
+  const hours = Math.floor((sec % 86400) / 3600);
+  const minutes = Math.floor((sec % 3600) / 60);
+  if (days > 0) return `${days} day${days>1?"s":""}${hours?` ${hours}h`:""}`;
+  if (hours > 0) return `${hours} hour${hours>1?"s":""}${minutes?` ${minutes}m`:""}`;
+  return `${minutes || 1} minute${minutes>1?"s":""}`;
+}
+
+
 /* ---------- preset card ---------- */
 function PresetCard({ item, onRefresh = () => {}, refreshing, onOpen = () => {}, onDownload = () => {} }) {
   const title = item.title || item.site_title;
@@ -152,9 +170,11 @@ function ConfirmScrapeDialog({
   url = "",
   inProgress = false,
   estimatedDuration = null,
+  nextAllowedAt = null,
 }) {
   const isRescrape = mode === "rescrape";
   const minutes = estimatedDuration ? Math.ceil(estimatedDuration / 60) : null;
+  const rescrapeLocked = isRescrape && Boolean(nextAllowedAt);
 
   return (
     <Dialog
@@ -203,8 +223,14 @@ function ConfirmScrapeDialog({
               <>
                 <br />
                 <br />
-                <strong>Estimated duration:</strong> around {minutes} minute
+                <strong>Estimated scrape duration:</strong> around {minutes} minute
                 {minutes > 1 ? "s" : ""}.
+              </>
+            )}
+            {isRescrape && nextAllowedAt && (
+              <>
+                <br />
+                <strong>Re-scrape available in:</strong> {disabledUntil(nextAllowedAt)} (until {new Date(nextAllowedAt).toLocaleString()})
               </>
             )}
             <br />
@@ -217,13 +243,38 @@ function ConfirmScrapeDialog({
       {!inProgress && (
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => onConfirm(url, isRescrape)}
+
+          <Tooltip
+            title={
+              rescrapeLocked
+                ? `Must wait for re-scrape availability (${disabledUntil(nextAllowedAt)} left)`
+                : ""
+            }
+            disableHoverListener={!rescrapeLocked}
           >
-            {isRescrape ? "Re-scrape" : "Scrape"}
-          </Button>
+            <span>
+              <Button
+                variant="contained"
+                color="primary"
+                disabled={rescrapeLocked}
+                onClick={() => onConfirm(url, isRescrape)}
+                sx={{
+                  ...(rescrapeLocked ? { cursor: "not-allowed" } : {}),
+                  "&.Mui-disabled": {
+                    backgroundColor: (theme) => `${theme.palette.grey[300]} !important`,
+                    color: (theme) => `${theme.palette.grey[700]} !important`,
+                    boxShadow: "none",
+                  },
+                  "&.Mui-disabled:hover": {
+                    backgroundColor: (theme) => `${theme.palette.grey[300]} !important`,
+                  },
+                }}
+                aria-label={isRescrape ? "Re-scrape" : "Scrape"}
+              >
+                {isRescrape ? "Re-scrape" : "Scrape"}
+              </Button>
+            </span>
+          </Tooltip>
         </DialogActions>
       )}
     </Dialog>
@@ -375,6 +426,24 @@ export function WebScraper() {
       setConfirmOpen(false);
     }
   };
+
+  const dialogNextAllowedAt = useMemo(() => {
+    if (!confirmUrl) return null;
+    // find the matching preset row for this URL
+    const match = presets.find(p => {
+      try { return urlKeyStrict(p.url) === urlKeyStrict(confirmUrl); }
+      catch { return p.url === confirmUrl; }
+    });
+    const last = match?.last_scraped_at;
+    if (!last) return null;
+
+    const lastMs = new Date(last).getTime();
+    if (Number.isNaN(lastMs)) return null;
+
+    const next = new Date(lastMs + COOLDOWN_DAYS * 86400000);
+    return next.getTime() > Date.now() ? next.toISOString() : null;
+  }, [presets, confirmUrl]);
+
 
   const openChatForUrl = (url) => {
     setSelectedUrl(url);
@@ -592,7 +661,7 @@ export function WebScraper() {
                 Back
               </Button>
               <Typography variant="h4" fontWeight={700} sx={{ ml: 0.5 }}>
-                Chat
+                ChatBot
               </Typography>
               <Chip
                 icon={<Bot size={14} />}
@@ -680,6 +749,15 @@ export function WebScraper() {
                 endIcon={isResponding ? <CircularProgress size={16} color="inherit" /> : <Send size={16} />}
                 disabled={!currentMessage.trim() || isResponding || !wsReadyRef.current}
                 onClick={handleSendMessage}
+                sx={{
+                  '&.Mui-disabled': {
+                    bgcolor: 'grey.400',
+                    color: 'grey.100',
+                  },
+                  '&.Mui-disabled:hover': {
+                    bgcolor: 'grey.400',
+                  },
+                }}
               >
                 {isResponding ? "Sending…" : "Send"}
               </Button>
@@ -832,6 +910,7 @@ export function WebScraper() {
         url={confirmUrl}
         inProgress={scrapeInProgress}
         estimatedDuration={scrapeEstimate}
+        nextAllowedAt={dialogNextAllowedAt}
       />
     </Paper>
   );
