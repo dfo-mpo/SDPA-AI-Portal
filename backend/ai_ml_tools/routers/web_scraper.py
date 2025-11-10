@@ -1,6 +1,6 @@
 # Imports
 from fastapi import APIRouter, Query
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, JSONResponse
 from pydantic import BaseModel
 from typing import Dict, List
 import uuid, json, re
@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse, urljoin
 from ai_ml_tools.utils.openai import request_openai_chat
 from fastapi import WebSocket, WebSocketDisconnect
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 router = APIRouter(prefix="/api", tags=["web-scraper"])
 
@@ -202,6 +202,33 @@ def _get_last_duration(url: str):
             best_dur = m.get("duration_seconds")
     return best_dur
 
+def _last_scraped_at(url: str) -> datetime | None:
+    """Return most recent scraped_at for URL, or None."""
+    emb = _build_embeddings()
+    vs  = _get_or_create_vs(emb)
+    metas = (vs._collection.get(
+        where={"source": {"$eq": url}},
+        include=["metadatas"]
+    ) or {}).get("metadatas") or []
+    latest = None
+    for m in metas:
+        ts = m.get("scraped_at")
+        if not ts:
+            continue
+        try:
+            dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        except Exception:
+            continue
+        if latest is None or dt > latest:
+            latest = dt
+    return latest
+
+def _valid_http_url(u: str) -> bool:
+    try:
+        p = urlparse((u or "").strip())
+        return p.scheme in ("http", "https") and bool(p.netloc)
+    except Exception:
+        return False
 
 # ----- POST Requests -----
 
@@ -211,6 +238,38 @@ def api_scrape(req: ScrapeReq):
     '''Scrapes a URL (or uses cached data), stores chunks in memory, upserts them to Chroma, and returns a session_id.'''
     start_time = datetime.now(timezone.utc)
     cached = _url_cached(req.url)
+
+    # Reject bad URLs
+    if not _valid_http_url(req.url):
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "reason": "invalid_url",
+                "message": "That URL doesn't look valid. Please include http:// or https:// and a real host."
+            }
+        )
+
+    # Monhtly cool-down (block rescrapee if < 30days since last scrape)
+    if req.force:
+        last = _last_scraped_at(req.url)
+        if last:
+            now = datetime.now(timezone.utc)
+            next_allowed = last + timedelta(days=30)
+            if now < next_allowed:
+                retry_after = int((next_allowed - now).total_seconds())
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "status": "cooldown",
+                        "message": "Re-scrape blocked by 30-day cooldown.",
+                        "url": req.url,
+                        "last_scraped_at": last.isoformat(),
+                        "next_allowed_at": next_allowed.isoformat(),
+                    },
+                    headers={"Retry-After": str(retry_after)},
+                )
+
     if cached and not req.force:
         session_id = str(uuid.uuid4())
         _session_url[session_id] = req.url
@@ -230,7 +289,19 @@ def api_scrape(req: ScrapeReq):
             "last_scrape_duration": last_dur,
         }
 
-    data = scrape_website(req.url)
+    try:
+        data = scrape_website(req.url)
+    except Exception as e:
+        return JSONResponse(
+            status_code=502,  # bad gateway: upstream site or network failed
+            content={
+                "status": "error",
+                "reason": "unreachable",
+                "message": "We couldn't reach that website (it may be down, invalid, or returned 4xx/5xx).",
+                "detail": str(e),
+            }
+        )
+        
     text = data.get("combined_text", "") or ""
     chunks = split_dom_content(text)
     site_meta = data.get("site_meta") or {
