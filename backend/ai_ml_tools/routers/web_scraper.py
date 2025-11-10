@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse, urljoin
 from ai_ml_tools.utils.openai import request_openai_chat
 from fastapi import WebSocket, WebSocketDisconnect
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api", tags=["web-scraper"])
 
@@ -30,6 +31,7 @@ os.environ.setdefault("ANONYMIZED_TELEMETRY", "false")
 # Classes
 class ScrapeReq(BaseModel):
     url: str
+    force: bool = False
 
 
 # Functions
@@ -73,6 +75,7 @@ def upsert_chunks_into_vector_db(chunks: list[str], source_url: str, site_meta: 
         "site_title": (site_meta.get("site_title") or ""),
         "site_description":(site_meta.get("site_description") or ""),
         "favicon": (site_meta.get("favicon") or default_favicon),
+        "duration_seconds": site_meta.get("duration_seconds"),
     } for i in range(len(chunks))]
 
     vectors = emb.embed_documents(chunks)
@@ -132,6 +135,7 @@ def _list_presets() -> list[dict]:
             "url": src,
             "chunk_count": 0,
             "last_scraped_at": None,
+            "last_scrape_duration": None,
             "doc_id": m.get("doc_id", ""),
             "title": "",
             "description": "",
@@ -139,8 +143,13 @@ def _list_presets() -> list[dict]:
         })
         info["chunk_count"] += 1
         t = m.get("scraped_at")
+        dur = m.get("duration_seconds")
         if t and (info["last_scraped_at"] is None or t > info["last_scraped_at"]):
             info["last_scraped_at"] = t
+            if dur is not None:
+               info["last_scrape_duration"] = dur
+        elif info["last_scrape_duration"] is None and dur is not None:
+            info["last_scrape_duration"] = dur
 
         if not info["title"] and m.get("site_title"):
             info["title"] = m["site_title"]
@@ -177,18 +186,39 @@ def _host_favicon(u: str) -> str:
     except Exception:
         return ""
 
+def _get_last_duration(url: str):
+    emb = _build_embeddings()
+    vs  = _get_or_create_vs(emb)
+    metas = (vs._collection.get(
+        where={"source": {"$eq": url}},
+        include=["metadatas"]
+    ) or {}).get("metadatas") or []
+
+    best_t, best_dur = None, None
+    for m in metas:
+        t = m.get("scraped_at")
+        if t and (best_t is None or t > best_t):
+            best_t = t
+            best_dur = m.get("duration_seconds")
+    return best_dur
+
+
 # ----- POST Requests -----
 
 # Scrape POST request
 @router.post("/scrape")
 def api_scrape(req: ScrapeReq):
     '''Scrapes a URL (or uses cached data), stores chunks in memory, upserts them to Chroma, and returns a session_id.'''
+    start_time = datetime.now(timezone.utc)
     cached = _url_cached(req.url)
-    if cached:
+    if cached and not req.force:
         session_id = str(uuid.uuid4())
         _session_url[session_id] = req.url
         _memory[session_id] = []
         _combined_text[session_id] = ""
+        end_time = datetime.now(timezone.utc)
+        duration_sec = (end_time - start_time).total_seconds()
+        last_dur = _get_last_duration(req.url)
         return {
             "status": "ok",
             "session_id": session_id,
@@ -196,6 +226,8 @@ def api_scrape(req: ScrapeReq):
             "embedded_count": 0,
             "cache_hit": True,
             "url": req.url,
+            "duration_seconds": duration_sec,
+            "last_scrape_duration": last_dur,
         }
 
     data = scrape_website(req.url)
@@ -210,6 +242,9 @@ def api_scrape(req: ScrapeReq):
     _memory[session_id] = chunks
     _combined_text[session_id] = text
 
+    end_time = datetime.now(timezone.utc)
+    duration_sec = (end_time - start_time).total_seconds()
+    site_meta["duration_seconds"] = duration_sec
     added = upsert_chunks_into_vector_db(chunks, req.url, site_meta=site_meta)
 
     return {
@@ -217,9 +252,11 @@ def api_scrape(req: ScrapeReq):
         "session_id": session_id,
         "chunk_count": len(chunks),
         "embedded_count": added,
-        "cache_hit": False,
+        "cache_hit": bool(cached),
         "url": req.url,
         "site_meta": site_meta,
+        "duration_seconds": duration_sec,
+        "scraped_at": end_time.isoformat(),
     }
 
 
