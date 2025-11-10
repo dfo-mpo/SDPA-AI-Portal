@@ -1,9 +1,12 @@
 # ---------- Imports ----------
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 from typing import List, Dict, Any
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import io, shutil, tempfile
+from starlette.background import BackgroundTask
 
 from azure.identity import DefaultAzureCredential
 from azure.ai.ml import MLClient
@@ -127,3 +130,30 @@ def api_list_blobs():
     except HttpResponseError as e:
         # 403s and others surface as clean JSON
         raise HTTPException(status_code=403, detail={"error": "blob_list_failed", "message": str(e)})
+
+# GET the files/folders and download as ZIP
+@router.get("/models/{name}/versions/{version}/download.zip")
+def api_model_download_zip(name: str, version: str):
+    # 1) Download the model to a temp dir via AML
+    tmpdir = tempfile.mkdtemp(prefix=f"{name}_v{version}_")
+    try:
+        ml.models.download(name=name, version=version, download_path=tmpdir)
+    except Exception as e:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        raise HTTPException(status_code=404, detail=f"Download failed for {name} v{version}: {e}")
+
+    # 2) Create a zip with shutil.make_archive (one-liner) and serve it
+    zip_path = shutil.make_archive(tmpdir, "zip", root_dir=tmpdir)
+    filename = f"{name}_v{version}.zip"
+
+    def cleanup():
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        try: os.remove(zip_path)
+        except: pass
+
+    return FileResponse(
+        zip_path,
+        media_type="application/zip",
+        filename=filename,
+        background=BackgroundTask(cleanup),
+    )
