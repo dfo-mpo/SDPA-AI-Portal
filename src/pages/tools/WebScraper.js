@@ -7,9 +7,10 @@ import {
   Paper, Stack, Alert, AlertTitle, TextField, Button, Drawer, Divider,
   Typography, Box, Grid, Card, CardActionArea, CardContent, Avatar,
   IconButton, Tooltip, CircularProgress, InputAdornment, Skeleton,
+  Dialog, DialogTitle, DialogContent, DialogActions, Chip,
 } from "@mui/material";
-import { Search, RefreshCw, ArrowLeft, Send, Bot } from "lucide-react";
-import { Chip } from "@mui/material";
+import { Search, RefreshCw, ArrowLeft, Send, Bot, Download } from "lucide-react";
+import { flushSync } from "react-dom";
 
 const API_BASE = "http://localhost:8000";
 
@@ -58,10 +59,20 @@ function urlKeyStrict(val) {
   return `${u.protocol}//${u.hostname.toLowerCase()}${path}${u.search}`;
 }
 
+function downloadCombinedByUrl(u) {
+  const href = `${API_BASE}/api/combined-by-url?url=${encodeURIComponent(u)}`;
+  const a = document.createElement("a");
+  a.href = href;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 /* ---------- preset card ---------- */
-function PresetCard({ item, onRefresh = () => {}, refreshing, onOpen = () => {} }) {
+function PresetCard({ item, onRefresh = () => {}, refreshing, onOpen = () => {}, onDownload = () => {} }) {
   const title = item.title || item.site_title;
-  const fav = item.favicon
+  const fav = item.favicon;
   const descr =
     item.description ||
     item.site_description ||
@@ -88,6 +99,17 @@ function PresetCard({ item, onRefresh = () => {}, refreshing, onOpen = () => {} 
               {title}
             </Typography>
             <Box sx={{ flex: 1 }} />
+            <Tooltip title="Download already scraped data">
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={(e) => { e.stopPropagation(); onDownload(item.url); }}
+                  aria-label="Download already-scraped data"
+                >
+                  <Download size={18} />
+                </IconButton>
+              </span>
+            </Tooltip>
             <Tooltip title="Refresh (re-scrape)">
               <span>
                 <IconButton
@@ -122,6 +144,92 @@ function PresetCard({ item, onRefresh = () => {}, refreshing, onOpen = () => {} 
   );
 }
 
+function ConfirmScrapeDialog({
+  open,
+  onClose,
+  onConfirm,
+  mode = "scrape",
+  url = "",
+  inProgress = false,
+  estimatedDuration = null,
+}) {
+  const isRescrape = mode === "rescrape";
+  const minutes = estimatedDuration ? Math.ceil(estimatedDuration / 60) : null;
+
+  return (
+    <Dialog
+      open={open}
+      onClose={inProgress ? undefined : onClose}
+      PaperProps={{
+        sx: {
+          backgroundColor: "#fff",
+          borderRadius: 3,
+          p: 1,
+          boxShadow: 4,
+          width: 600,
+        },
+      }}
+    >
+      <DialogTitle>
+        {inProgress
+          ? "Scraping in Progress"
+          : isRescrape
+          ? "Re-scrape Website"
+          : "Scrape Website"}
+      </DialogTitle>
+
+      <DialogContent>
+        {inProgress ? (
+          <Alert
+            severity="success"
+            icon={<CircularProgress size={20} sx={{ mr: 1 }} />}
+            sx={{ display: "flex", alignItems: "center", backgroundColor: "#e8f5e9" }}
+          >
+            <AlertTitle>Scraping in Progress</AlertTitle>
+            Please wait while we extract and analyze data from:
+            <Typography
+              variant="body2"
+              sx={{ mt: 1, fontWeight: 500, wordBreak: "break-all" }}
+            >
+              {url}
+            </Typography>
+          </Alert>
+        ) : (
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            {isRescrape
+              ? `Re-scraping ${url} may take several hours depending on site size.`
+              : `Scraping ${url} may take several hours depending on website complexity.`}
+            {minutes && (
+              <>
+                <br />
+                <br />
+                <strong>Estimated duration:</strong> around {minutes} minute
+                {minutes > 1 ? "s" : ""}.
+              </>
+            )}
+            <br />
+            <br />
+            Do you want to continue?
+          </Typography>
+        )}
+      </DialogContent>
+
+      {!inProgress && (
+        <DialogActions>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => onConfirm(url, isRescrape)}
+          >
+            {isRescrape ? "Re-scrape" : "Scrape"}
+          </Button>
+        </DialogActions>
+      )}
+    </Dialog>
+  );
+}
+
 // Render assistant HTML
 function renderAssistantMessage(message) {
   let content = (message.content || "")
@@ -146,6 +254,13 @@ export function WebScraper() {
   const [refreshing, setRefreshing] = useState(() => new Set());
   const [adding, setAdding] = useState(false);
   const [addErr, setAddErr] = useState("");
+
+  // confirm scrape/rescrape
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmUrl, setConfirmUrl] = useState("");
+  const [confirmMode, setConfirmMode] = useState("");
+  const [scrapeInProgress, setScrapeInProgress] = useState(false);
+  const [scrapeEstimate, setScrapeEstimate] = useState(null);
 
   // chat UI state
   const [chatOpen, setChatOpen] = useState(false);
@@ -179,19 +294,11 @@ export function WebScraper() {
     );
   }, [presets, q]);
 
-  const handleRefresh = async (url) => {
-    const next = new Set(refreshing); next.add(url); setRefreshing(next);
-    try {
-      const r = await fetch(`${API_BASE}/api/scrape`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      await reload();
-    } catch (e) {
-    } finally {
-      const n2 = new Set(refreshing); n2.delete(url); setRefreshing(n2);
-    }
+  const handleRefresh = (url) => {
+    setConfirmMode("rescrape");
+    setConfirmUrl(url);
+    setScrapeEstimate(getLastDurationFor(url));
+    setConfirmOpen(true);
   };
 
   const existingKeys = useMemo(() => {
@@ -208,29 +315,64 @@ export function WebScraper() {
       setAddErr("Enter a valid URL that includes http:// or https://");
       return;
     }
-    try {
-      if (existingKeys.has(urlKeyStrict(q))) {
-        setAddErr("This URL was already scraped. Use Refresh to re-scrape.");
-        return;
-      }
-    } catch {
-      setAddErr("Invalid URL.");
-      return;
-    }
+    const normalized = q.trim();
+    let isExisting = false;
+    try { isExisting = existingKeys.has(urlKeyStrict(q)); } catch {}
+    setConfirmMode(isExisting ? "rescrape" : "scrape");
+    setConfirmUrl(q.trim());
+    setScrapeEstimate(isExisting ? getLastDurationFor(normalized) : null);
+    setConfirmOpen(true);
+  };
 
-    setAdding(true);
+  const getLastDurationFor = (url) => {
+    if (!url) return null;
+    const match = presets.find(p => {
+      try { return urlKeyStrict(p.url) === urlKeyStrict(url); }
+      catch { return p.url === url; }
+    });
+    const dur = match && match.last_scrape_duration;
+    if (typeof dur === "number" && isFinite(dur)) return dur;
+    if (dur != null) {
+      const n = Number(dur);
+      return isFinite(n) ? n : null;
+    }
+    return null;
+  };
+
+  const runScrape = async (url, force = false) => {
+    flushSync(() => {
+      setScrapeInProgress(true);
+    });
+    setAddErr("");
+
+    const prev = presets.find(p => {
+      try { return urlKeyStrict(p.url) === urlKeyStrict(url); }
+      catch { return p.url === url; }
+    });
+    setScrapeEstimate(prev?.last_scrape_duration || null);
+
     try {
-      await fetch(`${API_BASE}/api/scrape`, {
+      const r = await fetch(`${API_BASE}/api/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: q.trim() }),
+        body: JSON.stringify({ url, force }),
       });
-      setQ("");
+      const j = await r.json();
+
+      if (j.cache_hit) {
+        if (j.last_scrape_duration != null) {
+          setScrapeEstimate(j.last_scrape_duration);
+        }
+      } else if (j.duration_seconds != null) {
+        setScrapeEstimate(j.duration_seconds);
+      }
+
       await reload();
     } catch {
       setAddErr("Failed to start scraping. Please try again.");
     } finally {
-      setAdding(false);
+      setScrapeInProgress(false);
+      setConfirmOpen(false);
     }
   };
 
@@ -318,258 +460,287 @@ export function WebScraper() {
     };
   }, [chatOpen]);
 
-  // Render Chat
-  if (chatOpen) {
-    return (
-      <Paper sx={{ p: { xs: 1, sm: 1, md: 2 }, mx: "auto", my: 2, maxWidth: 1100, borderRadius: 3 }}>
-        {/* Header */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-          <Button variant="text" startIcon={<ArrowLeft size={16} />} onClick={() => setChatOpen(false)}>
-            Back
-          </Button>
-          <Typography variant="h5" fontWeight={700} sx={{ ml: 0.5 }}>
-            Chat
-          </Typography>
-          <Chip
-            icon={<Bot size={14} />}
-            label={selectedUrl}
-            variant="outlined"
-            size="small"
-            sx={{ ml: 2, maxWidth: "50%", overflow: "hidden", textOverflow: "ellipsis" }}
-          />
-          <Box sx={{ flex: 1 }} />
-        </Box>
-
-        {/* Messages */}
-        <Box
-          ref={listRef}
-          sx={{
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 2,
-            p: 2,
-            background: "#fff",
-            height: { xs: 480, sm: 560 },
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: 1.25,
-          }}
-        >
-
-          {messages.map((m, i) => {
-            if (m.role === "system") {
-              return (
-                <Box key={i} sx={{ textAlign: "center", my: 1 }}>
-                  <Typography variant="caption" color="text.secondary">{m.content}</Typography>
-                </Box>
-              );
-            }
-            if (m.role === "error") {
-              return (
-                <Paper key={i} elevation={0} sx={{ p: 1.25, bgcolor: "error.light", color: "error.contrastText", maxWidth: "85%" }}>
-                  <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>{m.content}</Typography>
-                </Paper>
-              );
-            }
-
-            const isUser = m.role === "user";
-            return (
-              <Box key={i} sx={{ display: "flex", flexDirection: "column", alignItems: isUser ? "flex-end" : "flex-start" }}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 1.25,
-                    maxWidth: "85%",
-                    borderRadius: 2,
-                    ...(isUser
-                      ? {
-                          bgcolor: "primary.main",
-                          color: "primary.contrastText",
-                          position: "relative",
-                          "&::after": {
-                            content: '""',
-                            position: "absolute",
-                            bottom: 10,
-                            right: -8,
-                            width: 0,
-                            height: 0,
-                            borderTop: "8px solid transparent",
-                            borderBottom: "8px solid transparent",
-                            borderLeft: "10px solid",
-                            borderLeftColor: "primary.main",
-                          },
-                        }
-                      : {
-                          bgcolor: "grey.100",
-                          color: "text.primary",
-                          position: "relative",
-                          "&::after": {
-                            content: '""',
-                            position: "absolute",
-                            bottom: 10,
-                            left: -8,
-                            width: 0,
-                            height: 0,
-                            borderTop: "8px solid transparent",
-                            borderBottom: "8px solid transparent",
-                            borderRight: "10px solid",
-                            borderRightColor: "grey.100",
-                          },
-                        }),
-                  }}
-                >
-                  {m.role === "assistant"
-                    ? renderAssistantMessage(m)
-                    : <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>{m.content}</Typography>}
-                </Paper>
-                {m.timestamp && (
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, fontSize: "0.7rem" }}>
-                    {m.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </Typography>
-                )}
-              </Box>
-            );
-          })}
-
-          {isResponding && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary", mt: 0.5 }}>
-              <CircularProgress size={16} />
-              <Typography variant="body2">Assistant is typing…</Typography>
-            </Box>
-          )}
-        </Box>
-
-        {/* Input */}
-        <Box sx={{ mt: 1.5, display: "flex", gap: 1 }}>
-          <TextField
-            variant="outlined"
-            placeholder="Type your message…"
-            value={currentMessage}
-            onChange={(e) => setCurrentMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-            fullWidth
-            size="small"
-            multiline
-            maxRows={3}
-            disabled={isResponding}
-          />
-          <Button
-            variant="contained"
-            endIcon={isResponding ? <CircularProgress size={16} color="inherit" /> : <Send size={16} />}
-            disabled={!currentMessage.trim() || isResponding || !wsReadyRef.current}
-            onClick={handleSendMessage}
-          >
-            {isResponding ? "Sending…" : "Send"}
-          </Button>
-        </Box>
-      </Paper>
-    );
-  }
-
 
   return (
-      <Paper
-        sx={{
-          p: { xs: 1, sm: 1, md: 2 },
-          mx: "auto",
-          my: 2,
-          maxWidth: 1320,
-          borderRadius: 3,
-        }}
-      >
-        <Stack sx={{ mb: 1 }}>
-          <p style={{ fontSize: 50, fontWeight: 600, marginTop: 30 }}>Web Scraper</p>
-          <p style={{ fontSize: 20, marginTop: 0 }}>
-            Extract data from any public website using a URL
-          </p>
-          <p style={{ marginTop: 20 }}>
-            This tool allows users to input a website URL and automatically scrape its contents for
-            structured data extraction. Once scraped, users can ask questions about the page using
-            OpenAI-powered analysis. Ideal for quick insights, research, or prototyping, this scraper
-            simplifies the process of turning raw web content into actionable answers.
-          </p>
-        </Stack>
+    <Paper
+      sx={{
+        p: { xs: 1, sm: 1, md: 2 },
+        mx: "auto",
+        my: 2,
+        maxWidth: 1320,
+        borderRadius: 3,
+      }}
+    >
+      {/* ---------- Header + Description (always same) ---------- */}
+      <Stack sx={{ mb: 1 }}>
+        <p style={{ fontSize: 50, fontWeight: 600, marginTop: 30 }}>Web Scraper</p>
+        <p style={{ fontSize: 20, marginTop: 0 }}>
+          Extract data from any public website using a URL
+        </p>
+        <p style={{ marginTop: 20 }}>
+          This tool allows users to input a website URL and automatically scrape its contents for
+          structured data extraction. Once scraped, users can ask questions about the page using
+          OpenAI-powered analysis. Ideal for quick insights, research, or prototyping, this scraper
+          simplifies the process of turning raw web content into actionable answers.
+        </p>
+      </Stack>
 
-        <Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
-          <AlertTitle>Disclaimer</AlertTitle>
-          This scraper is for <strong>demonstration purposes only</strong> and is{" "}
-          <strong>not</strong> an enterprise solution. Use only{" "}
-          <strong>publicly accessible URLs</strong> and avoid scraping protected, sensitive, or
-          classified content. The tool is intended for educational and exploratory use with{" "}
-          <strong>no production guarantees</strong>. Scraper may take <strong>several hours</strong> to
-          complete based on the URL. By proceeding, you confirm you have the right to access and analyze the content you provide.
-        </Alert>
+      {/* ---------- Disclaimer (always same) ---------- */}
+      <Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
+        <AlertTitle>Disclaimer</AlertTitle>
+        This scraper is for <strong>demonstration purposes only</strong> and is{" "}
+        <strong>not</strong> an enterprise solution. Use only{" "}
+        <strong>publicly accessible URLs</strong> and avoid scraping protected, sensitive, or
+        classified content. The tool is intended for educational and exploratory use with{" "}
+        <strong>no production guarantees</strong>. Scraper may take <strong>several hours</strong> to
+        complete based on the URL. By proceeding, you confirm you have the right to access and analyze
+        the content you provide.
+      </Alert>
 
-      {/* Search Bar */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-        <TextField
-          fullWidth
-          size="medium"
-          placeholder="Search scraped sites… or paste a URL"
-          value={q}
-          onChange={(e) => { setQ(e.target.value); setAddErr(""); }}
-          onKeyDown={(e) => { if (e.key === "Enter" && !adding) handleAdd(); }}
-          error={Boolean(addErr)}
-          helperText={addErr || undefined}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search size={18} />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Button
-          variant="contained"
-          onClick={handleAdd}
-          disabled={adding}
-          startIcon={adding ? <CircularProgress sx={{ color: 'common.white' }} size={16} /> : null}
+      {/* ---------- CONDITIONAL BODY ---------- */}
+      {chatOpen ? (
+        /* ==================== Chat View ==================== */
+        <Box
           sx={{
-            textTransform: "none",
-            alignSelf: "flex-start",
-            "&.Mui-disabled": {
-              opacity: 1,
-              color: "grey.400",
-              WebkitTextFillColor: "unset",
-            },
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: 2,
+            width: "100%",
+            boxSizing: "border-box",
           }}
         >
-          {adding ? "Scraping…" : "Add/Scrape"}
-        </Button>
-      </Box>
+          {/* Left: Presets */}
+          <Box
+            sx={{
+              width: { xs: "100%", md: "35%" },
+              minWidth: 320,
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 2,
+              p: 1.5,
+              background: "#fff",
+              height: { xs: "auto", md: 660 },
+              display: "flex",
+              flexDirection: "column",
+              boxSizing: "border-box",
+            }}
+          >
+            <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
+              Presets
+            </Typography>
 
-      {/* Grid */}
-      {err && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {err}
-        </Alert>
-      )}
+            {/* Search + Add */}
+            <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search or paste a URL…"
+                value={q}
+                onChange={(e) => { setQ(e.target.value); setAddErr(""); }}
+                onKeyDown={(e) => { if (e.key === "Enter" && !adding) handleAdd(); }}
+                error={Boolean(addErr)}
+                helperText={addErr || undefined}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search size={16} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Button
+                variant="contained"
+                onClick={handleAdd}
+                disabled={adding}
+                sx={{ whiteSpace: "nowrap" }}
+              >
+                {adding ? "Scraping…" : "Add"}
+              </Button>
+            </Box>
 
-      <Grid container spacing={2}>
-        {filtered.map((item) => (
+            <Box sx={{ flex: 1, overflowY: "auto", pr: 0.5 }}>
+              {err && <Alert severity="error" sx={{ mb: 1 }}>{err}</Alert>}
+
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} variant="rounded" height={84} sx={{ mb: 1 }} />
+                ))
+              ) : filtered.length ? (
+                filtered.map((item) => (
+                  <Box key={item.url} sx={{ mb: 1 }}>
+                    <PresetCard
+                      item={item}
+                      onRefresh={handleRefresh}
+                      refreshing={refreshing.has(item.url)}
+                      onOpen={openChatForUrl}
+                      onDownload={downloadCombinedByUrl}
+                    />
+                  </Box>
+                ))
+              ) : (
+                <Typography align="center" color="text.secondary" sx={{ py: 2 }}>
+                  No results. Try a different search or <b>Scrape</b> this URL.
+                </Typography>
+              )}
+            </Box>
+          </Box>
+
+          {/* Right: Chat Panel */}
+          <Box sx={{ flex: 1, minWidth: 0, boxSizing: "border-box", }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+              <Button variant="text" startIcon={<ArrowLeft size={16} />} onClick={() => setChatOpen(false)}>
+                Back
+              </Button>
+              <Typography variant="h4" fontWeight={700} sx={{ ml: 0.5 }}>
+                Chat
+              </Typography>
+              <Chip
+                icon={<Bot size={14} />}
+                label={selectedUrl}
+                variant="outlined"
+                size="small"
+                sx={{ ml: 2, maxWidth: "50%", overflow: "hidden", textOverflow: "ellipsis" }}
+              />
+              <Box sx={{ flex: 1 }} />
+            </Box>
+
+            {/* Chat Messages */}
+            <Box
+              ref={listRef}
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 2,
+                p: 2,
+                background: "#fff",
+                height: { xs: 480, sm: 560 },
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.25,
+              }}
+            >
+              {messages.map((m, i) => (
+                <Box key={i} sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: m.role === "user" ? "flex-end" : "flex-start"
+                }}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 1.25,
+                      maxWidth: "85%",
+                      borderRadius: 2,
+                      bgcolor: m.role === "user" ? "primary.main" : "grey.100",
+                      color: m.role === "user" ? "primary.contrastText" : "text.primary",
+                    }}
+                  >
+                    {m.role === "assistant"
+                      ? renderAssistantMessage(m)
+                      : <Typography variant="body2">{m.content}</Typography>}
+                  </Paper>
+                  {m.timestamp && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25 }}>
+                      {m.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </Typography>
+                  )}
+                </Box>
+              ))}
+
+              {isResponding && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary", mt: 0.5 }}>
+                  <CircularProgress size={16} />
+                  <Typography variant="body2">Assistant is typing…</Typography>
+                </Box>
+              )}
+            </Box>
+
+            {/* Chat Input */}
+            <Box sx={{ mt: 1.5, display: "flex", gap: 1 }}>
+              <TextField
+                variant="outlined"
+                placeholder="Type your message…"
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                fullWidth
+                size="small"
+                multiline
+                maxRows={3}
+                disabled={isResponding}
+              />
+              <Button
+                variant="contained"
+                endIcon={isResponding ? <CircularProgress size={16} color="inherit" /> : <Send size={16} />}
+                disabled={!currentMessage.trim() || isResponding || !wsReadyRef.current}
+                onClick={handleSendMessage}
+              >
+                {isResponding ? "Sending…" : "Send"}
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+      ) : (
+        /* ==================== Grid View ==================== */
+        <>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+            <TextField
+              fullWidth
+              size="medium"
+              placeholder="Search scraped sites… or paste a URL"
+              value={q}
+              onChange={(e) => { setQ(e.target.value); setAddErr(""); }}
+              onKeyDown={(e) => { if (e.key === "Enter" && !adding) handleAdd(); }}
+              error={Boolean(addErr)}
+              helperText={addErr || undefined}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search size={18} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleAdd}
+              disabled={adding}
+              startIcon={adding ? <CircularProgress sx={{ color: 'common.white' }} size={16} /> : null}
+            >
+              {"Scrape"}
+            </Button>
+          </Box>
+
+          {err && <Alert severity="error" sx={{ mb: 2 }}>{err}</Alert>}
+
+          <Grid container spacing={2}>
+            {filtered.map((item) => (
               <Grid item xs={12} sm={6} md={4} key={item.url}>
                 <PresetCard
                   item={item}
                   onRefresh={handleRefresh}
                   refreshing={refreshing.has(item.url)}
                   onOpen={openChatForUrl}
+                  onDownload={downloadCombinedByUrl}
                 />
               </Grid>
             ))}
-        {!loading && filtered.length === 0 && (
-          <Grid item xs={12}>
-            <Typography align="center" color="text.secondary" sx={{ py: 4 }}>
-              No results. Try a different search or Add/Scrape this website Url.
-            </Typography>
+            {!loading && filtered.length === 0 && (
+              <Grid item xs={12}>
+                <Typography align="center" color="text.secondary" sx={{ py: 4 }}>
+                  No results. Try a different search or <b>Scrape</b> this website Url.
+                </Typography>
+              </Grid>
+            )}
           </Grid>
-        )}
-      </Grid>
+        </>
+      )}
 
       {/* Tiny right-edge arrow tab */}
       <Button
@@ -652,6 +823,16 @@ export function WebScraper() {
           </Typography>
         </Box>
       </Drawer>
+
+      <ConfirmScrapeDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={(url, isRescrape) => runScrape(url, isRescrape)}
+        mode={confirmMode}
+        url={confirmUrl}
+        inProgress={scrapeInProgress}
+        estimatedDuration={scrapeEstimate}
+      />
     </Paper>
   );
 }
