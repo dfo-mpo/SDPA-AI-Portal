@@ -7,6 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import io, shutil, tempfile
 from starlette.background import BackgroundTask
+from datetime import datetime, timezone
 
 from azure.identity import DefaultAzureCredential
 from azure.ai.ml import MLClient
@@ -38,98 +39,83 @@ ml = MLClient(cred, SUB_ID, RG, WS)
 # Always derive the tracking URI from the workspace to avoid region mismatches
 TRACKING_URI = ml.workspaces.get(WS).mlflow_tracking_uri
 mlflow.set_tracking_uri(TRACKING_URI)
+client = MlflowClient()
 
-# Create a blob client to read blob files
-def get_blob_service_client() -> BlobServiceClient:
 
-    # build a connection string from name + key (like your Node example)
-    if not STORAGE or not ACCOUNT_KEY:
-        raise RuntimeError(
-            "Missing storage creds: set AZURE_STORAGE_ACCOUNT_NAME and "
-            "AZURE_STORAGE_ACCOUNT_KEY (or AZURE_ML_STORAGE_ACCOUNT_KEY)."
-        )
-    built_conn = (
-        f"DefaultEndpointsProtocol=https;"
-        f"AccountName={STORAGE};"
-        f"AccountKey={ACCOUNT_KEY};"
-        f"EndpointSuffix=core.windows.net"
-    )
-    return BlobServiceClient.from_connection_string(built_conn)
+# ---------- Helpers ----------
+def metaData(v):
+    # 1) Define when created
+    created_on = None
+    if getattr(v, "creation_timestamp", None) is not None:
+        created_on = datetime.fromtimestamp(int(v.creation_timestamp)/1000, tz=timezone.utc).isoformat()
 
-blob_service = get_blob_service_client()
+    # 2) Define when last updated
+    last_updated_on = None
+    if getattr(v, "last_updated_timestamp", None) is not None:
+        last_updated_on = datetime.fromtimestamp(int(v.last_updated_timestamp)/1000, tz=timezone.utc).isoformat()
+
+    # 3) Type from Azure ML model entity
+    try:
+        am = ml.models.get(name=v.name, version=str(v.version))
+        t = getattr(am, "type", None)
+        aml_type = getattr(t, "name", str(t)) if t else None
+        flavors = getattr(am, "flavors", None)
+    except Exception:
+        aml_type = None
+        flavors = None
+
+    # 3) Return metadata
+    return {
+        "name": v.name,
+        "version": str(v.version),
+        "description": getattr(v, "description", None),
+        "type": aml_type,
+        "flavors": flavors or None,
+        "tags": getattr(v, "tags", {}) or None,
+        "created_on": created_on,
+        "last_updated_on": last_updated_on,
+    }
 
 
 # ---------- FastAPI ----------
 router = APIRouter(prefix="/api", tags=["aml"])
 
-# GET health
-@router.get("/health")
-def api_health():
-    return {"ok": True, "workspace": WS, "tracking_uri": TRACKING_URI}
-
-# GET Models using MLflow Tracking URI
+# GET all models (latest)
 @router.get("/models")
-def api_list_models():
-    client = MlflowClient()
+def list_models():
+    # 1) Access registered models
     try:
-        out: List[Dict[str, Any]] = []
-        for rm in client.search_registered_models():
-            latest = rm.latest_versions[0] if getattr(rm, "latest_versions", None) else None
-            out.append({
-                "name": rm.name,
-                "description": getattr(rm, "description", None),
-                "latest_version": getattr(latest, "version", None),
-                "latest_stage": getattr(latest, "current_stage", None),
-            })
-        return out
-    except RestException as e:
-        # Some AML-managed MLflow builds reject certain default filters
-        raise HTTPException(status_code=502, detail={"error": "mlflow_registry_error", "message": str(e)})
+        regs = client.search_registered_models()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list models: {e}")
 
-# GET the versions of a specific model
-@router.get("/models/{name}/versions")
-def api_list_model_versions(name: str):
-    client = MlflowClient()
-    try:
-        versions = client.search_model_versions(f"name = '{name}'")
-        payload: List[Dict[str, Any]] = []
-        for v in versions:
-            payload.append({
-                "name": v.name,
-                "version": v.version,
-                "current_stage": v.current_stage,
-                "run_id": v.run_id,
-                "source": v.source,
-                "description": getattr(v, "description", None),
-                "creation_timestamp": getattr(v, "creation_timestamp", None),
-                "last_updated_timestamp": getattr(v, "last_updated_timestamp", None),
-                "tags": getattr(v, "tags", None),
-            })
+    # 2) Go throught all models + versions and output only latest version of a model
+    out = []
+    for rm in regs:
+        name = getattr(rm, "name", None)
+        if not name:
+            continue
         try:
-            payload.sort(key=lambda x: int(x["version"]), reverse=True)
+            versions = client.search_model_versions(f"name = '{name}'")
+            if not versions:
+                continue
+            latest = max(versions, key=lambda x: int(getattr(x, "version", 0)))
+            out.append(metaData(latest))
         except Exception:
-            pass
-        return payload
-    except RestException as e:
-        raise HTTPException(status_code=502, detail={"error": "mlflow_registry_error", "message": str(e)})
+            continue
 
-# GET the blob files/folders from blob container
-@router.get("/blobs")
-def api_list_blobs():
+    # Newest first by last update
+    out.sort(key=lambda x: x.get("last_updated_on") or "", reverse=True)
+    return out
+
+# GET Model Name specific version
+@router.get("/models/{name}/versions/{version}")
+def get_model_version(name: str, version: str):
     try:
-        container = blob_service.get_container_client(CONTAINER)
-        items: List[Dict[str, Any]] = []
-        for b in container.list_blobs():
-            items.append({
-                "name": b.name,
-                "size": getattr(b, "size", None),
-                "content_type": getattr(getattr(b, "content_settings", None), "content_type", None),
-                "last_modified": getattr(b, "last_modified", None),
-            })
-        return items
-    except HttpResponseError as e:
-        # 403s and others surface as clean JSON
-        raise HTTPException(status_code=403, detail={"error": "blob_list_failed", "message": str(e)})
+        v = client.get_model_version(name=name, version=str(version))
+    except Exception:
+        raise HTTPException(status_code=404, detail=f"Version '{version}' not found for model '{name}'")
+    return metaData(v)
 
 # GET the files/folders and download as ZIP
 @router.get("/models/{name}/versions/{version}/download.zip")
