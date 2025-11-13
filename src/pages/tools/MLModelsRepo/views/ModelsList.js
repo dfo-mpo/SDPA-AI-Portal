@@ -4,7 +4,7 @@ import SearchBar from "../components/SearchBar";
 import ModelCard from "../components/ModelCard";
 import CardsGrid from "../components/CardsGrid";
 
-export default function ModelsList({ rows = [], onOpenModel }) {
+export default function ModelsList({ rows = [], onSelect }) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -61,7 +61,10 @@ export default function ModelsList({ rows = [], onOpenModel }) {
         >
           {filtered.map((item) => (
             <Box key={item.id}>
-              <ModelCard item={item} onClick={() => onOpenModel?.(item.id)} />
+              <ModelCard
+                item={item}
+                onClick={() => onSelect && onSelect(item)}  // <-- THIS is the important part
+              />
             </Box>
           ))}
         </CardsGrid>

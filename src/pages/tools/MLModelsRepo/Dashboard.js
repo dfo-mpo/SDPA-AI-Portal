@@ -3,10 +3,26 @@
  */
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Box, Tabs, Tab, Stack, Alert, AlertTitle, Paper, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Tabs,
+  Tab,
+  Stack,
+  Alert,
+  AlertTitle,
+  Paper,
+  CircularProgress,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { useLanguage } from "../../../contexts";
 import { getToolTranslations } from "../../../utils";
 import ModelsList from "./views/ModelsList";
+import ModelDetail from "./views/ModelDetail";
 import * as modelsApi from "./services/repoApi";
 
 // Main Dashboard
@@ -17,6 +33,8 @@ export function MLModelsRepo() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [selectedModel, setSelectedModel] = useState(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -39,6 +57,15 @@ export function MLModelsRepo() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleSelect = (row) => {
+    setSelectedModel(row);
+    setDetailOpen(true);
+  };
+
+  const handleCloseDetail = () => {
+    setDetailOpen(false);
+  };
 
   return (
     <Paper
@@ -93,11 +120,63 @@ export function MLModelsRepo() {
           <CircularProgress />
         </Stack>
       ) : (
-        <ModelsList rows={items} />
+        <>
+          {/* grid of cards */}
+          <ModelsList
+            rows={items}
+            onSelect={handleSelect}
+          />
+
+          {/* README dialog */}
+          {selectedModel && (
+            <Dialog
+              open={detailOpen}
+              onClose={handleCloseDetail}
+              fullWidth
+              maxWidth="md"
+              PaperProps={{
+                sx: {
+                  backgroundColor: "white",
+                },
+              }}
+            >
+              <DialogTitle
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  bgcolor: "white",
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  README — {selectedModel.name} (v{selectedModel.version})
+                </Typography>
+                <IconButton
+                  onClick={handleCloseDetail}
+                  size="small"
+                  sx={{ ml: "auto" }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+
+              <DialogContent
+                dividers
+                sx={{
+                  p: 2,
+                  backgroundColor: "white",
+                }}
+              >
+                <ModelDetail
+                  name={selectedModel.name}
+                  version={selectedModel.version}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
+        </>
       )}
     </Paper>
   );
 }
-
 
 export default MLModelsRepo;

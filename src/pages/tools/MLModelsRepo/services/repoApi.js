@@ -65,3 +65,25 @@ export async function getModelVersion(name, version) {
 export function getDownloadUrl(name, version) {
   return `${BASE}/models/${encodeURIComponent(name)}/versions/${encodeURIComponent(String(version))}/download.zip`;
 }
+
+/**
+ * /api/models/{name}/versions/{version}/readme
+ * Direct README reference
+ */
+export async function getAmlReadme(name, version) {
+  const url = `${BASE}/models/${encodeURIComponent(
+    name
+  )}/versions/${encodeURIComponent(version)}/readme`;
+
+  const res = await fetch(url);
+  if (res.status === 404) {
+    // no README for that model/version
+    return null;
+  }
+  if (!res.ok) {
+    throw new Error(`Failed to load README: ${res.status} ${res.statusText}`);
+  }
+
+  const data = await res.json();
+  return data;
+}
