@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-import io, shutil, tempfile
+import io, shutil, tempfile, time
 from starlette.background import BackgroundTask
 from datetime import datetime, timezone
 
@@ -40,6 +40,13 @@ ml = MLClient(cred, SUB_ID, RG, WS)
 TRACKING_URI = ml.workspaces.get(WS).mlflow_tracking_uri
 mlflow.set_tracking_uri(TRACKING_URI)
 client = MlflowClient()
+
+# ---------- Simple in-memory caches ----------
+_MODELS_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
+MODELS_CACHE_TTL = 300  # seconds
+
+_README_CACHE: Dict[tuple, Dict[str, Any]] = {}
+README_CACHE_TTL = 300  # seconds, per (name, version)
 
 
 # ---------- Helpers ----------
@@ -82,7 +89,17 @@ router = APIRouter(prefix="/api", tags=["aml"])
 
 # GET all models (latest)
 @router.get("/models")
-def list_models():
+def list_models(force: bool = False):
+    now = time.time()
+
+    # 0) Serve from cache if fresh and not forced
+    if (
+        not force
+        and _MODELS_CACHE["data"] is not None
+        and now - _MODELS_CACHE["ts"] < MODELS_CACHE_TTL
+    ):
+        return _MODELS_CACHE["data"]
+
     # 1) Access registered models
     try:
         regs = client.search_registered_models()
@@ -106,6 +123,11 @@ def list_models():
 
     # Newest first by last update
     out.sort(key=lambda x: x.get("last_updated_on") or "", reverse=True)
+
+    # 3) Store in cache
+    _MODELS_CACHE["data"] = out
+    _MODELS_CACHE["ts"] = now
+
     return out
 
 # GET Model Name specific version
@@ -143,3 +165,85 @@ def api_model_download_zip(name: str, version: str):
         filename=filename,
         background=BackgroundTask(cleanup),
     )
+
+
+# GET the README for a model version (if present)
+@router.get("/models/{name}/versions/{version}/readme")
+def api_model_readme(name: str, version: str, force: bool = False):
+    """
+    Return README content (if any) for an AML model version.
+
+    Shape:
+    {
+      "filename": "README.md",
+      "media_type": "text/markdown",
+      "content": "### My model\\n..."
+    }
+    """
+    key = (name, str(version))
+    now = time.time()
+
+    # 0) Serve from cache if fresh and not forced
+    cached = _README_CACHE.get(key)
+    if (
+        not force
+        and cached is not None
+        and now - cached["ts"] < README_CACHE_TTL
+    ):
+        return cached["data"]
+
+    tmpdir = tempfile.mkdtemp(prefix=f"{name}_v{version}_")
+    try:
+        # Download all artifacts for that model version
+        ml.models.download(name=name, version=version, download_path=tmpdir)
+
+        # Look for README* in any subfolder
+        readme_path = None
+        for root, dirs, files in os.walk(tmpdir):
+            for fname in files:
+                lower = fname.lower()
+                if lower.startswith("readme"):  # README, README.md, README.txt, etc.
+                    readme_path = os.path.join(root, fname)
+                    break
+            if readme_path:
+                break
+
+        if not readme_path:
+            detail = "README not found for this model version"
+            # Cache the unsuccessful lookup
+            _README_CACHE[key] = {
+                "ok": False,
+                "data": None,
+                "status": 404,
+                "detail": detail,
+                "ts": now,
+            }
+            raise HTTPException(status_code=404, detail=detail)
+
+        # Read content
+        try:
+            with open(readme_path, "r", encoding="utf-8") as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            with open(readme_path, "r", encoding="latin-1") as f:
+                content = f.read()
+
+        media_type = (
+            "text/markdown"
+            if readme_path.lower().endswith(".md")
+            else "text/plain"
+        )
+
+        result = {
+            "filename": os.path.basename(readme_path),
+            "media_type": media_type,
+            "content": content,
+        }
+
+        # Cache only successful reads
+        _README_CACHE[key] = {"data": result, "ts": now}
+
+        return result
+
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
