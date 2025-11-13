@@ -14,10 +14,6 @@ from azure.ai.ml import MLClient
 from azure.storage.blob import BlobServiceClient
 from azure.core.exceptions import HttpResponseError
 
-import mlflow
-from mlflow.tracking import MlflowClient
-from mlflow.exceptions import RestException
-
 # ---------- Config ----------
 SUB_ID = os.getenv("AZURE_SUBSCRIPTION_ID")
 RG = os.getenv("AZURE_RESOURCE_GROUP")
@@ -36,11 +32,6 @@ cred = DefaultAzureCredential()
 # AML control-plane (for discovering tracking URI)
 ml = MLClient(cred, SUB_ID, RG, WS)
 
-# Always derive the tracking URI from the workspace to avoid region mismatches
-TRACKING_URI = ml.workspaces.get(WS).mlflow_tracking_uri
-mlflow.set_tracking_uri(TRACKING_URI)
-client = MlflowClient()
-
 # ---------- Simple in-memory caches ----------
 _MODELS_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
 MODELS_CACHE_TTL = 300  # seconds
@@ -51,27 +42,20 @@ README_CACHE_TTL = 300  # seconds, per (name, version)
 
 # ---------- Helpers ----------
 def metaData(v):
+    # Created time is already an ISO string on AML models
+    ctx = getattr(v, "creation_context", None)
+
     # 1) Define when created
-    created_on = None
-    if getattr(v, "creation_timestamp", None) is not None:
-        created_on = datetime.fromtimestamp(int(v.creation_timestamp)/1000, tz=timezone.utc).isoformat()
+    created_on = (getattr(ctx, "created_at", None))
 
     # 2) Define when last updated
-    last_updated_on = None
-    if getattr(v, "last_updated_timestamp", None) is not None:
-        last_updated_on = datetime.fromtimestamp(int(v.last_updated_timestamp)/1000, tz=timezone.utc).isoformat()
+    last_updated_on = getattr(ctx, "last_modified_at", None) if ctx is not None else None
 
-    # 3) Type from Azure ML model entity
-    try:
-        am = ml.models.get(name=v.name, version=str(v.version))
-        t = getattr(am, "type", None)
-        aml_type = getattr(t, "name", str(t)) if t else None
-        flavors = getattr(am, "flavors", None)
-    except Exception:
-        aml_type = None
-        flavors = None
+    # 3) Type and Flavour from AML Model Entity
+    aml_type = getattr(v, "type", None)
+    flavors = getattr(v, "flavors", None)
 
-    # 3) Return metadata
+    # 4) Return metadata
     return {
         "name": v.name,
         "version": str(v.version),
@@ -102,21 +86,19 @@ def list_models(force: bool = False):
 
     # 1) Access registered models
     try:
-        regs = client.search_registered_models()
+        regs = ml.models.list()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list models: {e}")
 
     # 2) Go throught all models + versions and output only latest version of a model
     out = []
-    for rm in regs:
-        name = getattr(rm, "name", None)
-        if not name:
-            continue
+    for model in regs:
+        name = model.name
         try:
-            versions = client.search_model_versions(f"name = '{name}'")
+            versions = ml.models.list(name=name)
             if not versions:
                 continue
-            latest = max(versions, key=lambda x: int(getattr(x, "version", 0)))
+            latest = max(versions, key=lambda x: int(x.version))
             out.append(metaData(latest))
         except Exception:
             continue
@@ -134,7 +116,7 @@ def list_models(force: bool = False):
 @router.get("/models/{name}/versions/{version}")
 def get_model_version(name: str, version: str):
     try:
-        v = client.get_model_version(name=name, version=str(version))
+        v = ml.models.get(name=name, version=version)
     except Exception:
         raise HTTPException(status_code=404, detail=f"Version '{version}' not found for model '{name}'")
     return metaData(v)
@@ -190,6 +172,9 @@ def api_model_readme(name: str, version: str, force: bool = False):
         and cached is not None
         and now - cached["ts"] < README_CACHE_TTL
     ):
+        status = cached.get("status")
+        if status == 404:
+            raise HTTPException(status_code=404, detail=cached.get("detail", "README not found"))
         return cached["data"]
 
     tmpdir = tempfile.mkdtemp(prefix=f"{name}_v{version}_")
