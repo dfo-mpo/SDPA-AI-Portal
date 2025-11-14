@@ -42,7 +42,7 @@ export default function ModelCard({ item, onReadme, onHistory }) {
   // Body of card
   const Body = (
     <CardContent
-      sx={{ p: 2, display: "flex", flexDirection: "column", height: "100%" }}
+      sx={{ p: 0.5, display: "flex", flexDirection: "column", height: "100%" }}
     >
       {/* Title + version + TYPE (blue) */}
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
@@ -149,10 +149,10 @@ export default function ModelCard({ item, onReadme, onHistory }) {
 
           {/* Created and Last Modified dates */}
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-          <strong>Created at:</strong> {toLocal(item?.createdOn) || "—"}
+          <strong>Created:</strong> {toLocal(item?.createdOn) || "—"}
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-          <strong>Last updated at:</strong> {toLocal(item?.lastUpdatedOn) || "—"}
+          <strong>Updated:</strong> {toLocal(item?.lastUpdatedOn) || "—"}
         </Typography>
       </Stack>
 
@@ -160,8 +160,8 @@ export default function ModelCard({ item, onReadme, onHistory }) {
         <span
           style={{
             position: "absolute",
-            right: 8,
-            bottom: 8,
+            right: 15,
+            bottom: 15,
             display: "inline-flex",
             gap: 4,
           }}

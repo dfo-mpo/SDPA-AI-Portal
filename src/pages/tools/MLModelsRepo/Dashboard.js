@@ -17,9 +17,12 @@ import {
   DialogTitle,
   DialogContent,
   IconButton,
-  Chip
+  Chip,
+  Drawer,
+  Button,
+  Divider
 } from "@mui/material";
-import { Boxes, History, BookOpen } from "lucide-react";
+import { Boxes, History, BookOpen, HelpCircle, FileText, Download, Search } from "lucide-react";
 import CloseIcon from "@mui/icons-material/Close";
 import { useLanguage } from "../../../contexts";
 import { getToolTranslations } from "../../../utils";
@@ -39,6 +42,7 @@ export function MLModelsRepo() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [historyFor, setHistoryFor] = useState(null);
   const [tab, setTab] = useState(0);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -119,7 +123,7 @@ export function MLModelsRepo() {
           Explore and Upload ML Models
         </p>
         <p style={{ marginTop: 30 }}>
-          A unified repository where users can upload, explore, and manage machine learning models. It supports versioning, model cards with key metadata, and provides SDK-ready examples in Python, R, and REST to help teams quickly integrate models into their workflows. Users can browse existing models from OCDS and SDPA or contribute their own, with support for common formats like ONNX, TorchScript, and scikit-learn.
+          A unified repository where users can upload, explore, and manage machine learning models. It supports versioning and model cards with key metadata to help teams quickly integrate models into their workflows. Users can browse existing models from OCDS and SDPA or contribute their own.
         </p>
       </Stack>
 
@@ -246,6 +250,152 @@ export function MLModelsRepo() {
           )}
         </>
       )}
+
+      {/* Tiny right-edge arrow tab */}
+      <Button
+        onClick={() => setHelpOpen(true)}
+        variant="contained"
+        sx={{
+          position: "fixed",
+          right: 0,
+          top: "50%",
+          transform: "translateY(-50%)",
+          minWidth: 0,
+          width: 36,
+          height: 48,
+          borderTopLeftRadius: 12,
+          borderBottomLeftRadius: 12,
+          borderTopRightRadius: 0,
+          borderBottomRightRadius: 0,
+          p: 0,
+          fontWeight: 800,
+        }}
+        aria-label="Open instructions"
+        title="Open instructions"
+      >
+        <HelpCircle size={18} />
+      </Button>
+
+      <Drawer
+  anchor="right"
+  open={helpOpen}
+  onClose={() => setHelpOpen(false)}
+  PaperProps={{
+    sx: { width: 380, background: "#f5f5f5" },
+  }}
+>
+  <Box sx={{ p: 2.5 }}>
+    {/* Header */}
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        mb: 1,
+      }}
+    >
+      <Typography variant="h4" fontWeight={700}>
+        How this page works
+      </Typography>
+    </Box>
+
+    <Divider sx={{ my: 3 }} />
+
+    {/* 1. Browse & use existing models */}
+    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+      1. Use existing models
+    </Typography>
+
+    <Typography variant="body2" sx={{ lineHeight: 1.7, mb: 1.5 }}>
+      This page is for <b>discovering and using</b> models that have already
+      been registered in the repository.  
+      <br />
+      <br />
+      You can:
+    </Typography>
+
+    {/* Bullets with icons + spacing */}
+    <Stack spacing={1.1} sx={{ mb: 2 }}>
+      <Typography
+        variant="body2"
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
+        •
+        <Search size={16} />
+        <span>
+          <b>Search</b> by model name or tags using the search bar.
+        </span>
+      </Typography>
+
+      <Typography
+        variant="body2"
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
+        •
+        <FileText size={16} />
+        <span>
+          Open the <b>README</b> to view details, usage, and documentation.
+        </span>
+      </Typography>
+
+      <Typography
+        variant="body2"
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
+        •
+        <History size={16} />
+        <span>
+          Click <b>Version history</b> to browse other versions of the same model.
+        </span>
+      </Typography>
+
+      <Typography
+        variant="body2"
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
+        •
+        <Download size={16} />
+        <span>
+          Click <b>Download</b> to retrieve model weights / artifacts as a ZIP file.
+        </span>
+      </Typography>
+    </Stack>
+
+
+    <Divider sx={{ my: 3 }} />
+
+    {/* 2. Contribute a new model */}
+    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+      2. Contribute a new model
+    </Typography>
+    <Typography variant="body2" sx={{ lineHeight: 1.7 }}>
+      You <b>cannot upload models directly</b> from this page.
+      <br />
+      To register a new model or a new version, use the dedicated{" "}
+      <b>Model Upload</b> experience in Azure ML Studio.
+    </Typography>
+
+    <Button
+      variant="contained"
+      size="small"
+      sx={{ mt: 2 }}
+      href="https://ml.azure.com/model/list?wsid=/subscriptions/4858d1be-583d-42d6-a4a3-44172168b003/resourcegroups/Merged-AI-Portal-Frontend-RG/providers/Microsoft.MachineLearningServices/workspaces/MLModelRepoAML&tid=8c1a4d93-d828-4d0e-9303-fd3bd611c822"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Open Azure ML Model Upload
+    </Button>
+
+    <Typography
+      variant="body2"
+      sx={{ mt: 1.5, fontSize: 12, lineHeight: 1.6 }}
+    >
+      Once a model is successfully registered there, it will appear in this
+      list with its tags, flavors, and metadata.
+    </Typography>
+  </Box>
+</Drawer>
+
     </Paper>
   );
 }

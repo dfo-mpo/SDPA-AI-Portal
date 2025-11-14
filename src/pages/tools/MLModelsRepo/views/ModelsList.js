@@ -1,5 +1,6 @@
+// ModelsList.jsx (only the CardsGrid usage block changed)
 import React, { useMemo, useState } from "react";
-import { Box, Stack, Button, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import SearchBar from "../components/SearchBar";
 import ModelCard from "../components/ModelCard";
 import CardsGrid from "../components/CardsGrid";
@@ -19,7 +20,6 @@ export default function ModelsList({ rows = [], onSelect, onHistory, showSearch 
 
   return (
     <>
-      {/* Search + button snug together */}
       {showSearch && (
         <Stack
           direction="row"
@@ -40,33 +40,14 @@ export default function ModelsList({ rows = [], onSelect, onHistory, showSearch 
         </Stack>
       )}
 
-      {/* Left-anchored, responsive grid (same as UploadsList) */}
       <Box sx={{ mt: 2, width: "100%", overflow: "visible" }}>
-        <CardsGrid
-          sx={{
-            width: "100%",
-            maxWidth: "100%",
-            mx: 0,
-            px: 0,
-            justifyContent: "flex-start !important",
-            justifyItems: "stretch",
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "repeat(2, minmax(0, 1fr))",
-              md: "repeat(2, minmax(0, 1fr))",
-              lg: "repeat(3, minmax(0, 1fr))",
-            },
-            gap: 2.5,
-            boxSizing: "border-box",
-          }}
-        >
+        <CardsGrid sx={{ width: "100%", maxWidth: "100%", mx: 0, px: 0 }}>
           {filtered.map((item) => (
             <Box key={item.id}>
               <ModelCard
                 item={item}
                 onReadme={() => onSelect && onSelect(item)}
-                onHistory={onHistory ? (row) => onHistory(item) : undefined}
+                onHistory={onHistory ? () => onHistory(item) : undefined}
               />
             </Box>
           ))}
