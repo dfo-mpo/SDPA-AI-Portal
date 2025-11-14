@@ -4,7 +4,7 @@ import SearchBar from "../components/SearchBar";
 import ModelCard from "../components/ModelCard";
 import CardsGrid from "../components/CardsGrid";
 
-export default function ModelsList({ rows = [], onSelect }) {
+export default function ModelsList({ rows = [], onSelect, onHistory, showSearch = true }) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -20,23 +20,25 @@ export default function ModelsList({ rows = [], onSelect }) {
   return (
     <>
       {/* Search + button snug together */}
-      <Stack
-        direction="row"
-        spacing={1}
-        alignItems="center"
-        sx={{ mb: 2, flexWrap: { xs: "wrap", sm: "nowrap" } }}
-      >
-        <SearchBar
-          value={query}
-          onChange={setQuery}
-          placeholder="Search by name or tag"
-          sx={{
-            flex: "1 1 520px",
-            minWidth: 240,
-            width: { xs: "100%", sm: "auto" },
-          }}
-        />
-      </Stack>
+      {showSearch && (
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          sx={{ mb: 2, flexWrap: { xs: "wrap", sm: "nowrap" } }}
+        >
+          <SearchBar
+            value={query}
+            onChange={setQuery}
+            placeholder="Search by name or tag"
+            sx={{
+              flex: "1 1 520px",
+              minWidth: 300,
+              width: { xs: "100%", sm: "auto" },
+            }}
+          />
+        </Stack>
+      )}
 
       {/* Left-anchored, responsive grid (same as UploadsList) */}
       <Box sx={{ mt: 2, width: "100%", overflow: "visible" }}>
@@ -63,7 +65,8 @@ export default function ModelsList({ rows = [], onSelect }) {
             <Box key={item.id}>
               <ModelCard
                 item={item}
-                onClick={() => onSelect && onSelect(item)}  // <-- THIS is the important part
+                onReadme={() => onSelect && onSelect(item)}
+                onHistory={onHistory ? (row) => onHistory(item) : undefined}
               />
             </Box>
           ))}

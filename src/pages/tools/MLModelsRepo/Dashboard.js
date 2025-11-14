@@ -17,7 +17,9 @@ import {
   DialogTitle,
   DialogContent,
   IconButton,
+  Chip
 } from "@mui/material";
+import { Boxes, History, BookOpen } from "lucide-react";
 import CloseIcon from "@mui/icons-material/Close";
 import { useLanguage } from "../../../contexts";
 import { getToolTranslations } from "../../../utils";
@@ -35,6 +37,8 @@ export function MLModelsRepo() {
   const [err, setErr] = useState("");
   const [selectedModel, setSelectedModel] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [historyFor, setHistoryFor] = useState(null);
+  const [tab, setTab] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -65,6 +69,35 @@ export function MLModelsRepo() {
 
   const handleCloseDetail = () => {
     setDetailOpen(false);
+  };
+
+  const handleHistory = async (item) => {
+    setLoading(true);
+    setErr("");
+    try {
+      const { items } = await modelsApi.listModelVersions(item.name);
+      setItems(items);
+      setHistoryFor(item.name);
+      setTab(1);
+    } catch (e) {
+      const msg =
+        e?.response?.data?.detail?.message ||
+        e?.response?.data?.detail ||
+        e?.message ||
+        "Failed to load model versions.";
+      setErr(String(msg));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setTab(newValue);
+    // 0 = Models, 1 = Version history
+    if (newValue === 0) {
+      setHistoryFor(null);
+      load();
+    }
   };
 
   return (
@@ -100,13 +133,48 @@ export function MLModelsRepo() {
         By proceeding, you confirm you have the right to share the materials and agree to comply with these boundaries.
       </Alert>
 
-      {/* Single Tab: Models */}
+      {/* Tabs: Models + Version history */}
       <Stack direction="row" alignItems="center" sx={{ width: "100%", mb: 2 }}>
-        <Tabs value={0} sx={{ minHeight: 48 }}>
-          <Tab label={t?.ui?.sections?.models || "Models"} sx={{ minHeight: 48 }} />
+        <Tabs
+          value={tab}
+          onChange={handleTabChange}
+          sx={{ minHeight: 48 }}
+        >
+          {/* Models tab */}
+          <Tab
+            icon={<Boxes size={16} />}
+            iconPosition="start"
+            label={t?.ui?.sections?.models || "Models"}
+            sx={{ minHeight: 48 }}
+          />
+
+          {/* Version history tab (only when active) */}
+          {historyFor && (
+            <Tab
+              icon={<History size={16} />}
+              iconPosition="start"
+              label={`Version history`}
+              sx={{ minHeight: 48 }}
+            />
+          )}
         </Tabs>
         <Box sx={{ flexGrow: 1 }} />
       </Stack>
+
+      {tab === 1 && historyFor && (
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ opacity: 0.7, p: 1 }}>
+            Viewing history for:
+          </Typography>
+          <Chip
+            label={historyFor}
+            color="primary"
+            size="large"
+            variant="outlined"
+            sx={{ fontWeight: 600 }}
+          />
+        </Stack>
+      )}
 
       {/* Content */}
       {err && (
@@ -125,6 +193,8 @@ export function MLModelsRepo() {
           <ModelsList
             rows={items}
             onSelect={handleSelect}
+            onHistory={handleHistory}
+            showSearch={tab === 0}
           />
 
           {/* README dialog */}
@@ -147,8 +217,9 @@ export function MLModelsRepo() {
                   bgcolor: "white",
                 }}
               >
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  README — {selectedModel.name} (v{selectedModel.version})
+                <BookOpen size={25} style={{ marginRight: 8 }}/>
+                <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                  {selectedModel.name} (v{selectedModel.version}) - README
                 </Typography>
                 <IconButton
                   onClick={handleCloseDetail}

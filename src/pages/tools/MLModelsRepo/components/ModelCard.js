@@ -8,7 +8,7 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { Download } from "lucide-react";
+import { Download, History, FileText } from "lucide-react";
 
 function toLocal(iso) {
   if (!iso) return "";
@@ -31,7 +31,7 @@ const TAG_COLORS = ["success", "info", "secondary", "warning"];
 const tagColor = (i) => TAG_COLORS[i % TAG_COLORS.length];
 
 // Main functionality of Model Card
-export default function ModelCard({ item, onClick }) {
+export default function ModelCard({ item, onReadme, onHistory }) {
   const handleDownload = (e) => {
     e.stopPropagation();
     if (item?.downloadUrl) {
@@ -156,33 +156,70 @@ export default function ModelCard({ item, onClick }) {
         </Typography>
       </Stack>
 
-      {/* Download button (bottom right) */}
-      <Tooltip title={item?.downloadUrl ? "Download ZIP" : "No downloadable artifact"}>
+        {/* History + Download buttons (bottom right) */}
         <span
           style={{
             position: "absolute",
             right: 8,
             bottom: 8,
             display: "inline-flex",
+            gap: 4,
           }}
         >
-          <IconButton
-            onClick={handleDownload}
-            disabled={!item?.downloadUrl}
-            size="small"
-            sx={{
-              bgcolor: (t) => (item?.downloadUrl ? t.palette.background.paper : "transparent"),
-              border: (t) => (item?.downloadUrl ? `1px solid ${t.palette.divider}` : "none"),
-              "&:hover": {
-                bgcolor: (t) => (item?.downloadUrl ? t.palette.action.hover : "transparent"),
-              },
-            }}
-            aria-label="Download ZIP"
-          >
-            <Download size={18} />
-          </IconButton>
+          {/* README Button (only if onClick is provided) */}
+          {onReadme && (
+            <Tooltip title="Open README & details">
+              <IconButton
+                size="small"
+                aria-label="Open README & details"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReadme();
+                }}
+              >
+                <FileText size={18} />
+              </IconButton>
+            </Tooltip>
+          )}
+          {/* History Button */}
+          <Tooltip title="View version history">
+            <IconButton
+              size="small"
+              aria-label="View version history"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onHistory) onHistory(item);
+              }}
+            >
+              <History size={18} />
+            </IconButton>
+          </Tooltip>
+
+          {/* Download Button */}
+          <Tooltip title={item?.downloadUrl ? "Download ZIP" : "No downloadable artifact"}>
+            <span>
+              <IconButton
+                onClick={handleDownload}
+                disabled={!item?.downloadUrl}
+                size="small"
+                sx={{
+                  bgcolor: (t) =>
+                    item?.downloadUrl ? t.palette.background.paper : "transparent",
+                  border: (t) =>
+                    item?.downloadUrl ? `1px solid ${t.palette.divider}` : "none",
+                  "&:hover": {
+                    bgcolor: (t) =>
+                      item?.downloadUrl ? t.palette.action.hover : "transparent",
+                  },
+                }}
+                aria-label="Download ZIP"
+              >
+                <Download size={18} />
+              </IconButton>
+            </span>
+          </Tooltip>
         </span>
-      </Tooltip>
+
     </CardContent>
   );
 
@@ -197,16 +234,9 @@ export default function ModelCard({ item, onClick }) {
         boxSizing: "border-box",
         borderRadius: 2,
         transition: "box-shadow 120ms ease, transform 120ms ease",
-        ...(onClick && { cursor: "pointer", "&:hover": { boxShadow: 3, transform: "translateY(-1px)" } }),
       }}
     >
-      {onClick ? (
-        <CardActionArea sx={{ height: "100%" }} onClick={onClick}>
-          {Body}
-        </CardActionArea>
-      ) : (
-        Body
-      )}
+      {Body}
     </Card>
   );
 }

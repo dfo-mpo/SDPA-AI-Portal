@@ -87,3 +87,13 @@ export async function getAmlReadme(name, version) {
   const data = await res.json();
   return data;
 }
+
+/**
+ * /api/models/{name}/versions
+ * Returns version list of a specific model
+ */
+export async function listModelVersions(name) {
+  const url = `${BASE}/models/${encodeURIComponent(name)}/versions`;
+  const { data } = await axios.get(url);
+  return { cards: data, items: data.map(mapToItem) };
+}
