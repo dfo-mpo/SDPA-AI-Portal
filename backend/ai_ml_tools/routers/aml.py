@@ -112,14 +112,26 @@ def list_models(force: bool = False):
 
     return out
 
-# GET Model Name specific version
-@router.get("/models/{name}/versions/{version}")
-def get_model_version(name: str, version: str):
+# GET all versions of a Model
+@router.get("/models/{name}/versions")
+def list_model_versions(name: str):
     try:
-        v = ml.models.get(name=name, version=version)
+        versions = list(ml.models.list(name=name))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to list versions for '{name}': {e}",
+        )
+
+    out = [metaData(v) for v in versions]
+    # newest version number first
+    try:
+        out.sort(key=lambda x: int(x["version"]), reverse=True)
     except Exception:
-        raise HTTPException(status_code=404, detail=f"Version '{version}' not found for model '{name}'")
-    return metaData(v)
+        out.sort(key=lambda x: x.get("version", ""), reverse=True)
+
+    return out
+
 
 # GET the files/folders and download as ZIP
 @router.get("/models/{name}/versions/{version}/download.zip")
