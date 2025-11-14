@@ -566,212 +566,41 @@ export function WebScraper() {
         the content you provide.
       </Alert>
 
-      {/* ---------- CONDITIONAL BODY ---------- */}
-      {chatOpen ? (
-        /* ==================== Chat View ==================== */
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: 2,
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Left: Presets */}
         <Box
           sx={{
+            width: { xs: "100%", md: "35%" },
+            minWidth: 320,
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 2,
+            p: 1.5,
+            background: "#fff",
+            height: { xs: "auto", md: 660 },
             display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            gap: 2,
-            width: "100%",
+            flexDirection: "column",
             boxSizing: "border-box",
           }}
         >
-          {/* Left: Presets */}
-          <Box
-            sx={{
-              width: { xs: "100%", md: "35%" },
-              minWidth: 320,
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 2,
-              p: 1.5,
-              background: "#fff",
-              height: { xs: "auto", md: 660 },
-              display: "flex",
-              flexDirection: "column",
-              boxSizing: "border-box",
-            }}
-          >
-            <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
-              Presets
-            </Typography>
+          <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
+            Presets
+          </Typography>
 
-            {/* Search + Add */}
-            <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Search or paste a URL…"
-                value={q}
-                onChange={(e) => { setQ(e.target.value); setAddErr(""); }}
-                onKeyDown={(e) => { if (e.key === "Enter" && !adding) handleAdd(); }}
-                error={Boolean(addErr)}
-                helperText={addErr || undefined}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search size={16} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              <Button
-                variant="contained"
-                onClick={handleAdd}
-                disabled={adding}
-                sx={{ whiteSpace: "nowrap" }}
-              >
-                {adding ? "Scraping…" : "Add"}
-              </Button>
-            </Box>
-
-            <Box sx={{ flex: 1, overflowY: "auto", pr: 0.5 }}>
-              {err && <Alert severity="error" sx={{ mb: 1 }}>{err}</Alert>}
-
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} variant="rounded" height={84} sx={{ mb: 1 }} />
-                ))
-              ) : filtered.length ? (
-                filtered.map((item) => (
-                  <Box key={item.url} sx={{ mb: 1 }}>
-                    <PresetCard
-                      item={item}
-                      onRefresh={handleRefresh}
-                      refreshing={refreshing.has(item.url)}
-                      onOpen={openChatForUrl}
-                      onDownload={downloadCombinedByUrl}
-                    />
-                  </Box>
-                ))
-              ) : (
-                <Typography align="center" color="text.secondary" sx={{ py: 2 }}>
-                  No results. Try a different search or <b>Scrape</b> this URL.
-                </Typography>
-              )}
-            </Box>
-          </Box>
-
-          {/* Right: Chat Panel */}
-          <Box sx={{ flex: 1, minWidth: 0, boxSizing: "border-box", }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-              <Button variant="text" startIcon={<ArrowLeft size={16} />} onClick={() => setChatOpen(false)}>
-                Back
-              </Button>
-              <Typography variant="h4" fontWeight={700} sx={{ ml: 0.5 }}>
-                ChatBot
-              </Typography>
-              <Chip
-                icon={<Bot size={14} />}
-                label={selectedUrl}
-                variant="outlined"
-                size="small"
-                sx={{ ml: 2, maxWidth: "50%", overflow: "hidden", textOverflow: "ellipsis" }}
-              />
-              <Box sx={{ flex: 1 }} />
-            </Box>
-
-            {/* Chat Messages */}
-            <Box
-              ref={listRef}
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 2,
-                p: 2,
-                background: "#fff",
-                height: { xs: 480, sm: 560 },
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-                gap: 1.25,
-              }}
-            >
-              {messages.map((m, i) => (
-                <Box key={i} sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: m.role === "user" ? "flex-end" : "flex-start"
-                }}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 1.25,
-                      maxWidth: "85%",
-                      borderRadius: 2,
-                      bgcolor: m.role === "user" ? "primary.main" : "grey.100",
-                      color: m.role === "user" ? "primary.contrastText" : "text.primary",
-                    }}
-                  >
-                    {m.role === "assistant"
-                      ? renderAssistantMessage(m)
-                      : <Typography variant="body2">{m.content}</Typography>}
-                  </Paper>
-                  {m.timestamp && (
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25 }}>
-                      {m.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </Typography>
-                  )}
-                </Box>
-              ))}
-
-              {isResponding && (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary", mt: 0.5 }}>
-                  <CircularProgress size={16} />
-                  <Typography variant="body2">Assistant is typing…</Typography>
-                </Box>
-              )}
-            </Box>
-
-            {/* Chat Input */}
-            <Box sx={{ mt: 1.5, display: "flex", gap: 1 }}>
-              <TextField
-                variant="outlined"
-                placeholder="Type your message…"
-                value={currentMessage}
-                onChange={(e) => setCurrentMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                fullWidth
-                size="small"
-                multiline
-                maxRows={3}
-                disabled={isResponding}
-              />
-              <Button
-                variant="contained"
-                endIcon={isResponding ? <CircularProgress size={16} color="inherit" /> : <Send size={16} />}
-                disabled={!currentMessage.trim() || isResponding || !wsReadyRef.current}
-                onClick={handleSendMessage}
-                sx={{
-                  '&.Mui-disabled': {
-                    bgcolor: 'grey.400',
-                    color: 'grey.100',
-                  },
-                  '&.Mui-disabled:hover': {
-                    bgcolor: 'grey.400',
-                  },
-                }}
-              >
-                {isResponding ? "Sending…" : "Send"}
-              </Button>
-            </Box>
-          </Box>
-        </Box>
-      ) : (
-        /* ==================== Grid View ==================== */
-        <>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+          {/* Search + Add */}
+          <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
             <TextField
               fullWidth
-              size="medium"
-              placeholder="Search scraped sites… or paste a URL"
+              size="small"
+              placeholder="Search or paste a URL…"
               value={q}
               onChange={(e) => { setQ(e.target.value); setAddErr(""); }}
               onKeyDown={(e) => { if (e.key === "Enter" && !adding) handleAdd(); }}
@@ -780,7 +609,7 @@ export function WebScraper() {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Search size={18} />
+                    <Search size={16} />
                   </InputAdornment>
                 ),
               }}
@@ -789,36 +618,149 @@ export function WebScraper() {
               variant="contained"
               onClick={handleAdd}
               disabled={adding}
-              startIcon={adding ? <CircularProgress sx={{ color: 'common.white' }} size={16} /> : null}
+              sx={{ whiteSpace: "nowrap" }}
             >
-              {"Scrape"}
+              {adding ? "Scraping…" : "Add"}
             </Button>
           </Box>
 
-          {err && <Alert severity="error" sx={{ mb: 2 }}>{err}</Alert>}
+          <Box sx={{ flex: 1, overflowY: "auto", pr: 0.5 }}>
+            {err && <Alert severity="error" sx={{ mb: 1 }}>{err}</Alert>}
 
-          <Grid container spacing={2}>
-            {filtered.map((item) => (
-              <Grid item xs={12} sm={6} md={4} key={item.url}>
-                <PresetCard
-                  item={item}
-                  onRefresh={handleRefresh}
-                  refreshing={refreshing.has(item.url)}
-                  onOpen={openChatForUrl}
-                  onDownload={downloadCombinedByUrl}
-                />
-              </Grid>
-            ))}
-            {!loading && filtered.length === 0 && (
-              <Grid item xs={12}>
-                <Typography align="center" color="text.secondary" sx={{ py: 4 }}>
-                  No results. Try a different search or <b>Scrape</b> this website Url.
-                </Typography>
-              </Grid>
+            {loading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} variant="rounded" height={84} sx={{ mb: 1 }} />
+              ))
+            ) : filtered.length ? (
+              filtered.map((item) => (
+                <Box key={item.url} sx={{ mb: 1 }}>
+                  <PresetCard
+                    item={item}
+                    onRefresh={handleRefresh}
+                    refreshing={refreshing.has(item.url)}
+                    onOpen={openChatForUrl}
+                    onDownload={downloadCombinedByUrl}
+                  />
+                </Box>
+              ))
+            ) : (
+              <Typography align="center" color="text.secondary" sx={{ py: 2 }}>
+                No results. Try a different search or <b>Scrape</b> this URL.
+              </Typography>
             )}
-          </Grid>
-        </>
-      )}
+          </Box>
+        </Box>
+
+        {/* Right: Chat Panel */}
+        <Box sx={{ flex: 1, minWidth: 0, boxSizing: "border-box", }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+            <Button variant="text" startIcon={<ArrowLeft size={16} />} onClick={() => setChatOpen(false)}>
+              Back
+            </Button>
+            <Typography variant="h4" fontWeight={700} sx={{ ml: 0.5 }}>
+              ChatBot
+            </Typography>
+            <Chip
+              icon={<Bot size={14} />}
+              label={selectedUrl}
+              variant="outlined"
+              size="small"
+              sx={{ ml: 2, maxWidth: "50%", overflow: "hidden", textOverflow: "ellipsis" }}
+            />
+            <Box sx={{ flex: 1 }} />
+          </Box>
+
+          {/* Chat Messages */}
+          <Box
+            ref={listRef}
+            sx={{
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 2,
+              p: 2,
+              background: "#fff",
+              height: { xs: 480, sm: 560 },
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.25,
+            }}
+          >
+            {messages.map((m, i) => (
+              <Box key={i} sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: m.role === "user" ? "flex-end" : "flex-start"
+              }}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 1.25,
+                    maxWidth: "85%",
+                    borderRadius: 2,
+                    bgcolor: m.role === "user" ? "primary.main" : "grey.100",
+                    color: m.role === "user" ? "primary.contrastText" : "text.primary",
+                  }}
+                >
+                  {m.role === "assistant"
+                    ? renderAssistantMessage(m)
+                    : <Typography variant="body2">{m.content}</Typography>}
+                </Paper>
+                {m.timestamp && (
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25 }}>
+                    {m.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </Typography>
+                )}
+              </Box>
+            ))}
+
+            {isResponding && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary", mt: 0.5 }}>
+                <CircularProgress size={16} />
+                <Typography variant="body2">Assistant is typing…</Typography>
+              </Box>
+            )}
+          </Box>
+
+          {/* Chat Input */}
+          <Box sx={{ mt: 1.5, display: "flex", gap: 1 }}>
+            <TextField
+              variant="outlined"
+              placeholder="Type your message…"
+              value={currentMessage}
+              onChange={(e) => setCurrentMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              fullWidth
+              size="small"
+              multiline
+              maxRows={3}
+              disabled={isResponding}
+            />
+            <Button
+              variant="contained"
+              endIcon={isResponding ? <CircularProgress size={16} color="inherit" /> : <Send size={16} />}
+              disabled={!currentMessage.trim() || isResponding || !wsReadyRef.current}
+              onClick={handleSendMessage}
+              sx={{
+                '&.Mui-disabled': {
+                  bgcolor: 'grey.400',
+                  color: 'grey.100',
+                },
+                '&.Mui-disabled:hover': {
+                  bgcolor: 'grey.400',
+                },
+              }}
+            >
+              {isResponding ? "Sending…" : "Send"}
+            </Button>
+          </Box>
+        </Box>
+      </Box>
 
       {/* Tiny right-edge arrow tab */}
       <Button
