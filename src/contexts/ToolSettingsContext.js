@@ -72,6 +72,11 @@ const [fenceCountingSettings, setFenceCountingSettings] = useState({
     }
   });
 
+  // Web Scraper settings (simple for now)
+  const [webScraperSettings, setWebScraperSettings] = useState({
+    modelType: 'gpt4omini',
+  });
+
 // PII Redactor settings with improved Canadian-specific information detection
 const [piiRedactorSettings, setPiiRedactorSettings] = useState({
   redactionMethod: 'mask', // 'mask' or 'typePlaceholder'
@@ -159,6 +164,22 @@ const [piiRedactorSettings, setPiiRedactorSettings] = useState({
     }
   };
 
+   /**
+   * Update PDF Chatbot settings
+   * 
+   * @param {Object} settings - New settings object or update function
+   */
+  const updateWebScraperSettings = (settings) => {
+    if (typeof settings === 'function') {
+      setWebScraperSettings(settings);
+    } else {
+      setWebScraperSettings((prev) => ({
+        ...prev,
+        ...settings,
+      }));
+    }
+  };
+
   /**
    * Update PII Redactor settings with backward compatibility
    * 
@@ -231,7 +252,11 @@ const [piiRedactorSettings, setPiiRedactorSettings] = useState({
 
     // Fence Counting
     fenceCountingSettings,
-    setFenceCountingSettings
+    setFenceCountingSettings,
+
+    // Web Scraper
+    webScraperSettings,
+    updateWebScraperSettings,
   };
 
   return (

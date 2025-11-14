@@ -9,7 +9,7 @@ import {
   IconButton, Tooltip, CircularProgress, InputAdornment, Skeleton,
   Dialog, DialogTitle, DialogContent, DialogActions, Chip,
 } from "@mui/material";
-import { Search, RefreshCw, ArrowLeft, Send, Bot, Download } from "lucide-react";
+import { Search, RefreshCw, Send, Download } from "lucide-react";
 import { flushSync } from "react-dom";
 
 const API_BASE = "http://localhost:8000";
@@ -465,7 +465,6 @@ export function WebScraper() {
     setIsResponding(true);
 
     // provisional assistant bubble to stream into
-    setMessages(prev => [...prev, { role: "assistant", content: "", timestamp: new Date() }]);
     lastUserMessageRef.current = userMsg;
 
     wsRef.current?.send(JSON.stringify({
@@ -515,7 +514,16 @@ export function WebScraper() {
       }
 
       if (msg.done === true || msg.finish_reason !== undefined) {
-        setIsResponding(false);
+        const current = messagesRef.current;
+        const last = current[current.length - 1];
+        const hasAssistantContent =
+          last &&
+          last.role === "assistant" &&
+          (last.content || "").trim().length > 0;
+
+        if (hasAssistantContent) {
+          setIsResponding(false);
+        }
       }
     };
 
@@ -542,11 +550,11 @@ export function WebScraper() {
     >
       {/* ---------- Header + Description (always same) ---------- */}
       <Stack sx={{ mb: 1 }}>
-        <p style={{ fontSize: 50, fontWeight: 600, marginTop: 30 }}>Web Scraper</p>
+        <p style={{ fontSize: 50, fontWeight: 600, marginTop: 10 }}>Web Scraper</p>
         <p style={{ fontSize: 20, marginTop: 0 }}>
           Extract data from any public website using a URL
         </p>
-        <p style={{ marginTop: 20 }}>
+        <p style={{ marginTop: 30 }}>
           This tool allows users to input a website URL and automatically scrape its contents for
           structured data extraction. Once scraped, users can ask questions about the page using
           OpenAI-powered analysis. Ideal for quick insights, research, or prototyping, this scraper
@@ -580,10 +588,8 @@ export function WebScraper() {
           sx={{
             width: { xs: "100%", md: "35%" },
             minWidth: 320,
-            border: "1px solid",
             borderColor: "divider",
             borderRadius: 2,
-            p: 1.5,
             background: "#fff",
             height: { xs: "auto", md: 660 },
             display: "flex",
@@ -654,19 +660,9 @@ export function WebScraper() {
         {/* Right: Chat Panel */}
         <Box sx={{ flex: 1, minWidth: 0, boxSizing: "border-box", }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-            <Button variant="text" startIcon={<ArrowLeft size={16} />} onClick={() => setChatOpen(false)}>
-              Back
-            </Button>
             <Typography variant="h4" fontWeight={700} sx={{ ml: 0.5 }}>
               ChatBot
             </Typography>
-            <Chip
-              icon={<Bot size={14} />}
-              label={selectedUrl}
-              variant="outlined"
-              size="small"
-              sx={{ ml: 2, maxWidth: "50%", overflow: "hidden", textOverflow: "ellipsis" }}
-            />
             <Box sx={{ flex: 1 }} />
           </Box>
 
@@ -743,7 +739,7 @@ export function WebScraper() {
             />
             <Button
               variant="contained"
-              endIcon={isResponding ? <CircularProgress size={16} color="inherit" /> : <Send size={16} />}
+              endIcon={isResponding ? <CircularProgress size={16} sx={{ color: 'white' }} /> : <Send size={16} />}
               disabled={!currentMessage.trim() || isResponding || !wsReadyRef.current}
               onClick={handleSendMessage}
               sx={{

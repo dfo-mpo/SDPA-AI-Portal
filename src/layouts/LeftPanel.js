@@ -41,7 +41,8 @@ import {
   SensitivityScoreSettings,
   PDFChatbotSettings,
   FrenchTranslationSettings,
-  CSVAnalyzerSettings
+  CSVAnalyzerSettings,
+  WebScraperSettings,
 } from '../components/tools/settings';
 
 import { getToolByName } from '../utils';
@@ -80,7 +81,8 @@ export default function NewLeftPanel({
     'Sensitivity Score Calculator': <SensitivityScoreSettings />,
     'PDF Chatbot': <PDFChatbotSettings />,
     'French Translation': <FrenchTranslationSettings />,
-    'CSV/PDF Analyzer': <CSVAnalyzerSettings />
+    'CSV/PDF Analyzer': <CSVAnalyzerSettings />,
+    'Web Scraper' : <WebScraperSettings />
   };
 
   // Component-specific styles
