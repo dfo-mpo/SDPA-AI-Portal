@@ -9,7 +9,9 @@ import {
   IconButton, Tooltip, CircularProgress, InputAdornment, Skeleton,
   Dialog, DialogTitle, DialogContent, DialogActions, Chip,
 } from "@mui/material";
-import { Search, RefreshCw, Send, Download } from "lucide-react";
+import { 
+  Search, RefreshCw, Send, Bot, Download, AlertTriangle, 
+  HelpCircle, Clock, GaugeCircle, Globe2 } from "lucide-react";
 import { flushSync } from "react-dom";
 
 const API_BASE = "http://localhost:8000";
@@ -780,16 +782,19 @@ export function WebScraper() {
         aria-label="Open instructions"
         title="Open instructions"
       >
-        {"?"}
+        <HelpCircle size={18} />
       </Button>
 
       <Drawer
         anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        PaperProps={{ sx: { width: 360, background: "#f5f5f5" } }}
+        PaperProps={{
+          sx: { width: 380, background: "#f5f5f5" },
+        }}
       >
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: 2.5 }}>
+          {/* Header */}
           <Box
             sx={{
               display: "flex",
@@ -798,47 +803,161 @@ export function WebScraper() {
               mb: 1,
             }}
           >
-            <Typography variant="h2" fontWeight={700}>
-              How to Use
+            <Typography variant="h4" fontWeight={700}>
+              About this page
             </Typography>
           </Box>
 
           <Divider sx={{ my: 3 }} />
 
-          <Typography variant="h4" fontWeight={700} sx={{ mb: 1.5}}>
-            Steps
+          {/* 1. Model & analysis */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+            1. Model & analysis
           </Typography>
-          <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.6 }}>
-            <b>1.</b> Enter a URL you wish to scrape.
-            <br/><b>2.</b> Click <b>Scrape</b> button.
-            <br/><b>3.</b> Wait until scraper is finished scraping.
-            <br/><b>4.</b> Ask questions about the data scraped.
-            <br/><b>5.</b> Click <b>Parse</b> button and wait for response.
-            <br/><b>6.</b> Wait for a response.
+
+          <Typography variant="body2" sx={{ lineHeight: 1.7, mb: 2 }}>
+            Configure the <b>model type</b> and behavior from the Web Scraper settings
+            panel on the left-hand side. GPT models currently used include{" "}
+            <b>GPT-4o mini</b>, <b>GPT-4o</b>, and <b>GPT-3.5</b>.
           </Typography>
 
           <Divider sx={{ my: 3 }} />
 
-          <Typography variant="h4" fontWeight={700}>
-            Example Prompts
+          {/* 2. Add or select a website */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+            2. Add or select a website
           </Typography>
-          <Typography variant="body2" sx={{ mt: 1.5 }}>
-            • "Return the single <b>name</b> with the <b>highest salary</b>."
-            <br />• "List all <b>emails</b> found on the page, one per line."
-            <br />• "Extract a <b>table</b> with columns: Name | Title | City."
+
+          <Typography variant="body2" sx={{ lineHeight: 1.7, mb: 1.5 }}>
+            Use the left panel to <b>search existing presets</b> or{" "}
+            <b>add a new URL</b> to scrape.
           </Typography>
+
+          <Stack spacing={1.1} sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Search size={18} />
+              <span>
+                Use the <b>search box</b> to filter presets by title,
+                description, or URL.
+              </span>
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Download size={20} />
+              <span>
+                Click <b>Download</b> on a preset card to retrieve already-scraped
+                text for that URL.
+              </span>
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <RefreshCw size={20} />
+              <span>
+                Use <b>Refresh</b> to re-scrape a site when content has changed
+                (subject to cooldown rules).
+              </span>
+            </Typography>
+          </Stack>
 
           <Divider sx={{ my: 3 }} />
 
-          <Typography variant="h4" fontWeight={700}>
-            Tips
+          {/* 3. Chat with the scraped data */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+            3. Chat with the scraped data
           </Typography>
-          <Typography variant="body2" sx={{ mt: 1.5 }}>
-            • If output repeats, request <b>only one</b> result.
-            <br />• Specify format: paragraph, bullet point, document.
+
+          <Typography variant="body2" sx={{ lineHeight: 1.7, mb: 1.5 }}>
+            Click on a preset card to open the <b>chat panel</b> on the right.
+            The assistant will answer questions based on the scraped content.
+          </Typography>
+
+          <Stack spacing={1.1} sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Bot size={20} />
+              <span>
+                Ask <b>specific questions</b> such as summaries, extractions,
+                or custom analyses.
+              </span>
+            </Typography>
+
+            <Typography
+                variant="body2"
+                sx={{ mt: 1, fontSize: 12, lineHeight: 1.6 }}
+              >
+                You can send multiple follow-up questions as long as the URL
+                stays selected.
+            </Typography>
+          </Stack>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* 4. Be aware (limitations / cooldown) */}
+          <Typography
+            variant="subtitle1"
+            fontWeight={700}
+            sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <AlertTriangle size={18} />
+            Be aware
+          </Typography>
+
+          <Stack spacing={1.1} sx={{ mb: 1.5 }}>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
+            >
+              <Clock size={25} style={{ marginTop: 2 }} />
+              <span>
+                Scraping / re-scraping a URL can take <b>hours or even days</b> to
+                complete, depending on the size and depth of the website.
+              </span>
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
+            >
+              <GaugeCircle size={25} style={{ marginTop: 2 }} />
+              <span>
+                For simplicity and to reduce compute usage, there is a{" "}
+                <b>30-day cooldown</b> between re-scrapes of the same URL.
+              </span>
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
+            >
+              <Globe2 size={20} style={{ marginTop: 2 }} />
+              <span>
+                Only use <b>public, non-sensitive</b> URLs. Avoid protected, private, or
+                classified content.
+              </span>
+            </Typography>
+          </Stack>
+
+          <Typography
+            variant="body2"
+            sx={{ mt: 1, fontSize: 12, lineHeight: 1.6 }}
+          >
+            Once a site has been scraped successfully, it will appear as a preset card
+            with its last scraped time and can be reused for chat or downloads.
           </Typography>
         </Box>
       </Drawer>
+
 
       <ConfirmScrapeDialog
         open={confirmOpen}
