@@ -384,10 +384,10 @@ export const SectionGroups = {
     label: "Project Details",
     questions: [
       "contact_name",
-      "contact_email",
-      "contact_region",
       "sme_name",
+      "contact_email",
       "sme_email",
+      "contact_region",
       "contact_sector",
       "project_title",
       "use_case_overview",
