@@ -121,7 +121,7 @@ export default function FenceCountingSettings() {
         </Select>
       </SettingFormControl>
       
-      <SettingDivider sx={fenceStyles.divider} />
+      {/* <SettingDivider sx={fenceStyles.divider} /> */}
       
       {/* Species Selection with Checkboxes */}
       <Box sx={fenceStyles.speciesSection}>
@@ -187,7 +187,7 @@ export default function FenceCountingSettings() {
         </FormGroup>
       </Box>
       
-      <SettingDivider sx={fenceStyles.divider} />
+      {/* <SettingDivider sx={fenceStyles.divider} /> */}
       
       {/* Object Tracking Option */}
       <SettingRow

@@ -151,6 +151,7 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
   const [modelSize, setModelSize] = useState("");          // string like "1.2 GB" or number of MB/bytes
   const [dataClassification, setDataClassification] = useState("");
   const [lastUpdated] = useState(() => new Date().toISOString()); // auto, read-only
+  const [repoUrl, setRepoUrl] = useState("");
 
   // Map relPath -> index in files/paths (for delete)
   const pathIndex = React.useMemo(
@@ -248,7 +249,8 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
     sysRequirements.trim() &&
     modelSize.trim() &&
     dataClassification &&
-    files.length > 0;
+    files.length > 0 &&
+    repoUrl.trim();
 
   const canSubmit = !isGuest && requiredOk && !saving;
 
@@ -347,6 +349,7 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
         modelSize,
         dataClassification,
         lastUpdated,
+        repoUrl
       });
       const newId = out?.manifest?.id;
       onCreated?.(newId);
@@ -387,45 +390,6 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
         <Grid item xs={12} md={6}>
           <TextField fullWidth size="small" required label="Model title"
             value={title} onChange={(e) => setTitle(e.target.value)} disabled={isGuest} sx={tallInput}/>
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            fullWidth size="small" required
-            label="Short description"
-            placeholder="One or two sentences about this model"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            multiline maxRows={4}
-            disabled={isGuest}
-            sx={{ "& .MuiOutlinedInput-root": { height: 100, alignItems: "flex-start" } }}
-            />
-        </Grid>
-        
-        <Grid item xs={12}>
-          <TextField
-            fullWidth size="small" required
-            label="How to use this model"
-            placeholder="Describe basic usage, quickstart commands, expected input/output"
-            value={howToUse}
-            onChange={(e) => setHowToUse(e.target.value)}
-            multiline maxRows={4}
-            disabled={isGuest}
-            sx={{ "& .MuiOutlinedInput-root": { height: 100, alignItems: "flex-start" } }}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            fullWidth size="small" required
-            label="Where was the data sourced?"
-            placeholder="List datasets, collection methods, links, licensing constraints"
-            value={dataSources}
-            onChange={(e) => setDataSources(e.target.value)}
-            multiline maxRows={4}
-            disabled={isGuest}
-            sx={{ "& .MuiOutlinedInput-root": { height: 100, alignItems: "flex-start" } }}
-          />
         </Grid>
 
         {/* ======== Metadata (All Mandatory) ======== */}
@@ -579,6 +543,78 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
           </TextField>
         </Grid>
 
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth size="small" label="Add tag"
+            placeholder="Press Enter or comma to add"
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={onTagKeyDown}
+            onPaste={onTagPaste}
+            sx={tallInput}
+            disabled={isGuest}
+          />
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
+            {tags.map((t) => (
+              <Chip key={t} size="small" label={t} onDelete={() => setTags(tags.filter(x => x !== t))} />
+            ))}
+          </Stack>
+        </Grid>
+
+          <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            size="small"
+            label="GitHub / URL"
+            placeholder="https://github.com/org/repo or project site"
+            value={repoUrl}
+            onChange={(e) => setRepoUrl(e.target.value)}
+            sx={tallInput}
+            disabled={isGuest}
+            type="url"
+            inputProps={{ inputMode: "url", pattern: "https?://.*" }}
+          />
+        </Grid>
+
+        <Grid item xs={12}>
+          <TextField
+            fullWidth size="small" required
+            label="Short description"
+            placeholder="One or two sentences about this model"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            multiline maxRows={4}
+            disabled={isGuest}
+            sx={{ "& .MuiOutlinedInput-root": { height: 100, alignItems: "flex-start" } }}
+            />
+        </Grid>
+        
+        <Grid item xs={12}>
+          <TextField
+            fullWidth size="small" required
+            label="How to use this model"
+            placeholder="Describe basic usage, quickstart commands, expected input/output"
+            value={howToUse}
+            onChange={(e) => setHowToUse(e.target.value)}
+            multiline maxRows={4}
+            disabled={isGuest}
+            sx={{ "& .MuiOutlinedInput-root": { height: 100, alignItems: "flex-start" } }}
+          />
+        </Grid>
+
+        <Grid item xs={12}>
+          <TextField
+            fullWidth size="small" required
+            label="Where was the data sourced?"
+            placeholder="List datasets, collection methods, links, licensing constraints"
+            value={dataSources}
+            onChange={(e) => setDataSources(e.target.value)}
+            multiline maxRows={4}
+            disabled={isGuest}
+            sx={{ "& .MuiOutlinedInput-root": { height: 100, alignItems: "flex-start" } }}
+          />
+        </Grid>
+
         <Grid item xs={12}>
           <TextField
             fullWidth size="small" required
@@ -622,53 +658,7 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
           />
         </Grid>
 
-        <Grid item xs={12} md={3.5}>
-          <TextField
-            fullWidth size="small"
-            label="Last Updated"
-            value={new Date(lastUpdated).toLocaleString()}
-            InputProps={{ readOnly: true }}
-            helperText="Auto-populated on create"
-            sx={tallInput}
-            disabled={isGuest}
-          />
-        </Grid>
-
-        {/* tags + visibility */}
-        <Grid item xs={12} md={5}>
-          <TextField
-            fullWidth size="small" label="Add tag"
-            placeholder="Press Enter or comma to add"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyDown={onTagKeyDown}
-            onPaste={onTagPaste}
-            sx={tallInput}
-            disabled={isGuest}
-          />
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
-            {tags.map((t) => (
-              <Chip key={t} size="small" label={t} onDelete={() => setTags(tags.filter(x => x !== t))} />
-            ))}
-          </Stack>
-        </Grid>
-
-        <Grid item xs={12} md={3.5}>
-          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-            Visibility
-          </Typography>
-          <RadioGroup
-            row
-            value={visibility}
-            onChange={(e) => setVisibility(e.target.value)}
-            name="visibility"
-          >
-            <FormControlLabel value="private" control={<Radio size="small" />} label="Private" />
-            <FormControlLabel value="public" control={<Radio size="small" />} label="Public" />
-          </RadioGroup>
-        </Grid>
-
-        <Grid item xs={12}>
+        <Grid item xs={12} md={7.5}>
         <Box
           onDrop={onDrop}
           onDragOver={onDragOver}
@@ -680,7 +670,7 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
           <Stack spacing={0.5}>
             <Typography variant="subtitle2">Model files & folders</Typography>
             <Typography variant="caption" color="text.secondary">
-              Drag & drop files/folders, or pick a folder. Folder structure is preserved.
+              Drag & drop files/folders, or pick a folder.
             </Typography>
           </Stack>
           <Stack direction="row" spacing={1}>
@@ -742,6 +732,33 @@ export default function CreateModel({ onCancel, onCreated, userId }) {
         {error && (
           <Grid item xs={12}><Typography variant="body2" color="error">{error}</Typography></Grid>
         )}
+
+        <Grid item xs={12} md={2.7}>
+          <TextField
+            fullWidth size="small"
+            label="Last Updated"
+            value={new Date(lastUpdated).toLocaleString()}
+            InputProps={{ readOnly: true }}
+            helperText="Auto-populated on create"
+            sx={tallInput}
+            disabled={isGuest}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={1.8}>
+          <Typography variant="caption" color="text.secondary">
+            Visibility
+          </Typography>
+          <RadioGroup
+            row
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+            name="visibility"
+          >
+            <FormControlLabel value="private" control={<Radio size="small" />} label="Private" />
+            <FormControlLabel value="public" control={<Radio size="small" />} label="Public" />
+          </RadioGroup>
+        </Grid>
 
         <Grid item xs={12}>
           <Stack direction="row" spacing={1} sx={{ mt: 1 }}>

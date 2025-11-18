@@ -1,219 +1,403 @@
 /**
  * ML Model Repository Dashboard
- *
- * Core component for the ML Model Repository tool, which enables users to
- * manage, explore, and interact with machine learning models. This component
- * provides the user interface for browsing available models, viewing model
- * metadata, uploading new models, and monitoring usage statistics.
  */
 
-import React, { useEffect, useState } from "react";
-import { Box, Tabs, Tab, Button, Stack } from "@mui/material";
-import { ToolPage } from "../../../components/tools";
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  Box,
+  Tabs,
+  Tab,
+  Stack,
+  Alert,
+  AlertTitle,
+  Paper,
+  CircularProgress,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  Chip,
+  Drawer,
+  Button,
+  Divider
+} from "@mui/material";
+import { Boxes, History, BookOpen, HelpCircle, FileText, Download, Search } from "lucide-react";
+import CloseIcon from "@mui/icons-material/Close";
 import { useLanguage } from "../../../contexts";
 import { getToolTranslations } from "../../../utils";
-import { useMsal } from "@azure/msal-react"; 
-
-// views
 import ModelsList from "./views/ModelsList";
-import UploadsList from "./views/UploadsList";
 import ModelDetail from "./views/ModelDetail";
-import CreateModel from "./views/CreateModel";
-import FilesTab from "./views/FilesTab";         // NEW
-import SettingsTab from "./views/SettingsTab";   // NEW
-import CreateReadme from "./views/CreateReadme"  // NEW
-import * as repo from "./services/repoApi";
+import * as modelsApi from "./services/repoApi";
 
-const VIEW = {
-  MODELS: "models",
-  UPLOADS: "uploads",
-  DETAIL: "detail",
-  CREATE: "create",
-};
-
+// Main Dashboard
 export function MLModelsRepo() {
   const { language } = useLanguage();
   const t = getToolTranslations("mlModelsRepo", language);
-  const { accounts } = useMsal();
-  const userId = accounts?.[0]?.idTokenClaims?.oid          // preferred stable id
-                || accounts?.[0]?.username
-                || accounts?.[0]?.homeAccountId
-                || null;
 
-  // global page state
-  const [view, setView] = useState(VIEW.MODELS);
-  const [lastListTab, setLastListTab] = useState(0); // 0=models, 1=uploads (remember which tab)
-  const [models, setModels] = useState([]);
-  const [uploads, setUploads] = useState([]);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
   const [selectedModel, setSelectedModel] = useState(null);
-  const [pendingReadmeId, setPendingReadmeId] = useState(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [historyFor, setHistoryFor] = useState(null);
+  const [tab, setTab] = useState(0);
+  const [helpOpen, setHelpOpen] = useState(false);
 
-  // detail sub-tabs: 0 = Overview, 1 = Files, 2 = Settings (only if mine)
-  const [detailTab, setDetailTab] = useState(0);
-  const [isMine, setIsMine] = useState(false);
-
-  // load data (replace with Azure later)
-  const reload = async () => {
-    const [m, u] = await Promise.all([repo.listModels(), repo.listUploads(userId)]);
-    setModels(m);
-    setUploads(u);
-  };
-  useEffect(() => { reload(); }, [userId]);
-
-  // Tabs control (only two tabs: Models / My Uploads)
-  const tabValue = lastListTab;
-  const handleTab = (_e, v) => {
-    setLastListTab(v);
-    setSelectedModel(null);
-    setView(v === 0 ? VIEW.MODELS : VIEW.UPLOADS);
-  };
-
-  // handlers to move between views
-  const openModel = async (id, fromUploads = false) => {
-    const model = await repo.getModel(id, { userId: fromUploads ? userId : undefined }); // <-- pass only if needed
-    setSelectedModel(model);
-    setIsMine(fromUploads || uploads.some((u) => u.id === id));
-    setDetailTab(0); // land on Overview
-    setView(VIEW.DETAIL);
-    setLastListTab(fromUploads ? 1 : 0);
-  };
-
-  const backToList = () => {
-    setView(lastListTab === 0 ? VIEW.MODELS : VIEW.UPLOADS);
-    setSelectedModel(null);
-  };
-
-  const onCreateClick = () => {
-    setLastListTab(1);
-    setPendingReadmeId(null);
-    setView(VIEW.CREATE);
-  };
-
-  const onCreated = async (newId) => {
-    const [m, u] = await Promise.all([repo.listModels(), repo.listUploads(userId)]);
-    setModels(m);
-    setUploads(u);
-    setPendingReadmeId(newId);
-    setView(VIEW.CREATE);
-    // 
-  };
-
-  const onReadmeSaved = async (id) => {
-    await reload();
-    setPendingReadmeId(null);
-    openModel(id, true);
-  }
-
-  // Update selected model after settings change
-  const onSettingsUpdated = (updated) => {
-    setSelectedModel(updated);
-    // also reflect in local lists
-    setModels((prev) => prev.map((x) => (x.id === updated.id ? { ...x, ...updated } : x)));
-    setUploads((prev) => prev.map((x) => (x.id === updated.id ? { ...x, ...updated } : x)));
-  };
-
-  const upsert = (list, m) =>
-  list.some(x => x.id === m.id)
-    ? list.map(x => (x.id === m.id ? { ...x, ...m } : x))
-    : [...list, m];
-
-  const handleSettingsUpdated = (updated) => {
-    setSelectedModel(updated);
-
-    // keep both lists in sync immediately
-    if (updated.private) {
-      // now private → remove from public Models, keep/add in My Uploads
-      setModels(prev => prev.filter(x => x.id !== updated.id));
-      setUploads(prev => upsert(prev, updated));
-    } else {
-      // now public → ensure in Models, keep/add pointer in My Uploads
-      setModels(prev => upsert(prev, updated));
-      setUploads(prev => upsert(prev, updated));
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr("");
+    try {
+      const { items } = await modelsApi.listModels();
+      setItems(items);
+    } catch (e) {
+      const msg =
+        e?.response?.data?.detail?.message ||
+        e?.response?.data?.detail ||
+        e?.message ||
+        "Failed to load models.";
+      setErr(String(msg));
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
-    // optional: background truth refresh (won't flicker)
-    reload();
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleSelect = (row) => {
+    setSelectedModel(row);
+    setDetailOpen(true);
   };
 
-  const handleModelDeleted = (deletedId) => {
-    setSelectedModel(null);
-    setModels(prev => prev.filter(x => x.id !== deletedId));
-    setUploads(prev => prev.filter(x => x.id !== deletedId));
-    setView(VIEW.UPLOADS);
-    // optional: reload();
+  const handleCloseDetail = () => {
+    setDetailOpen(false);
   };
 
-  const showListTabs = view === VIEW.MODELS || view === VIEW.UPLOADS || view === VIEW.CREATE;
-  const showDetailTabs = view === VIEW.DETAIL && selectedModel;
+  const handleHistory = async (item) => {
+    setLoading(true);
+    setErr("");
+    try {
+      const { items } = await modelsApi.listModelVersions(item.name);
+      setItems(items);
+      setHistoryFor(item.name);
+      setTab(1);
+    } catch (e) {
+      const msg =
+        e?.response?.data?.detail?.message ||
+        e?.response?.data?.detail ||
+        e?.message ||
+        "Failed to load model versions.";
+      setErr(String(msg));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Clamp detailTab if not mine (hide Settings)
-  const effectiveDetailTab = isMine ? detailTab : Math.min(detailTab, 1);
+  const handleTabChange = (event, newValue) => {
+    setTab(newValue);
+    // 0 = Models, 1 = Version history
+    if (newValue === 0) {
+      setHistoryFor(null);
+      load();
+    }
+  };
 
   return (
-    <ToolPage
-      title={t.title}
-      shortDescription={t.shortDescription}
-      longDescription={t.longDescription}
-      backgroundImage="/assets/calculations.png"
-      hideActionButton
-      onFileSelected={() => {}}
+    <Paper
+      sx={{
+        p: { xs: 1, sm: 1, md: 2 },
+        mx: "auto",
+        my: 2,
+        maxWidth: 1320,
+        borderRadius: 3,
+      }}
     >
-      <div><div></div></div>
-      {/* Top rail */}
-      <Stack direction="row" alignItems="center" sx={{ width: "100%", mb: 2 }}>
-        {showListTabs && (
-          <Tabs value={tabValue} onChange={handleTab} sx={{ minHeight: 48 }}>
-            <Tab label={t.ui?.sections?.models || "Models"} sx={{ minHeight: 48 }} />
-            <Tab label={t.ui?.sections?.uploads || "My Uploads"} sx={{ minHeight: 48 }} />
-          </Tabs>
-        )}
-
-        {showDetailTabs && (
-          <Tabs
-            value={effectiveDetailTab}
-            onChange={(_e, v) => setDetailTab(v)}
-            sx={{ minHeight: 48 }}
-          >
-            <Tab label="Overview" sx={{ minHeight: 48 }} />
-            <Tab label="Files" sx={{ minHeight: 48 }} />
-            {isMine && <Tab label="Settings" sx={{ minHeight: 48 }} />}
-          </Tabs>
-        )}
-
-        <Box sx={{ flexGrow: 1 }} />
-
-        {view === VIEW.DETAIL && (
-          <Button variant="text" onClick={backToList}>
-            ← Back
-          </Button>
-        )}
+      {/* Header / Hero */}
+      <Stack sx={{ mb: 1 }}>
+        <p style={{ fontSize: 50, fontWeight: 600, marginTop: 30 }}>
+          ML Models Repository
+        </p>
+        <p style={{ fontSize: 20, marginTop: 0 }}>
+          Explore and Upload ML Models
+        </p>
+        <p style={{ marginTop: 30 }}>
+          A unified repository where users can upload, explore, and manage machine learning models. It supports versioning and model cards with key metadata to help teams quickly integrate models into their workflows. Users can browse existing models from OCDS and SDPA or contribute their own.
+        </p>
       </Stack>
 
-      {/* Views */}
-      {view === VIEW.MODELS && <ModelsList rows={models} onOpenModel={openModel} />}
+      {/* Disclaimer */}
+      <Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
+        <AlertTitle>Disclaimer</AlertTitle>
+        This hub is for <strong>demonstration purposes only</strong> and is <strong>not</strong> an enterprise solution.
+        Upload and publish <strong>only unclassified/unprotected information</strong>: both models and their training data
+        must be unclassified or publicly available. <strong>Do not</strong> upload protected, sensitive, or classified data.
+        Content here is intended for collaborative exploration and documentation with <strong>no production guarantees</strong>.
+        By proceeding, you confirm you have the right to share the materials and agree to comply with these boundaries.
+      </Alert>
 
-      {view === VIEW.UPLOADS && (
-        <UploadsList rows={uploads} onOpenModel={(id) => openModel(id, true)} onCreateClick={onCreateClick} />
+      {/* Tabs: Models + Version history */}
+      <Stack direction="row" alignItems="center" sx={{ width: "100%", mb: 2 }}>
+        <Tabs
+          value={tab}
+          onChange={handleTabChange}
+          sx={{ minHeight: 48 }}
+        >
+          {/* Models tab */}
+          <Tab
+            icon={<Boxes size={16} />}
+            iconPosition="start"
+            label={t?.ui?.sections?.models || "Models"}
+            sx={{ minHeight: 48 }}
+          />
+
+          {/* Version history tab (only when active) */}
+          {historyFor && (
+            <Tab
+              icon={<History size={16} />}
+              iconPosition="start"
+              label={`Version history`}
+              sx={{ minHeight: 48 }}
+            />
+          )}
+        </Tabs>
+        <Box sx={{ flexGrow: 1 }} />
+      </Stack>
+
+      {tab === 1 && historyFor && (
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ opacity: 0.7, p: 1 }}>
+            Viewing history for:
+          </Typography>
+          <Chip
+            label={historyFor}
+            color="primary"
+            size="large"
+            variant="outlined"
+            sx={{ fontWeight: 600 }}
+          />
+        </Stack>
       )}
 
-      {view === VIEW.DETAIL && selectedModel && (
+      {/* Content */}
+      {err && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {err}
+        </Alert>
+      )}
+
+      {loading ? (
+        <Stack alignItems="center" justifyContent="center" sx={{ py: 6 }}>
+          <CircularProgress />
+        </Stack>
+      ) : (
         <>
-          {effectiveDetailTab === 0 && <ModelDetail model={selectedModel} isMine={isMine} userId={userId}/>}
-          {effectiveDetailTab === 1 && <FilesTab model={selectedModel} isMine={isMine} userId={userId}/>}
-          {isMine && effectiveDetailTab === 2 && (
-            <SettingsTab model={selectedModel} isMine={isMine} userId={userId} onUpdated={handleSettingsUpdated} onDeleted={handleModelDeleted}/>
+          {/* grid of cards */}
+          <ModelsList
+            rows={items}
+            onSelect={handleSelect}
+            onHistory={handleHistory}
+            showSearch={tab === 0}
+          />
+
+          {/* README dialog */}
+          {selectedModel && (
+            <Dialog
+              open={detailOpen}
+              onClose={handleCloseDetail}
+              fullWidth
+              maxWidth="md"
+              PaperProps={{
+                sx: {
+                  backgroundColor: "white",
+                },
+              }}
+            >
+              <DialogTitle
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  bgcolor: "white",
+                }}
+              >
+                <BookOpen size={25} style={{ marginRight: 8 }}/>
+                <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                  {selectedModel.name} (v{selectedModel.version}) - README
+                </Typography>
+                <IconButton
+                  onClick={handleCloseDetail}
+                  size="small"
+                  sx={{ ml: "auto" }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+
+              <DialogContent
+                dividers
+                sx={{
+                  p: 2,
+                  backgroundColor: "white",
+                }}
+              >
+                <ModelDetail
+                  name={selectedModel.name}
+                  version={selectedModel.version}
+                />
+              </DialogContent>
+            </Dialog>
           )}
         </>
       )}
 
-      {view === VIEW.CREATE && (
-        pendingReadmeId 
-        ? <CreateReadme modelId={pendingReadmeId} userId={userId} onSaved={() => onReadmeSaved(pendingReadmeId)} />
-        : 
-        <CreateModel userId={userId} onCancel={backToList} onCreated={onCreated} />)}
-    </ToolPage>
+      {/* Tiny right-edge arrow tab */}
+      <Button
+        onClick={() => setHelpOpen(true)}
+        variant="contained"
+        sx={{
+          position: "fixed",
+          right: 0,
+          top: "50%",
+          transform: "translateY(-50%)",
+          minWidth: 0,
+          width: 36,
+          height: 48,
+          borderTopLeftRadius: 12,
+          borderBottomLeftRadius: 12,
+          borderTopRightRadius: 0,
+          borderBottomRightRadius: 0,
+          p: 0,
+          fontWeight: 800,
+        }}
+        aria-label="Open instructions"
+        title="Open instructions"
+      >
+        <HelpCircle size={18} />
+      </Button>
+
+      <Drawer
+  anchor="right"
+  open={helpOpen}
+  onClose={() => setHelpOpen(false)}
+  PaperProps={{
+    sx: { width: 380, background: "#f5f5f5" },
+  }}
+>
+  <Box sx={{ p: 2.5 }}>
+    {/* Header */}
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        mb: 1,
+      }}
+    >
+      <Typography variant="h4" fontWeight={700}>
+        How this page works
+      </Typography>
+    </Box>
+
+    <Divider sx={{ my: 3 }} />
+
+    {/* 1. Browse & use existing models */}
+    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+      1. Use existing models
+    </Typography>
+
+    <Typography variant="body2" sx={{ lineHeight: 1.7, mb: 1.5 }}>
+      This page is for <b>discovering and using</b> models that have already
+      been registered in the repository.  
+      <br />
+      <br />
+      You can:
+    </Typography>
+
+    {/* Bullets with icons + spacing */}
+    <Stack spacing={1.1} sx={{ mb: 2 }}>
+      <Typography
+        variant="body2"
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
+        •
+        <Search size={16} />
+        <span>
+          <b>Search</b> by model name or tags using the search bar.
+        </span>
+      </Typography>
+
+      <Typography
+        variant="body2"
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
+        •
+        <FileText size={16} />
+        <span>
+          Open the <b>README</b> to view details, usage, and documentation.
+        </span>
+      </Typography>
+
+      <Typography
+        variant="body2"
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
+        •
+        <History size={16} />
+        <span>
+          Click <b>Version history</b> to browse other versions of the same model.
+        </span>
+      </Typography>
+
+      <Typography
+        variant="body2"
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
+        •
+        <Download size={16} />
+        <span>
+          Click <b>Download</b> to retrieve model weights / artifacts as a ZIP file.
+        </span>
+      </Typography>
+    </Stack>
+
+
+    <Divider sx={{ my: 3 }} />
+
+    {/* 2. Contribute a new model */}
+    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+      2. Contribute a new model
+    </Typography>
+    <Typography variant="body2" sx={{ lineHeight: 1.7 }}>
+      You <b>cannot upload models directly</b> from this page.
+      <br />
+      To register a new model or a new version, use the dedicated{" "}
+      <b>Model Upload</b> experience in Azure ML Studio.
+    </Typography>
+
+    <Button
+      variant="contained"
+      size="small"
+      sx={{ mt: 2 }}
+      href="https://ml.azure.com/model/list?wsid=/subscriptions/4858d1be-583d-42d6-a4a3-44172168b003/resourcegroups/Merged-AI-Portal-Frontend-RG/providers/Microsoft.MachineLearningServices/workspaces/MLModelRepoAML&tid=8c1a4d93-d828-4d0e-9303-fd3bd611c822"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Open Azure ML Model Upload
+    </Button>
+
+    <Typography
+      variant="body2"
+      sx={{ mt: 1.5, fontSize: 12, lineHeight: 1.6 }}
+    >
+      Once a model is successfully registered there, it will appear in this
+      list with its tags, flavors, and metadata.
+    </Typography>
+  </Box>
+</Drawer>
+
+    </Paper>
   );
 }
-
 
 export default MLModelsRepo;

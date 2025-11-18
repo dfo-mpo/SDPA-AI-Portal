@@ -33,5 +33,7 @@ src/components/auth/authConfig.js
 
 # venv 
 backend/.venv/
+src/setupProxy.js
+src/services/apiService.js
+backend/chroma_store/
 backend/db/
-backend/chroma_store

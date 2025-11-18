@@ -166,7 +166,7 @@ import {
       icon: BrainCircuit,
       backgroundImage: '/assets/csv-analyzer-banner.jpg',
       actionText: 'Coming Soon',
-      disabled: true
+      disabled: false
     },
     DATA_INTAKE_FORM: {
       id: 'data-intake-form',
@@ -186,10 +186,10 @@ import {
       actionText: 'Open Document',
       // showInDropdown: false
     },
-    AI_STORE: {
-      id: 'ai-store',
+    AI_RESOURCES: {
+      id: 'ai-resources',
       name: 'Models, APIs, Tools and Services',
-      category: 'AI Store',
+      category: 'AI Resources',
       icon: Store,
       backgroundImage: '/assets/csv-analyzer-banner.jpg',
       actionText: 'Coming Soon',
@@ -231,8 +231,8 @@ import {
     'Statistical and ML Algorithms Guide': [
       TOOLS.DOCX_EDITOR,
     ],
-    'AI Store': [
-      TOOLS.AI_STORE,
+    'AI Resources': [
+      TOOLS.AI_RESOURCES,
     ]
   };
   

@@ -36,17 +36,38 @@ export const Questions = [
   {
     name: "contact_name",
     label: "Contact Name",
-    type: "text"
+    type: "text",
+    half: true
   },
   {
     name: "contact_email",
     label: "Contact Email",
-    type: "text"
+    type: "text",
+    half: true
   },
   {
-    name: "contact_branch_sector",
-    label: "Contact Branch/Sector",
-    type: "text"
+    name: "contact_region",
+    label: "Contact Region",
+    type: "text",
+    half: true
+  },
+  {
+    name: "sme_name",
+    label: "SME Name",
+    type: "text",
+    half: true
+  },
+  {
+    name: "sme_email",
+    label: "SME Email",
+    type: "text",
+    half: true
+  },
+  {
+    name: "contact_sector",
+    label: "Contact Sector",
+    type: "text",
+    half: true
   },
   {
     name: "project_title",
@@ -59,26 +80,26 @@ export const Questions = [
     name: "use_case_overview",
     label: "Project Description and Objective",
     type: "textarea",
-    description: "Brief overview of potential program or service delivery, operations, or business process impacted being explored as a use case"
+    description: "Brief overview of potential program or service delivery, operations, or business process impacted being explored as a use case:"
   },
   {
     name: "business_problem",
     label: "",
     type: "textarea",
-    description: "What business problem or opportunity are you trying to address? (Tip: Focus on challenges that impact productivity, efficiency, or cost for operations or stakeholders.)"
+    description: "What business problems or opportunities are you trying to address? (Tip: Focus on challenges that impact productivity, efficiency, cost for operations or stakeholder):  "
   },
   {
-    name: "who_is_affected",
+    name: "primary_users",
     label: "",
     type: "textarea",
-    description: "Who would benefit from or be affected by this solution (e.g., internal teams, scientists, Indigenous communities, officers, Canadians)?"
+    description: "Primary users (e.g., Academia and researchers, internal teams, scientists, Indigenous communities, officers, Canadians)?"
   },
   { 
     name: "areas_of_impact_on_business", 
-    label: "Areas of impact on business", 
+    label: "", 
     type: "multiselect", 
     options: ["Labour", "Time", "Automation of processes", "Resource usage"], 
-    description: "Try to estimate how it would affect time, cost, revenue, customer satisfaction, etc.", 
+    description: "Areas of impact on business: (Try to estimate how it would affect time, cost, revenue, customer satisfaction, etc.)", 
     includeOtherOptions: true 
   },
   // { 
@@ -107,12 +128,12 @@ export const Questions = [
     type: "multiselect", 
     options: ["Protection of oceans and ecosystems", "Science for ecosystem decision-making", "Indigenous outcomes in ecosystem protection"], 
   },
-  { 
-    name: "justification_for_strategic_alignment", 
-    label: "Justification for Strategic Alignment:", 
-    type: "textarea", 
-    description: "Explain why this use case supports the selected DFO priorities:" 
-  },
+  // { 
+  //   name: "justification_for_strategic_alignment", 
+  //   label: "Justification for Strategic Alignment:", 
+  //   type: "textarea", 
+  //   description: "Explain why this use case supports the selected DFO priorities:" 
+  // },
   { 
     name: "feasibility", 
     label: "Feasibility", 
@@ -120,12 +141,12 @@ export const Questions = [
     options: ["Data is available and usable", "Required AI methods are technically mature", "Internal or external expertise can support this", "Budget or funding is feasible", "Tools, infrastructure, or platforms are accessible", "Legal or policy issues are manageable", "Stakeholder or partner support is realistic", "Implementation can begin within 6-12 months"],
     description: "Check all that apply to reflect readiness and ease of implementation:" 
   },
-  { 
-    name: "justification_for_feasibility", 
-    label: "Justification for Feasibility:", 
-    type: "textarea", 
-    description: "Explain the key enablers or challenges for implementation:" 
-  },
+  // { 
+  //   name: "justification_for_feasibility", 
+  //   label: "Justification for Feasibility:", 
+  //   type: "textarea", 
+  //   description: "Explain the key enablers or challenges for implementation:" 
+  // },
   { 
     name: "tools_needed_for_work", 
     label: "What tools/services do you currently use to fulfil this project", 
@@ -237,24 +258,24 @@ export const Questions = [
   },
 
 
-  { 
-    name: "is_dataset_available", 
-    label: "Is the data available and ready to use?", 
-    type: "radio", 
-    options: ["Yes", "No"], 
-    description: "Specifies whether the data required for the project is readily accessible."
-  },
-  {
-    name: "available_data_info",
-    label: "What kinds of information or data do you have or are currently used (if any)?",
-    type: "textarea",
-    description: "You don't need technical details—just describe what the data or information is."
-  },
+  // { 
+  //   name: "is_dataset_available", 
+  //   label: "Is the data available and ready to use?", 
+  //   type: "radio", 
+  //   options: ["Yes", "No"], 
+  //   description: "Specifies whether the data required for the project is readily accessible."
+  // },
+  // {
+  //   name: "available_data_info",
+  //   label: "What kinds of information or data do you have or are currently used (if any)?",
+  //   type: "textarea",
+  //   description: "You don't need technical details—just describe what the data or information is."
+  // },
   { 
     name: "data_source", 
-    label: "Data Source", 
+    label: "Data Source (s)", 
     type: "multiselect", 
-    options: ["SharePoint", "Local HD", "Oracle Database", "AWS", "Azure Storage"], 
+    options: ["SharePoint", "Local HD", "Oracle Database", "AWS", "Azure Storage", "GitHub", "DevOps"], 
     description: "Where the data used in the project is currently stored or accessed from.", 
     includeOtherOptions: true 
   },
@@ -285,7 +306,7 @@ export const Questions = [
     name: "success_outcomes",
     label: "",
     type: "textarea",
-    description: "If AI was selected, what outcome would success look like for addressing your business problem with AI? (Try to make this measurable: faster processes, better decisions, more sales, etc.)",
+    description: "If AI was selected, what outcome would success look like for addressing your business problem with AI? (Try to make this measurable: faster processes, better decisions, more sales, etc.) ",
     required: false
   },
   // {
@@ -310,13 +331,13 @@ export const Questions = [
     options: ["To-do", "In Progress", "Delivered", "Pause", "Blocked", "Closed "], 
     description: "" 
   },
-  { 
-    name: "data_annotation_support", 
-    label: "Data Annotation Support", 
-    type: "radio", 
-    options: ["Yes", "No", "I don't know"], 
-    description: "In most instances, we will require training in ML models and therefore we will require experts to label and annotate datasets. Does your team have the capacity to support with data annotation?"
-  },
+  // { 
+  //   name: "data_annotation_support", 
+  //   label: "Data Annotation Support", 
+  //   type: "radio", 
+  //   options: ["Yes", "No", "I don't know"], 
+  //   description: "In most instances, we will require training in ML models and therefore we will require experts to label and annotate datasets. Does your team have the capacity to support with data annotation?"
+  // },
   {
     name: "time_sensitive",
     label: "Is this project time-sensitive?",
@@ -355,98 +376,6 @@ export const Questions = [
     description: "Describe any potential risks",
     required: false
   },
-
-  // TBS Questions
-  {
-    name: "tbs_service_inventory_id",
-    label: "TBS Service Inventory ID",
-    type: "text",
-    description: "Identifies the unique number assigned to a service in the GC Service Inventory. Leave blank if not applicable"
-  },
-  {
-    name: "tbs_government_organization",
-    label: "TBS Government Organization (Fisheries and Oceans Canada)",
-    type: "text",
-    description: "Identifies the department or agency responsible for the AI system"
-  },
-  {
-    name: "tbs_ai_system_primary_users",
-    label: "TBS AI system primary users",
-    type: "text",
-    description: "Identifies whether the primary users of the AI system are GC employees, members of the public, both, or neither "
-  },
-  {
-    name: "tbs_developed_by",
-    label: "TBS Developed By",
-    type: "text",
-    description: "Identifies the developer of the system. If more than one option applies but parts of system were procured, please choose \"vendor\" and state vendor name in column H. Choose \"other\" for systems involving non-vendor external developers (e.g.,academia, civil society) "
-  },
-  {
-    name: "tbs_vendor_name",
-    label: "TBS Vendor name",
-    type: "text",
-    description: "Provides the name of the vendor from whom the AI system was procured. If no vendor, state \"Not applicable\" "
-  },
-  {
-    name: "tbs_status_date",
-    label: "TBS status date",
-    type: "text",
-    description: "Identifies the calendar year the AI system entered this status: e.g., if pilot began in 2021, or system was retired in 2019 "
-  },
-  {
-    name: "tbs_ai_system_capabilities",
-    label: "TBS AI system capabilities",
-    type: "text",
-    description: "Identifies the capabilities of the AI system. Max 300 characters "
-  },
-  {
-    name: "tbs_automated_decision_system",
-    label: "TBS Automated decision system",
-    type: "text",
-    description: "Identifies whether the AI system makes administrative decisions or related assessments about clients. For information on definition of an automated decision system, please see Directive on Automated Decision Making "
-  },
-  {
-    name: "tbs_algorithmic_impact_assessment",
-    label: "TBS Algorithmic impact assessment",
-    type: "text",
-    description: "Provides the unique number assigned to completed Algorithmic Impact Assessments (AIA) on the Open Government Portal. If this does not apply, state \"Not applicable.\" "
-  },
-  {
-    name: "tbs_data_sources",
-    label: "TBS data sources",
-    type: "text",
-    description: "Describes the sources of the data used to train and as inputs for the AI system. Give names of datasets if available, or describe type and source of data used. "
-  },
-  {
-    name: "tbs_involves_personal_information",
-    label: "TBS involves personal information",
-    type: "text",
-    description: "Identifies whether the AI system uses or creates personal information",
-  },
-  {
-    name: "tbs_personal_information_banks",
-    label: "TBS personal information banks",
-    type: "text",
-    description: "Identifies the Personal Information Banks associated with the activity. If no PIB exists, please state \"Not applicable\" "
-  },
-  {
-    name: "tbs_notification_of_ai",
-    label: "TBS Notification of AI",
-    type: "text",
-    description: "Identifies whether users are notified that they are interacting with an AI system "
-  },
-  {
-    name: "tbs_access_to_information_request",
-    label: "TBS Access to information request",
-    type: "text",
-    description: "Identifies any access to information request number relating to the AI system "
-  },
-  {
-    name: "tbs_system_results",
-    label: "TBS system results",
-    type: "text",
-    description: "Describes the expected or actual results of the implementation of the AI system. Max 500 characters including spaces "
-  },
 ];
 
 // this is used to keep track of the questions we want to render for each section
@@ -455,46 +384,47 @@ export const SectionGroups = {
     label: "Project Details",
     questions: [
       "contact_name",
+      "sme_name",
       "contact_email",
-      "contact_branch_sector",
+      "sme_email",
+      "contact_region",
+      "contact_sector",
       "project_title",
       "use_case_overview",
       "business_problem",
-      "who_is_affected",
+      "primary_users",
       "areas_of_impact_on_business",
       // "priority_level",
-      
-      
       "strategic_alignment",
       "fisheries_and_aquaculture",
       "aquatic_ecosystems",
-      "justification_for_strategic_alignment",
+      // "justification_for_strategic_alignment",
       "feasibility",
-      "justification_for_feasibility",
+      // "justification_for_feasibility",
       "tools_needed_for_work",
     ],
   },
   dataDetails: {
     label: "Data Details",
     questions: [
-      "is_dataset_available", 
-      "available_data_info",
+      // "is_dataset_available", 
+      // "available_data_info",
       "data_source", 
       "data_type",
       "classification",
     ],
   },
   aiMlQuestions: {
-    label: "Data Science, ML and AI",
+    label: "Artificial Intelligence (AI)",
     questions: [
       // "project_area", 
       "success_outcomes",
       // "ai_capability_used",
       "phase", 
       "status", 
-      "data_annotation_support",
       "time_sensitive",
       "time_sensitive_deadline",
+      // "data_annotation_support",
     ],
   },
   security: {
@@ -509,25 +439,5 @@ export const SectionGroups = {
       // "risks_area",
       "risks_level"
     ],
-  },
-  tbs: {
-    label: "Treasury Board of Canada Secretariat (TBS) Questionnaire",
-    questions: [
-      "tbs_service_inventory_id",
-      "tbs_government_organization",
-      "tbs_ai_system_primary_users",
-      "tbs_developed_by",
-      "tbs_vendor_name",
-      "tbs_status_date",
-      "tbs_ai_system_capabilities",
-      "tbs_automated_decision_system",
-      "tbs_algorithmic_impact_assessment",
-      "tbs_data_sources",
-      "tbs_involves_personal_information",
-      "tbs_personal_information_banks",
-      "tbs_notification_of_ai",
-      "tbs_access_to_information_request",
-      "tbs_system_results",
-    ]
   }
 };

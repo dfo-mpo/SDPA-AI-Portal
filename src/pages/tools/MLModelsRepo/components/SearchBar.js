@@ -2,7 +2,7 @@ import React from "react";
 import { Stack, TextField, InputAdornment } from "@mui/material";
 import { Search } from "lucide-react";
 
-export default function SearchBar({ value, onChange, placeholder = "Search…" }) {
+export default function SearchBar({ value, onChange, placeholder = "Search…", sx}) {
   return (
     <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 2 }}>
       <TextField
@@ -17,7 +17,10 @@ export default function SearchBar({ value, onChange, placeholder = "Search…" }
             </InputAdornment>
           ),
         }}
-        sx={{ maxWidth: 420 }}
+        sx={{
+          maxWidth: 415,
+          ...sx,
+        }}
       />
     </Stack>
   );

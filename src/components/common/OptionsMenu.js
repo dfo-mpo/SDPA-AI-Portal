@@ -16,6 +16,10 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import LoginRoundedIcon from '@mui/icons-material/LoginRounded';
+import {
+  Box,
+  Typography
+} from '@mui/material';
 import { MenuButton } from '.';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 import { useLanguage } from '../../contexts';
@@ -36,7 +40,7 @@ const MenuItem = styled(MuiMenuItem)({
  * @param {Function} props.onLogout - Callback function for logout action
  * @returns {JSX.Element} The rendered component
  */
-export default function OptionsMenu({ onLogout, onLogin }) {
+export default function OptionsMenu({ onLogout, onLogin, user }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const styles = useComponentStyles('optionsMenu');
@@ -111,4 +115,9 @@ export default function OptionsMenu({ onLogout, onLogin }) {
 OptionsMenu.propTypes = {
   /** Callback function for logout action */
   onLogout: PropTypes.func,
+
+  user: PropTypes.shape({
+    username: PropTypes.string,
+    name: PropTypes.string,
+  })
 };

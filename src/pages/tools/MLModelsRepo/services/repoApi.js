@@ -1,226 +1,99 @@
 import axios from 'axios';
 
-const API = 'http://localhost:4000/api'; // or use your proxy/env
+const BASE = "http://localhost:8000/api";
 
-/* ---------- Models ----------
-- CRUD Operations for models
-*/
+/* tiny helpers: frontend-only mapping for display */
+const toTagArray = (tags) =>
+  tags && typeof tags === "object"
+    ? Object.entries(tags).map(([k, v]) => `${k}:${v}`)
+    : [];
+  
+const toFlavorKeys = (flavors) =>
+  !flavors ? [] : Array.isArray(flavors) ? flavors : Object.keys(flavors);
 
-// ---------- List All Models ----------
+const mapToItem = (card) => {
+  const tagArr = toTagArray(card.tags);
+  const flavorArr = toFlavorKeys(card.flavors);
+
+  return {
+    id: `${card.name}@v${card.version}`,
+    name: card.name,
+    version: String(card.version ?? ""),
+    description: card.description || "",
+    type: card.type,
+    tags: tagArr,
+      tagsText: tagArr.join(", "),
+      flavors: flavorArr,
+      flavorsText: flavorArr.join(", "),
+    createdOn: card.created_on || "",
+    lastUpdatedOn: card.last_updated_on || "",
+    latestVersion: card.latest_version,
+    versionCount: card.version_count,
+    downloadUrl: getDownloadUrl(card.name, card.version),
+  }
+};
+
+/**
+ * GET /api/models/
+ * Returns latest version metadata for a model.
+ * - card: raw backend JSON (exact fields)
+ * - item: UI mapping
+ */
 export async function listModels() {
-  const { data } = await axios.get(`${API}/models`);
-  return (data.items || []).map(x => ({
-    id: x.id,
-    name: x.name,
-    description: x.description || '',
-    tags: x.tags || [],
-    version: x.version || '1.0.0',
-    updatedAt: x.updatedAt,
-    downloads: x.downloads || 0,
-    sizeMB: x.sizeMB || 0,
-    private: !!x.private,
-    sourcePath: x.sourcePath
-  }));
+  const url = `${BASE}/models`;
+  const { data } = await axios.get(url);
+  // keep your mapping consistent with the rest of the UI
+  return { cards: data, items: data.map(mapToItem) };
 }
 
-// ---------- List All Uploads ----------
-export async function listUploads(userId) {
-  if (!userId) return [];
-  const { data } = await axios.get(`${API}/uploads`, { params: { userId } });
-  return (data.items || []).map(x => ({
-    id: x.id,
-    name: x.name,
-    description: x.description || '',
-    tags: x.tags || [],
-    version: x.version || '1.0.0',
-    updatedAt: x.updatedAt,
-    downloads: x.downloads || 0,
-    sizeMB: x.sizeMB || 0,
-    private: !!x.private,
-    sourcePath: x.sourcePath
-  }));
+/**
+ * GET /api/models/{name}/versions/{version}
+ * Returns metadata for a specific version.
+ * - card: raw backend JSON (exact fields)
+ * - item: UI mapping (latestVersion/versionCount will be undefined here)
+ */
+export async function getModelVersion(name, version) {
+  const url = `${BASE}/models/${encodeURIComponent(name)}/versions/${encodeURIComponent(String(version))}`;
+  const { data } = await axios.get(url);
+  return { card: data, item: mapToItem(data) };
 }
 
-// ---------- Get a Model
-export async function getModel(id, { userId } = {}) {
-  const { data } = await axios.get(`${API}/models/${encodeURIComponent(id)}`, { params: { userId } });
+/**
+ * /api/models/{name}/versions/{version}/download.zip
+ * Direct ZIP for that version
+ */
+export function getDownloadUrl(name, version) {
+  return `${BASE}/models/${encodeURIComponent(name)}/versions/${encodeURIComponent(String(version))}/download.zip`;
+}
+
+/**
+ * /api/models/{name}/versions/{version}/readme
+ * Direct README reference
+ */
+export async function getAmlReadme(name, version) {
+  const url = `${BASE}/models/${encodeURIComponent(
+    name
+  )}/versions/${encodeURIComponent(version)}/readme`;
+
+  const res = await fetch(url);
+  if (res.status === 404) {
+    // no README for that model/version
+    return null;
+  }
+  if (!res.ok) {
+    throw new Error(`Failed to load README: ${res.status} ${res.statusText}`);
+  }
+
+  const data = await res.json();
   return data;
 }
 
-// ---------- Create New Model
-export async function createModelWithPaths({
-  owner,
-  name,
-  description = "",
-  howToUse = "",
-  dataSources = "",
-  tags = [],
-  visibility = "private",
-  files = [],
-  paths = [],
-  userId,
-  pipelineTag,
-  library,
-  languages = [],
-  license,
-  intendedUse,
-  outOfScope,
-  systemRequirements,
-  modelSize,
-  dataClassification,
-  lastUpdated,
-}) {
-  const form = new FormData();
-  form.append("owner", owner);
-  form.append("title", name);
-  form.append("description", description);
-  form.append("howToUse", howToUse);
-  form.append("dataSources", dataSources);
-  form.append("visibility", visibility);
-  if (userId) form.append("userId", userId);
-  if (Array.isArray(tags)) form.append("tags", tags.join(","));
-
-  // --- NEW metadata ---
-  if (pipelineTag) form.append("pipelineTag", pipelineTag);
-  if (library) form.append("library", library);
-  if (Array.isArray(languages)) form.append("languages", languages.join(","));
-  if (license) form.append("license", license);
-  if (intendedUse) form.append("intendedUse", intendedUse);
-  if (outOfScope) form.append("outOfScope", outOfScope);
-  if (systemRequirements) form.append("systemRequirements", systemRequirements);
-  if (modelSize) form.append("modelSize", modelSize);
-  if (dataClassification) form.append("dataClassification", dataClassification);
-  if (lastUpdated) form.append("lastUpdated", lastUpdated);
-
-  files.forEach((f, i) => {
-    form.append("files", f, f.name);
-    form.append("paths", paths[i] || f.name);
-  });
-
-  const { data } = await axios.post(`${API}/models/create`, form, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-      ...(userId ? { "x-user-id": userId } : {}),
-    },
-  });
-  return data;
-}
-
-
-
-/* ---------- Files ---------- */
-
-
-// ---------- List files for a model
-export async function listModelFilesById(id, { userId } = {}) {
-  const { data } = await axios.get(
-    `${API}/models/${encodeURIComponent(id)}/files`,
-    { params: userId ? { userId } : {} }
-  );
-  return Array.isArray(data?.items) ? data.items : [];
-}
-
-// ---------- Append files (add button in frontend)
-export async function uploadModelFiles({ id, files = [], isPrivate, userId, sourcePath, dir = "", paths = [] }) {
-  if (!userId) throw new Error("uploadModelFiles requires userId");
-
-  const base = sourcePath || (
-    isPrivate ? `users/${encodeURIComponent(userId)}/models/${id}` : `models/${id}`
-  );
-
-  const form = new FormData();
-  form.append("base", base);
-  form.append("dir", dir);
-  form.append("userId", userId);
-
-  files.forEach((f, i) => {
-    form.append("files", f, f.name);
-    form.append("paths", paths[i] || f.name); // critical
-  });
-
-  const { data } = await axios.post(`${API}/models/append`, form, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-      "x-user-id": userId,
-    },
-  });
-
-  return data;
-}
-
-// ---------- Delete files
-export async function deleteModelFile({ id, filePath, isPrivate, userId, sourcePath }) {
-  const base = sourcePath || (isPrivate
-    ? `users/${encodeURIComponent(userId)}/models/${id}`
-    : `models/${id}`);
-
-  // filePath is relative inside /files/
-  const { data } = await axios.delete(`${API}/models/file`, {
-    data: { base, filePath, userId },
-  });
-  return data;
-}
-
-
-
-/* ---------- Settings ---------- */
-// change visibility
-export async function updateVisibility(id, { visibility, userId }) {
-  const { data } = await axios.patch(
-    `${API}/models/${encodeURIComponent(id)}/visibility`,
-    { visibility, userId },
-    { headers: userId ? { 'x-user-id': userId } : {} }
-  );
-  return data;
-}
-
-// update metadata (name/owner/description/tags)
-export async function updateMeta(id, { name, owner, description, tags, userId }) {
-  const { data } = await axios.patch(
-    `${API}/models/${encodeURIComponent(id)}/meta`,
-    { name, owner, description, tags, userId },
-    { headers: userId ? { 'x-user-id': userId } : {} }
-  );
-  return data;
-}
-
-// delete repository
-export async function deleteModel(id, { userId }) {
-  const { data } = await axios.delete(
-    `${API}/models/${encodeURIComponent(id)}`,
-    { data: { userId }, headers: userId ? { 'x-user-id': userId } : {} }
-  );
-  return data;
-}
-
-
-
-/* ---------- Overview Tab ---------- */
-// get README.md
-export async function getReadme(id, { userId } = {}) {
-  const res = await axios.get(`${API}/models/${encodeURIComponent(id)}/readme`, {
-    params: userId ? { userId } : {}
-  });
-  return typeof res.data === 'string' ? res.data : (res.data ?? '');
-}
-
-// save README.md
-export async function saveReadme(id, { markdown, userId }) {
-  const { data } = await axios.put(
-    `${API}/models/${encodeURIComponent(id)}/readme`,
-    { markdown, userId },
-    { headers: userId ? { 'x-user-id': userId } : {} }
-  );
-  return data;
-}
-
-
-/* ---------- Manifest.json ---------- */
-// get Manifest
-export async function getManifest(id, { userId } = {}) {
-  const res = await axios.get(
-    `${API}/models/${encodeURIComponent(id)}/manifest`,
-    { params: userId ? { userId } : {} }
-  );
-  return res.data; // should be the JSON contents of manifest.json
+/**
+ * /api/models/{name}/versions
+ * Returns version list of a specific model
+ */
+export async function listModelVersions(name) {
+  const url = `${BASE}/models/${encodeURIComponent(name)}/versions`;
+  const { data } = await axios.get(url);
+  return { cards: data, items: data.map(mapToItem) };
 }
