@@ -22,7 +22,7 @@ LOW_QUALITY_PATTERNS = ["contact", "privacy", "terms", "login", "disclaimer", "a
 DEFAULT_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
               "AppleWebKit/537.36 (KHTML, like Gecko) "
               "Chrome/120.0.0.0 Safari/537.36 (AIWebScraper)")
-MAX_DEPTH = 2 # set to 4 for proudction and 1 or 2 for development 
+MAX_DEPTH = 1 # set to 4 for proudction and 1 or 2 for development 
 MAX_PAGES = 6000
 
 
@@ -65,7 +65,7 @@ def extract_links(base_url: str, html: str) -> List[str]:
         full = normalizeUrl(urljoin(base_url, href))
         links.append(full)
 
-    # NEW: detect hidden fragment navigation stored in IDs
+    # detect hidden fragment navigation stored in IDs
     fragment_links = extract_fragment_id_links(base_url, html)
     links.extend(fragment_links)
 
@@ -192,9 +192,9 @@ def extract_jsonld(html: str) -> list:
         raw=(s.string or s.get_text() or "").strip()
         if not raw: continue
         try:
-            raw = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)      # strip /* */
-            raw = re.sub(r"^\s*//.*?$", "", raw, flags=re.M)     # strip //
-            data=json.loads(re.sub(r",\s*([}\]])", r"\1", raw))  # fix trailing commas
+            raw = re.sub(r"/\*.*?\*/", "", raw, flags=re.S) # strip /* */
+            raw = re.sub(r"^\s*//.*?$", "", raw, flags=re.M) # strip //
+            data=json.loads(re.sub(r",\s*([}\]])", r"\1", raw)) # fix trailing commas
             out.extend(data if isinstance(data, list) else [data])
         except Exception:
             pass
@@ -370,7 +370,7 @@ def scrape_website(
                     })
                     continue
 
-                # extract text (reuse your helpers)
+                # extract text
                 body_html = extract_body_content(html)
                 text = clean_body_content(body_html)
 
@@ -387,7 +387,7 @@ def scrape_website(
                     continue
                 seen_signatures.add(sig)
 
-                # optional low-quality filter (keep your logic)
+                # low-quality filter
                 if any(p in url.lower() for p in LOW_QUALITY_PATTERNS):
                     print(f"⚠️ Low-quality pattern hit: {url}")
                     # do NOT block traversal; still discover links
@@ -407,7 +407,7 @@ def scrape_website(
                 if depth >= max_depth:
                     continue
 
-                # discover + print next-layer links (reuse your logic)
+                # discover + print next-layer links
                 links = extract_links(url, html)
 
                 if links:
