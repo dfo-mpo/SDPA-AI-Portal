@@ -321,6 +321,9 @@ export function WebScraper() {
   const [messages, setMessages] = useState([]);     // [{role, content, timestamp}]
   const [currentMessage, setCurrentMessage] = useState("");
   const [isResponding, setIsResponding] = useState(false);
+  const [chatByUrl, setChatByUrl] = useState({});
+  const chatByUrlRef = React.useRef({});
+  const selectedUrlRef = React.useRef(selectedUrl);
 
   // auto-scroll to newest message
   const listRef = React.useRef(null);
@@ -336,6 +339,22 @@ export function WebScraper() {
 
   // keep a fresh pointer to messages
   useEffect(() => { messagesRef.current = messages; }, [messages]);
+
+  // keep a fresh pointer to chatByUrl
+  useEffect(() => { chatByUrlRef.current = chatByUrl; }, [chatByUrl]);
+
+  // keep a fresh pointer to selectedUrl
+  useEffect(() => { selectedUrlRef.current = selectedUrl; }, [selectedUrl]);
+
+  // whenever messages change, store them under the current URL key
+  useEffect(() => {
+    if (!selectedUrlRef.current) return;
+    const key = urlKeyStrict(selectedUrlRef.current);
+    setChatByUrl(prev => ({
+      ...prev,
+      [key]: messages,
+    }));
+  }, [messages]);
 
   const filtered = useMemo(() => {
     if (!q.trim()) return presets;
@@ -450,6 +469,16 @@ export function WebScraper() {
   const openChatForUrl = (url) => {
     setSelectedUrl(url);
     setChatOpen(true);
+    const key = urlKeyStrict(url);
+    const existing = chatByUrlRef.current[key];
+
+    // if we’ve already chatted with this URL, restore its history
+    if (existing && existing.length) {
+      setMessages(existing);
+      return;
+    }
+
+    // otherwise, start a fresh chat for this URL
     setMessages([{
       role: "bot",
       content: `Chatting over “${url}”. Ask away!`,
