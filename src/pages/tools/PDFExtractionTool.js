@@ -465,7 +465,7 @@ export function PDFExtractionTool() {
           <Box sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
             {/* brief explaination of all the optionss */}
             <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-              You have <b>3</b> ways to define fields. Pick one, or mix &amp; match:
+              You can either <b>upload a CSV/JSON schema</b> or <b>define fields manually</b>.
             </Typography>
 
             {/* Option 1: Upload CSV/JSON Schema */}
@@ -504,97 +504,22 @@ export function PDFExtractionTool() {
               <Typography variant="caption" color="text.secondary">OR</Typography>
             </Divider>
 
-            {/* Option 2: Quick Add Presets */}
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-              <Chip label="Option 2" size="small" color="primary" variant="outlined" />
-              <Typography variant="subtitle1" fontWeight={700}>
-                Quick Add Presets
-              </Typography>
-            </Stack>
-            <Box sx={{ p: 1, mb: 2 }}>
-              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(160px,1fr))", gap: 1 }}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{ textTransform: "none", minHeight: 44 }}
-                  onClick={() => {
-                    const preset = ["Paper Title","Authors","Publication Year","Abstract","Methodology","Results","Conclusion"];
-                    const seen = new Set(fields.map(x => x.toLowerCase().trim()));
-                    const toAdd = preset.filter(p => !seen.has(p.toLowerCase().trim()));
-                    setFields(prev => [...prev, ...toAdd]);
-                    setPresetStatus({
-                      type: "success",
-                      msg: `Research Paper Preset added: ${preset.length} fields (${toAdd.length} new).`
-                    });
-                  }}
-                >
-                  Research Paper
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{ textTransform: "none", minHeight: 44 }}
-                  onClick={() => {
-                    const preset = ["Document Title","Company Name","Date","Executive Summary","Key Findings","Recommendations"];
-                    const seen = new Set(fields.map(x => x.toLowerCase().trim()));
-                    const toAdd = preset.filter(p => !seen.has(p.toLowerCase().trim()));
-                    setFields(prev => [...prev, ...toAdd]);
-                    setPresetStatus({
-                      type: "success",
-                      msg: `Business Document Preset added: ${preset.length} fields (${toAdd.length} new).`
-                    });
-                  }}
-                >
-                  Business Document
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{ textTransform: "none", minHeight: 44 }}
-                  onClick={() => {
-                    const preset = ["Invoice Number","Invoice Date","Subtotal","Taxes","Total Amount Due","Currency","Payment Terms"];
-                    const seen = new Set(fields.map(x => x.toLowerCase().trim()));
-                    const toAdd = preset.filter(p => !seen.has(p.toLowerCase().trim()));
-                    setFields(prev => [...prev, ...toAdd]);
-                    setPresetStatus({
-                      type: "success",
-                      msg: `Invoice Preset added: ${preset.length} fields (${toAdd.length} new).`
-                    });
-                  }}
-                >
-                  Invoice
-                </Button>
-              </Box>
-            </Box>
+            {/* Option 2: Manual Fields + Presets */}
+            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+              Option 2 – Manual fields (with presets)
+            </Typography>
 
-            {/* Preset Alert Status (Success, info or faiilure) */}
-            {presetStatus && (
-              <Alert
-                severity={presetStatus.type}
-                sx={{ mt: 1 }}
+            <Box sx={{ p: 1, mb: 2 }}>
+              {/* Manual input row */}
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 1,
+                  alignItems: "center",
+                  mb: 1,
+                  flexWrap: "wrap",
+                }}
               >
-                <AlertTitle sx={{ fontWeight: 600 }}>
-                  {presetStatus.type === "success" ? "✓ Preset applied"
-                    : presetStatus.type === "error" ? "Preset error" : "Working…"}
-                </AlertTitle>
-                {presetStatus.msg}
-              </Alert>
-            )}
-
-            {/* OR divider */}
-            <Divider sx={{ my: 2 }}>
-              <Typography variant="caption" color="text.secondary">OR</Typography>
-            </Divider>
-
-            {/* Option 3: Manual Fields */}
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-              <Chip label="Option 3" size="small" color="primary" variant="outlined" />
-              <Typography variant="subtitle1" fontWeight={700}>
-                Manual Fields
-              </Typography>
-            </Stack>
-            <Box sx={{ p: 1, mb: 2 }}>
-              <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1, flexWrap: "wrap" }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -602,27 +527,127 @@ export function PDFExtractionTool() {
                   value={newField}
                   onChange={(e) => setNewField(e.target.value)}
                 />
+
+              {/* Quick presets under the input */}
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1, flexBasis: "100%" }}>
+
                 <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => {
+                    const preset = [
+                      "Paper Title",
+                      "Authors",
+                      "Publication Year",
+                      "Abstract",
+                      "Methodology",
+                      "Results",
+                      "Conclusion",
+                    ];
+                    const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
+                    const toAdd = preset.filter(
+                      (p) => !seen.has(p.toLowerCase().trim())
+                    );
+                    setFields((prev) => [...prev, ...toAdd]);
+                    setPresetStatus({
+                      type: "success",
+                      msg: `Research Paper preset added: ${preset.length} fields (${toAdd.length} new).`,
+                    });
+                  }}
+                  sx={{ textTransform: "none", px: 1 }}
+                >
+                  + Research Paper
+                </Button>
+
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => {
+                    const preset = [
+                      "Document Title",
+                      "Company Name",
+                      "Date",
+                      "Executive Summary",
+                      "Key Findings",
+                      "Recommendations",
+                    ];
+                    const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
+                    const toAdd = preset.filter(
+                      (p) => !seen.has(p.toLowerCase().trim())
+                    );
+                    setFields((prev) => [...prev, ...toAdd]);
+                    setPresetStatus({
+                      type: "success",
+                      msg: `Business Document preset added: ${preset.length} fields (${toAdd.length} new).`,
+                    });
+                  }}
+                  sx={{ textTransform: "none", px: 1 }}
+                >
+                  + Business Document
+                </Button>
+
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => {
+                    const preset = [
+                      "Invoice Number",
+                      "Invoice Date",
+                      "Subtotal",
+                      "Taxes",
+                      "Total Amount Due",
+                      "Currency",
+                      "Payment Terms",
+                    ];
+                    const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
+                    const toAdd = preset.filter(
+                      (p) => !seen.has(p.toLowerCase().trim())
+                    );
+                    setFields((prev) => [...prev, ...toAdd]);
+                    setPresetStatus({
+                      type: "success",
+                      msg: `Invoice preset added: ${preset.length} fields (${toAdd.length} new).`,
+                    });
+                  }}
+                  sx={{ textTransform: "none", px: 1 }}
+                >
+                  + Invoice
+                </Button>
+              </Box>
+              <Button
                   variant="outlined"
                   size="small"
                   onClick={addField}
-                  sx={{ textTransform: "none", "&.MuiButton-contained": { color: "white" } }}
+                  sx={{ textTransform: "none" }}
                 >
                   Add
                 </Button>
               </Box>
 
-              {/* Manual Upload Alert Status (Success, info or faiilure) */}
+              {/* Alerts: manual + preset */}
               {manualStatus && (
-                <Alert
-                  severity={manualStatus.type}
-                  sx={{ mt: 1 }}
-                >
+                <Alert severity={manualStatus.type} sx={{ mt: 1 }}>
                   <AlertTitle sx={{ fontWeight: 600 }}>
-                    {manualStatus.type === "success" ? "✓ Field updated"
-                      : manualStatus.type === "error" ? "Field error" : "Working…"}
+                    {manualStatus.type === "success"
+                      ? "✓ Field updated"
+                      : manualStatus.type === "error"
+                      ? "Field error"
+                      : "Working…"}
                   </AlertTitle>
                   {manualStatus.msg}
+                </Alert>
+              )}
+
+              {presetStatus && (
+                <Alert severity={presetStatus.type} sx={{ mt: 1 }}>
+                  <AlertTitle sx={{ fontWeight: 600 }}>
+                    {presetStatus.type === "success"
+                      ? "✓ Preset applied"
+                      : presetStatus.type === "error"
+                      ? "Preset error"
+                      : "Working…"}
+                  </AlertTitle>
+                  {presetStatus.msg}
                 </Alert>
               )}
 
@@ -692,7 +717,7 @@ export function PDFExtractionTool() {
       {extractionStatus && (
         <Alert severity={extractionStatus.type} sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
           <AlertTitle sx={{ fontWeight: 600 }}>
-            {extractionStatus.type === "success" ? "✓ Extraction complete" : "Extraction error"}
+            {extractionStatus.type === "success" ? "✓ Extraction complete" : "Extraction Status"}
           </AlertTitle>
           {extractionStatus.msg}
         </Alert>
