@@ -777,6 +777,10 @@ export function WebScraper() {
               Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} variant="rounded" height={84} sx={{ mb: 1 }} />
               ))
+            ) : presets.length === 0 ? (
+              <Typography align="center" color="text.secondary" sx={{ py: 2 }}>
+                No websites scraped yet. Paste a URL above and click <b>Add</b> to get started.
+              </Typography>
             ) : filtered.length ? (
               filtered.map((item) => (
                 <Box key={item.url} sx={{ mb: 1 }}>
