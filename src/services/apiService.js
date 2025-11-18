@@ -20,8 +20,7 @@ import {
  * Base URL for the FastAPI backend.
  * Note: For HTTP requests we use http://, and for WebSocket connections we’ll use ws://.
  */
-// const API_BASE_URL = 'localhost:8080';
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'localhost:8000';
 
 /**
  * Process a video for fish counting
@@ -40,7 +39,7 @@ export const processFenceCounting = async (file, settings = {}) => {
   // Currently no settings are added to formData since backend doesn't support them
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/fence_counting/`, formData, {
+    const response = await axios.post(`http://${API_BASE_URL}/fence_counting/`, formData, {
       responseType: 'blob',
     });
     return response.data;
@@ -67,7 +66,7 @@ export const processScaleAge = async (file, settings = {}) => {
   formData.append('species', adaptedSettings.species);
   try {
     console.log("Sending species:", adaptedSettings.species);
-    const response = await fetch(`${API_BASE_URL}/age_scale/`, {
+    const response = await fetch(`http://${API_BASE_URL}/age_scale/`, {
       method: 'POST',
       body: formData
     });
@@ -96,7 +95,7 @@ export const convertToPng = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
   try {
-    const response = await axios.post(`${API_BASE_URL}/to_png/`, formData, {
+    const response = await axios.post(`http://${API_BASE_URL}/to_png/`, formData, {
       responseType: 'blob',
     });
     return response.data;
@@ -146,7 +145,7 @@ export const analyzeCsvPdf = async (csvFile, pdfFile, settings = {}) => {
         params.append('outputType', adaptedSettings.outputType);
       }
       const response = await axios.post(
-        `${API_BASE_URL}/openai_csv_analyze/?${params.toString()}`, 
+        `http://${API_BASE_URL}/openai_csv_analyze/?${params.toString()}`, 
         formData, 
         { responseType: 'blob' }
       );
@@ -205,7 +204,7 @@ export const redactPII = async (file, settings = {}) => {
     formData.append(key, value);
   }
   try {
-    const response = await axios.post(`${API_BASE_URL}/pii_redact/`, formData, {
+    const response = await axios.post(`http://${API_BASE_URL}/pii_redact/`, formData, {
       responseType: 'blob',
       timeout: 60000 // 60 second timeout for processing larger documents
     });
@@ -231,7 +230,7 @@ export const translateToFrench = async (file, settings = {}) => {
   // In the future, when backend supports settings, add them to formData here
   // Currently, no settings are added since backend doesn't accept any
   try {
-    const response = await fetch(`${API_BASE_URL}/pdf_to_french/`, {
+    const response = await fetch(`http://${API_BASE_URL}/pdf_to_french/`, {
       method: 'POST',
       body: formData
     });
@@ -282,7 +281,7 @@ export const calculateSensitivityScore = async (file, settings = {}) => {
 
 
   try {
-    const response = await fetch(`${API_BASE_URL}/sensitivity_score/`, {
+    const response = await fetch(`http://${API_BASE_URL}/sensitivity_score/`, {
       method: 'POST',
       body: formData
     });
@@ -304,14 +303,13 @@ export const processPdfDocument = async (files) => {
     formData.append(files.length > 1? 'files' : 'file', files[i]);
   }
   try {
-    const response = await fetch(files.length > 1? `${API_BASE_URL}/di_chunk_multi_document/` : `${API_BASE_URL}/di_chunk_single_document/`, {
+    const response = await fetch(files.length > 1? `http://${API_BASE_URL}/di_chunk_multi_document/` : `http://${API_BASE_URL}/di_chunk_single_document/`, {
       method: 'POST',
       body: formData
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
     return await response.json();
   } catch (error) {
     console.error('Error in processPdfDocument:', error);
@@ -331,10 +329,7 @@ export async function* askOpenAI(chatHistory, currentMessage, documentContent, s
   // Use the adapter to transform settings
   const adaptedSettings = adaptPdfChatbotSettings(settings);
   
-  // Determine the correct protocol based on the current page
-  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-  // Build the endpoint URL using the current host and a relative path
-  const wsUrl = `${protocol}://${window.location.host}/ws/chat_stream`;
+  const wsUrl = `ws://${API_BASE_URL.replace('http://', '')}/ws/chat_stream`;
   const socket = new WebSocket(wsUrl);
 
   await new Promise((resolve, reject) => {

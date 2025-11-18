@@ -52,23 +52,23 @@ export default function ToolPage({
   // Local styles
   const styles = {
     actionContainer: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 2,
-      flexWrap: 'wrap' // Allow items to wrap on smaller screens
+      // display: 'flex',
+      // alignItems: 'center',
+      // gap: 2,
+      // flexWrap: 'wrap' // Allow items to wrap on smaller screens
     },
     validationWarning: {
-      color: 'error.main',
-      fontSize: '0.75rem',
-      ml: 1,
-      fontWeight: 500
+      // color: 'error.main',
+      // fontSize: '0.75rem',
+      // ml: 1,
+      // fontWeight: 500
     },
     // Add responsive container for content
     contentContainer: {
-      width: '100%',
-      maxWidth: '100%',
-      overflowX: 'auto', // Allow horizontal scrolling if needed
-      wordBreak: 'break-word' // Break long words to prevent overflow
+      // width: '100%',
+      // maxWidth: '100%',
+      // overflowX: 'auto', // Allow horizontal scrolling if needed
+      // wordBreak: 'break-word' // Break long words to prevent overflow
     }
   };
   
@@ -96,116 +96,118 @@ export default function ToolPage({
 
   return (
     <>
-      <Banner
-        title={title}
-        description={shortDescription}
-        backgroundImage={backgroundImage}
-        variant="hero"
-      />
+      <Box sx={toolStyles.toolPageWrapper}>
+        <Banner
+          title={title}
+          description={shortDescription}
+          backgroundImage={backgroundImage}
+          variant="hero"
+        />
 
-      <ToolContentWrapper>
-        <Box sx={styles.contentContainer}>
-          <Stack spacing={2} alignItems="flex-start">
-            <Typography sx={{
-              ...toolStyles.description,
-              overflowWrap: 'break-word',
-              hyphens: 'auto'
-            }}>
-              {longDescription}
-            </Typography>
+        <ToolContentWrapper>
+          <Box sx={styles.contentContainer}>
+            <Stack spacing={2} alignItems="flex-start">
+              <Typography sx={{
+                ...toolStyles.description,
+                overflowWrap: 'break-word',
+                hyphens: 'auto'
+              }}>
+                {longDescription}
+              </Typography>
 
-            {/* Hidden file input element - key ensures it's recreated when reset occurs */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              key={uploadKey} // This ensures the input is recreated when uploadKey changes
-              style={{ display: 'none' }}
-              onChange={onFileChange}
-              accept=".pdf,.docx,.doc,.xlsx,.csv,.txt"
-              multiple={mutliUpload}
-            />
+              {/* Hidden file input element - key ensures it's recreated when reset occurs */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                key={uploadKey} // This ensures the input is recreated when uploadKey changes
+                style={{ display: 'none' }}
+                onChange={onFileChange}
+                accept=".pdf,.docx,.doc,.xlsx,.csv,.txt"
+                multiple={mutliUpload}
+              />
 
-            {/* Upload button with loading indicator - only shown if not hidden */}
-            {!hideActionButton && (
-              <div styles={{display: 'flex', justifyContent: 'space-around', flexDirection: 'row'}}>
+              {/* Upload button with loading indicator - only shown if not hidden */}
+              {!hideActionButton && (
+                <div styles={{display: 'flex', justifyContent: 'space-around', flexDirection: 'row'}}>
+                  <Box sx={styles.actionContainer}>
+                    <Button 
+                      variant="contained"
+                      onClick={() => {
+                        trackEvent('File Upload', 'Click', ToolPage.title);
+                        fileInputRef.current?.click();
+                      }}
+                      disabled={isProcessing || !isFormValid}
+                      startIcon={<Upload size={16} />}
+                      sx={{
+                        ...toolStyles.actionButton,
+                        whiteSpace: 'nowrap' // Prevent button text from wrapping
+                      }}
+                    >
+                      {actionButtonText}
+                    </Button>
+
+                    {isProcessing && (
+                      <CircularProgress size={24} sx={{ ml: 2 }} />
+                    )}
+                    
+                    {!isFormValid && validationMessage && (
+                      <Typography sx={styles.validationWarning}>
+                        {validationMessage}
+                      </Typography>
+                    )}
+                  </Box>
+                  {/* {downloadSamplesBtn && downloadSamplesBtn.length > 0 ? (  
+                    downloadSamplesBtn.map((sample, index) => {  
+                      return (  
+                        <Box key={index} sx={styles.actionContainer}>  
+                          <Button  
+                            variant="contained"  
+                            onClick={() => {  
+                              trackEvent('File Upload', 'Click', ToolPage.title);  
+                              fileInputRef.current?.click();  
+                            }}  
+                            disabled={isProcessing || !isFormValid}  
+                            startIcon={<Upload size={16} />}  
+                            sx={{  
+                              ...toolStyles.actionButton,  
+                              whiteSpace: 'nowrap' // Prevent button text from wrapping  
+                            }}  
+                          >  
+                            {actionButtonText}  
+                          </Button>  
+                        </Box>  
+                      );  
+                    })  
+                  ) : (  
+                    <p>No samples available</p> // Render a message if no samples are available  
+                  )}   */}
+                </div>
+              )}
+
+              
+              
+              {inProgress && (
                 <Box sx={styles.actionContainer}>
                   <Button 
                     variant="contained"
-                    onClick={() => {
-                      trackEvent('File Upload', 'Click', ToolPage.title);
-                      fileInputRef.current?.click();
-                    }}
-                    disabled={isProcessing || !isFormValid}
+                    onClick={() => {}}
                     startIcon={<Upload size={16} />}
                     sx={{
                       ...toolStyles.actionButton,
                       whiteSpace: 'nowrap' // Prevent button text from wrapping
                     }}
                   >
-                    {actionButtonText}
+                    Upload
                   </Button>
-
-                  {isProcessing && (
-                    <CircularProgress size={24} sx={{ ml: 2 }} />
-                  )}
-                  
-                  {!isFormValid && validationMessage && (
-                    <Typography sx={styles.validationWarning}>
-                      {validationMessage}
-                    </Typography>
-                  )}
-                </Box>
-                {/* {downloadSamplesBtn && downloadSamplesBtn.length > 0 ? (  
-                  downloadSamplesBtn.map((sample, index) => {  
-                    return (  
-                      <Box key={index} sx={styles.actionContainer}>  
-                        <Button  
-                          variant="contained"  
-                          onClick={() => {  
-                            trackEvent('File Upload', 'Click', ToolPage.title);  
-                            fileInputRef.current?.click();  
-                          }}  
-                          disabled={isProcessing || !isFormValid}  
-                          startIcon={<Upload size={16} />}  
-                          sx={{  
-                            ...toolStyles.actionButton,  
-                            whiteSpace: 'nowrap' // Prevent button text from wrapping  
-                          }}  
-                        >  
-                          {actionButtonText}  
-                        </Button>  
-                      </Box>  
-                    );  
-                  })  
-                ) : (  
-                  <p>No samples available</p> // Render a message if no samples are available  
-                )}   */}
-              </div>
-            )}
-
-            
-            
-            {inProgress && (
-              <Box sx={styles.actionContainer}>
-                <Button 
-                  variant="contained"
-                  onClick={() => {}}
-                  startIcon={<Upload size={16} />}
-                  sx={{
-                    ...toolStyles.actionButton,
-                    whiteSpace: 'nowrap' // Prevent button text from wrapping
-                  }}
-                >
-                  Upload
-                </Button>
-              </Box> 
-            )}
-            
-            {/* Tool-specific content (results, additional UI) */}
-            {children}
-          </Stack>
-        </Box>
-      </ToolContentWrapper>
+                </Box> 
+              )}
+              
+              {/* Tool-specific content (results, additional UI) */}
+              {children}
+            </Stack>
+          </Box>
+        </ToolContentWrapper>
+      </Box>
     </>
   );
 }
