@@ -9,7 +9,17 @@ import {
   Table, TableHead, TableRow, TableCell, TableBody, TableContainer, CircularProgress 
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+  Upload,
+  FileText,
+  Download,
+  Table as TableIcon,
+  AlertTriangle,
+  ListChecks,
+} from "lucide-react";
 
 const API_BASE = "http://localhost:8000";
 
@@ -874,7 +884,7 @@ export function PDFExtractionTool() {
         aria-label="Open instructions"
         title="Open instructions"
       >
-        {"?"}
+        <HelpCircle size={18} />
       </Button>
 
       {/* Right sliding instructions drawer */}
@@ -882,52 +892,165 @@ export function PDFExtractionTool() {
         anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        PaperProps={{ sx: { width: 360, background: "#f5f5f5" } }}
+        PaperProps={{ sx: { width: 380, background: "#f5f5f5" } }}
       >
-        <Box sx={{ p: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-            <Typography variant="h2" fontWeight={700}>How to Use</Typography>
+        <Box sx={{ p: 2.5 }}>
+          {/* Header */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 1,
+            }}
+          >
+            <Typography variant="h4" fontWeight={700}>
+              How to use this tool
+            </Typography>
           </Box>
 
           <Divider sx={{ my: 3 }} />
 
-          <Typography variant="h4" fontWeight={700} sx={{ mb: 1.5 }}>
-            Steps
+          {/* 1. Upload PDFs */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+            1. Upload PDF(s)
           </Typography>
-          <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.7 }}>
-            <b>1.</b> <b>Upload PDF(s)</b> (one or many).  
-            <br/><b>2.</b> (Optional) Upload a <b>CSV/JSON schema</b> to auto-populate extraction fields.  
-            <br/><b>3.</b> Add or edit <b>custom fields</b> (e.g., “Authors”, “Methodology”, “Invoice Total”).  
-            <br/><b>4.</b> Click <b>Extract Information</b> to get per-field answers, with source & reasoning.  
-            <br/><b>5.</b> <b>Download</b> results as CSV/JSON and ask follow-up questions.
-          </Typography>
+          <Stack spacing={1.1} sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Upload size={22} />
+              <span>
+                Click <b>Select PDF(s)</b> in the{" "}
+                <b>“Upload PDF(s)”</b> section to add one or more files.
+              </span>
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <FileText size={24} />
+              <span>
+                Use the built-in <b>preview viewer</b> to scroll through the
+                selected PDF and verify it loaded correctly.
+              </span>
+            </Typography>
+          </Stack>
 
           <Divider sx={{ my: 3 }} />
 
-          <Typography variant="h4" fontWeight={700}>Quick Add Presets</Typography>
-          <Typography variant="body2" sx={{ mt: 1.5, lineHeight: 1.7 }}>
-            • <b>Research Paper</b>: Paper Title, Authors, Year, Abstract, Methodology, Results, Conclusion  
-            <br/>• <b>Business Doc</b>: Document Title, Company, Date, Executive Summary, Key Findings, Recommendations  
-            <br/>• <b>Invoice</b>: Invoice #, Dates, Parties, Line Items, Subtotal, Tax, Total, Terms
+          {/* 2. Define fields */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+            2. Define question fields
           </Typography>
+          <Stack spacing={1.1} sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <FileText size={24} />
+              <span>
+                Option 1: <b>Upload a CSV/JSON schema</b> to auto-populate
+                fields (column headers / JSON keys).
+              </span>
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <ListChecks size={40} />
+              <span>
+                Option 2: <b>Add fields manually</b> (e.g. “Authors”, “Total
+                Amount Due”) and use the <b>presets</b> for common layouts like
+                Research Papers, Business Docs, or Invoices.
+              </span>
+            </Typography>
+          </Stack>
 
           <Divider sx={{ my: 3 }} />
 
-          <Typography variant="h4" fontWeight={700}>Example Prompts</Typography>
-          <Typography variant="body2" sx={{ mt: 1.5, lineHeight: 1.7 }}>
-            • “Summarize each PDF in 5 bullets.”  
-            <br/>• “What are the key findings in Section 3?”  
-            <br/>• “Return the single total amount due and currency.”
+          {/* 3. Extract & download */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+            3. Extract and review results
           </Typography>
+          <Stack spacing={1.1} sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Download size={24} />
+              <span>
+                Click <b>Extract Information</b> to run field-by-field
+                extraction across all uploaded PDFs.
+              </span>
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <TableIcon size={24} />
+              <span>
+                Use the <b>View Results</b> section to inspect answers, source
+                snippets, and reasoning in the results table.
+              </span>
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Download size={24} />
+              <span>
+                Download the output as <b>CSV</b> or <b>JSON</b> for further
+                analysis or integration into your own workflows.
+              </span>
+            </Typography>
+          </Stack>
 
           <Divider sx={{ my: 3 }} />
 
-          <Typography variant="h4" fontWeight={700}>Tips</Typography>
-          <Typography variant="body2" sx={{ mt: 1.5, lineHeight: 1.7 }}>
-            • For long PDFs, ask for a <b>summary</b> first, then drill down.  
-            <br/>• Use a <b>schema CSV/JSON</b> to speed up field creation and avoid duplicates.  
+          {/* Be aware / limitations */}
+          <Typography
+            variant="subtitle1"
+            fontWeight={700}
+            sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <AlertTriangle size={18} />
+            Be aware
           </Typography>
 
+          <Stack spacing={1.1} sx={{ mb: 1.5 }}>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
+            >
+              <AlertTriangle size={24} style={{ marginTop: 2 }} />
+              <span>
+                Only upload <b>public, non-sensitive PDFs</b>. Avoid protected,
+                confidential, or classified documents.
+              </span>
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
+            >
+              <TableIcon size={24} style={{ marginTop: 2 }} />
+              <span>
+                Extraction quality depends on <b>PDF structure</b>. Clean,
+                text-based PDFs will perform better than scanned, low-quality
+                ones.
+              </span>
+            </Typography>
+          </Stack>
+
+          <Typography
+            variant="body2"
+            sx={{ mt: 1, fontSize: 12, lineHeight: 1.6 }}
+          >
+            This tool is meant for <b>experimentation and demos</b>. Double-check
+            important values (totals, dates, names) before using them in any
+            official report or workflow.
+          </Typography>
         </Box>
       </Drawer>
 
