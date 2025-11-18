@@ -100,7 +100,7 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
         </Select>
       </SettingFormControl>
       
-      <SettingDivider />
+      {/* <SettingDivider /> */}
       
       {/* Context Window Slider */}
       <Box>
@@ -141,7 +141,7 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
         </Box>
       </Box>
       
-      <SettingDivider />
+      {/* <SettingDivider /> */}
       
       {/* Temperature Slider */}
       <Box>
@@ -185,7 +185,7 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
         </Box>
       </Box>
       
-      <SettingDivider />
+      {/* <SettingDivider /> */}
       
       {/* Follow-up Questions Option */}
       <SettingRow

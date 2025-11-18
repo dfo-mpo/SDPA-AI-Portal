@@ -172,7 +172,7 @@ export default function PIIRedactorSettings() {
         </RadioGroup>
       </Box>
 
-      <SettingDivider />
+      {/* <SettingDivider /> */}
 
       {/* Detection Sensitivity Section */}
       <Box sx={{ mb: -3 }}>
@@ -188,24 +188,26 @@ export default function PIIRedactorSettings() {
           sx={{ mb: 0.75 }}
         />
 
-        <Box sx={{ px: 2, mt: 2, mb: 1 }}>
+        <Box sx={commonStyles.sliderContainer}>
           <Slider
             value={piiRedactorSettings.detectionSensitivity}
             onChange={handleSensitivityChange}
-            min={1}
-            max={10}
+            aria-labelledby="detection-sensitivity-slider"
             step={1}
             marks={[
               { value: 1, label: translations?.sensitivityLow || 'Conservative' },
               { value: 5, label: translations?.sensitivityMedium || 'Balanced' },
               { value: 10, label: translations?.sensitivityHigh || 'Aggressive' },
             ]}
+            min={1}
+            max={10}
+            size="small"
             sx={commonStyles.slider}
             disabled
           />
         </Box>
         
-        <Box sx={{ px: 2, mt: 1, mb: 1 }}>
+        <Box sx={{ py: 2 }}>
           <Typography variant="caption" color="text.secondary">
             {translations?.sensitivityDescription || 
               "Conservative: Fewer false positives, might miss some PII. Aggressive: Catches more PII, might redact non-sensitive text."}
@@ -213,12 +215,18 @@ export default function PIIRedactorSettings() {
         </Box>
       </Box>
 
-      <SettingDivider />
+      {/* <SettingDivider /> */}
 
       {/* Information Categories Section - Enhanced with Canadian-specific items */}
-      <Box sx={{ mt: -2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1,
+        }}
+      >
         <SettingAlignedRow
-          left={<SettingHeader label={translations?.infoToRedact || "Information Types to Redact"} sx={{ mb: 0 }} />}
+          left={<SettingHeader label={translations?.infoToRedact || "Information Types to Redact"} />}
           right={
             <Tooltip title={translations?.infoTooltip || "Select which categories of information should be identified and redacted"}>
               <IconButton size="small">
@@ -226,10 +234,16 @@ export default function PIIRedactorSettings() {
               </IconButton>
             </Tooltip>
           }
-          sx={{ mb: 1 }}
+          // sx={{ mb: 1 }}
         />
         
-        <Box sx={{ mt: 1}}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+          }}
+        >
           {/* Category checkboxes with descriptions */}
           {Object.entries(piiRedactorSettings.categories).map(([category, settings]) => (
             <Paper 

@@ -8,11 +8,14 @@
 
 import React, { useState, Suspense, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Box, Paper, CircularProgress, Alert } from '@mui/material';
+import { useTheme, useMediaQuery, Box, Paper, CircularProgress, Alert, IconButton } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import { GovHeader, LeftPanel } from '.';
 import { getToolByName, getParam, getAllParams, updateURLParams } from '../utils';
 import { HomePage, DocxEditor, SurveyForm } from '../pages';
-import { useLanguage } from '../contexts';
+import { useLanguage, useAuth } from '../contexts';
 import { Footer, TermsModalContainer } from '../components/common';
 import { getLayoutTranslations } from '../translations/layout'
 import {
@@ -34,16 +37,27 @@ import {
 } from '../pages/tools';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
-export default function Dashboard({ onLogout, onLogin, isAuth }) {
+export default function Dashboard({ onLogout, onLogin }) {
   // Store the selected tool name
   const [selectedTool, setSelectedTool] = useState('');
   const [headerHeight, setHeaderHeight] = useState(80); // Default to 80px, dynamically updated
   const { language } = useLanguage();
   const dashboardTranslations = getLayoutTranslations('dashboard', language);
   const [showDisabledAlert, setShowDisabledAlert] = useState(false);
+  
+  const leftPanelWidth = '380';
+  const collapsedLeftPanelWidth = '66';
+
+  const theme = useTheme();
 
   // Use the styling hook with the dashboard style collection
   const styles = useComponentStyles('dashboard', { headerHeight });
+
+  // Use auth context for log in validation
+  const isAuth = useAuth();
+
+  // Matches "Md" size (above 'md' breakpoint)
+  const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
 
   // Determine if we're on the home page (no tool selected)
   const isHomePage = !selectedTool;
@@ -72,6 +86,17 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
     const tool = getToolByName(toolName);
     return tool && tool.disabled;
   };
+
+  // Set state for showing LeftPanel
+  const [showLeftPanel, setShowLeftPanel] = useState(true);
+  const toggleLeftPanel = () => setShowLeftPanel((prev) => !prev);
+
+  // Force to show the LeftPanel if screen size below md
+  useEffect(() => {
+    if (!isMdUp) {
+      setShowLeftPanel(true);
+    }
+  }, [isMdUp]);
 
   // Handle direct URL navigation attempts
   useEffect(() => {
@@ -156,11 +181,18 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
     return (
       <>
         {showDisabledAlert && (
-          <Box sx={{ maxWidth: 800, mt: 4, px: 2 }}>
+          <Box sx={{ maxWidth: 800 }}>
             <Alert 
               severity="warning" 
-              sx={{ mb: 2 }}
-              onClose={() => setShowDisabledAlert(false)}
+              sx={{ 
+                mb: 3,
+                borderRadius: 2,
+                '& .MuiAlert-icon': {
+                  color: theme.palette.warning.main,
+                  alignSelf: 'center'
+                },
+               }}
+              // onClose={() => setShowDisabledAlert(false)}
             >
               {dashboardTranslations.disabledToolAlert}
             </Alert>
@@ -177,86 +209,81 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
     );
   };
 
+  const renderToggleButton = () => {
+    if (isMdUp) {
+      return (
+        <IconButton
+          onClick={toggleLeftPanel}
+          size="string"
+          sx={{
+            position: 'absolute',
+            top: 20,
+            right: 12,
+            zIndex: 100,
+            transition: 'all 1s ease',
+            border: 'none',
+          }}
+        >
+          {showLeftPanel ? <MenuOpenIcon /> : <MenuIcon />}
+        </IconButton>
+      );
+    }
+    return null;
+  };
+
+  const renderHeader = (
+    <Box sx={styles.headerContainer}>
+      <GovHeader 
+        setHeaderHeight={setHeaderHeight} 
+        onLogout={onLogout}
+        onLogin={onLogin}
+      />
+    </Box>
+  );
+
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      minHeight: '100vh',
-      bgcolor: 'background.default' 
-    }}>
-      {/* Header with subtle extra padding */}
-      <Box sx={{
-        ...styles.container,
-        pb: 0.25,
-      }}>
-        <GovHeader setHeaderHeight={setHeaderHeight} />
+    <Box sx={styles.dashboardWrapper}>
+      {/* Screen width smaller than md */}
+      {!isMdUp && renderHeader}
+        
+      {/* Left Panel */}
+      <Box 
+        sx={{
+          ...styles.LeftPanelWrapper,
+          width: { xs: '100%', md: `${leftPanelWidth}px` },
+          minWidth: `${leftPanelWidth}px`,
+          transform: showLeftPanel ? 'translateX(0)' : `translateX(calc(-100% + ${collapsedLeftPanelWidth}px))`,
+          transition: 'all 0.3s ease',
+        }}
+      >
+        {/* {isHomePage && renderToggleButton()} */}
+        {renderToggleButton()}
+        <LeftPanel 
+          selectedTool={selectedTool} 
+          onSelectTool={handleToolSelect}  
+          isHomePage={isHomePage}
+          onLogout={onLogout}
+          onLogin={onLogin}
+          isMdUp={isMdUp}
+          showLeftPanel={showLeftPanel}
+        />
       </Box>
 
       {/* Main content area */}
-      <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        flexGrow: 1,
-        position: 'relative',
-        ...styles.mainWrapper,
-        // Improved overflow handling to prevent content hiding
-        overflowX: 'hidden',
-        overflowY: 'auto',
-        pt: 0.25 // 4px padding top
-      }}>
+      <Box 
+        sx={{
+          ...styles.mainWrapper,
+          ml: showLeftPanel ? 0 : `calc(-${leftPanelWidth}px + ${collapsedLeftPanelWidth}px)`,
+        }}
+      >
+        {isMdUp && renderHeader}
+        
         {/* Content wrapper with improved responsive layout and spacing */}
-        <Box sx={{
-          ...styles.contentWrapper,
-          display: 'flex',
-          // Responsive layout: column on mobile, row on desktop
-          flexDirection: { xs: 'column', md: 'row' },
-          flexGrow: 1,
-          gap: 2,
-          pt: 0.25 
-        }}>
-          {/* Left Panel with subtle spacing */}
-          <Box sx={{ 
-            width: { xs: '100%', md: 'auto' },
-            position: { xs: 'static', md: 'relative' },
-            height: { xs: 'auto', md: 'fit-content' },
-            zIndex: 2, // Ensure it appears above other content
-            // Add subtle spacing
-            mt: 0.25, // 4px margin top
-            mb: { xs: 0.25, md: 0 }
-          }}>
-            <LeftPanel 
-              selectedTool={selectedTool} 
-              onSelectTool={handleToolSelect}  
-              headerHeight={headerHeight}
-              isHomePage={isHomePage}
-              onLogout={onLogout}
-              isAuth={isAuth}
-              onLogin={onLogin}
-            />
-          </Box>
-
+        <Box sx={styles.contentWrapper}>
           {/* Main content area with improved overflow handling */}
-          <Box sx={{
-            ...styles.mainContent,
-            display: 'flex',
-            flexDirection: 'column',
-            flexGrow: 1,
-            width: '100%',
-            minWidth: 0, // Allow content to shrink
-            mt: 0.25 // 4px margin top
-          }}>
+          <Box sx={styles.mainContent}>
             {/* Tool content with proper overflow handling */}
-            <Paper sx={{
-              ...styles.contentPaper,
-              display: 'flex',
-              flexDirection: 'column',
-              flexGrow: 1,
-              width: '100%',
-              minWidth: 0, // Allow content to shrink
-              // overflowX: 'auto', // Enable horizontal scrolling when needed
-              // overflowY: 'visible', // Let content flow naturally
-              overflow: 'visible'
-            }}>
+            <Paper sx={styles.contentPaper}>
               <Suspense
                 fallback={
                   <Box sx={styles.loadingContainer}>
@@ -269,18 +296,10 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
             </Paper>
           </Box>
         </Box>
-        
+
         {/* Footer with subtle spacing above */}
-        <Box sx={{ 
-          width: '100vw', 
-          position: 'relative', 
-          left: '50%',
-          right: '50%',
-          marginLeft: '-50vw',
-          marginRight: '-50vw', 
-          mt: 0.25
-        }}>
-          <Footer headerHeight={headerHeight} />
+        <Box sx={styles.footerContainer}>
+          <Footer />
         </Box>
       </Box>
       
@@ -292,8 +311,5 @@ export default function Dashboard({ onLogout, onLogin, isAuth }) {
 
 Dashboard.propTypes = {
   /** Callback function for logout action */
-  onLogout: PropTypes.func,
-
-  /** Whether in user is signed in */
-  isAuth: PropTypes.bool.isRequired,
+  onLogout: PropTypes.func
 };

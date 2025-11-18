@@ -198,7 +198,7 @@ export default function SensitivityScoreSettings() {
       {/* Advanced Settings - Category Weights */}
       {showAdvanced && (
         <Box>
-          <SettingDivider />
+          {/* <SettingDivider /> */}
           
           <Box sx={sensitivityScoreStyles.flexBetween}>
             <SettingHeader 
@@ -223,147 +223,137 @@ export default function SensitivityScoreSettings() {
             </IconButton>
           </Box>
 
-          <Grid container spacing={1} sx={sensitivityScoreStyles.weightGrid} alignItems="center">
+          <Box 
+            display="grid"
+            gridTemplateColumns="3fr 1fr"
+            rowGap={1}
+            columnGap={1}
+            sx={sensitivityScoreStyles.weightGrid}
+          >
             {/* Personal Info Weight */}
-            <Grid item xs={7}>
-              <Typography 
-                variant="caption" 
-                sx={{
-                  ...sensitivityScoreStyles.weightLabel,
-                  ...(isWeightValid ? {} : sensitivityScoreStyles.weightLabelError)
-                }}
-              >
-                {translations.categories.personalInfo}
-              </Typography>
-            </Grid>
-            <Grid item xs={5}>
-              <TextField
-                size="small"
-                value={sensitivityScoreSettings.weights.personalInfo}
-                onChange={handleWeightChange('personalInfo')}
-                variant="outlined"
-                error={!isWeightValid}
-                inputProps={{
-                  min: 0,
-                  max: 100,
-                  type: 'text',
-                  'aria-label': translations.categories.personalInfo,
-                  inputMode: 'numeric',
-                  pattern: '[0-9]*'
-                }}
-                sx={{
-                  ...sensitivityScoreStyles.weightInput,
-                  ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
-                }}
-                disabled
-              />
-            </Grid>
+            <Typography 
+              variant="caption" 
+              sx={{
+                ...sensitivityScoreStyles.weightLabel,
+                ...(isWeightValid ? {} : sensitivityScoreStyles.weightLabelError)
+              }}
+            >
+              {translations.categories.personalInfo}
+            </Typography>
+            <TextField
+              size="small"
+              value={sensitivityScoreSettings.weights.personalInfo}
+              onChange={handleWeightChange('personalInfo')}
+              variant="outlined"
+              error={!isWeightValid}
+              inputProps={{
+                min: 0,
+                max: 100,
+                type: 'text',
+                'aria-label': translations.categories.personalInfo,
+                inputMode: 'numeric',
+                pattern: '[0-9]*'
+              }}
+              sx={{
+                ...sensitivityScoreStyles.weightInput,
+                ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
+              }}
+              disabled
+            />
             
             {/* Business Info Weight */}
-            <Grid item xs={7}>
-              <Typography 
-                variant="caption" 
-                sx={{
-                  ...sensitivityScoreStyles.weightLabel,
-                  ...(isWeightValid ? {} : sensitivityScoreStyles.weightLabelError)
-                }}
-              >
-                {translations.categories.businessInfo}
-              </Typography>
-            </Grid>
-            <Grid item xs={5}>
-              <TextField
-                size="small"
-                value={sensitivityScoreSettings.weights.businessInfo}
-                onChange={handleWeightChange('businessInfo')}
-                variant="outlined"
-                error={!isWeightValid}
-                inputProps={{
-                  min: 0,
-                  max: 100,
-                  type: 'text',
-                  'aria-label': translations.categories.businessInfo,
-                  inputMode: 'numeric',
-                  pattern: '[0-9]*'
-                }}
-                sx={{
-                  ...sensitivityScoreStyles.weightInput,
-                  ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
-                }}
-                disabled
-              />
-            </Grid>
+            <Typography 
+              variant="caption" 
+              sx={{
+                ...sensitivityScoreStyles.weightLabel,
+                ...(isWeightValid ? {} : sensitivityScoreStyles.weightLabelError)
+              }}
+            >
+              {translations.categories.businessInfo}
+            </Typography>
+            <TextField
+              size="small"
+              value={sensitivityScoreSettings.weights.businessInfo}
+              onChange={handleWeightChange('businessInfo')}
+              variant="outlined"
+              error={!isWeightValid}
+              inputProps={{
+                min: 0,
+                max: 100,
+                type: 'text',
+                'aria-label': translations.categories.businessInfo,
+                inputMode: 'numeric',
+                pattern: '[0-9]*'
+              }}
+              sx={{
+                ...sensitivityScoreStyles.weightInput,
+                ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
+              }}
+              disabled
+            />
             
             {/* Scientific Data Weight */}
-            <Grid item xs={7}>
-              <Typography 
-                variant="caption" 
-                sx={{
-                  ...sensitivityScoreStyles.weightLabel,
-                  ...(isWeightValid ? {} : sensitivityScoreStyles.weightLabelError)
-                }}
-              >
-                {translations.categories.scientificData}
-              </Typography>
-            </Grid>
-            <Grid item xs={5}>
-              <TextField
-                size="small"
-                value={sensitivityScoreSettings.weights.scientificData}
-                onChange={handleWeightChange('scientificData')}
-                variant="outlined"
-                error={!isWeightValid}
-                inputProps={{
-                  min: 0,
-                  max: 100,
-                  type: 'text',
-                  'aria-label': translations.categories.scientificData,
-                  inputMode: 'numeric',
-                  pattern: '[0-9]*'
-                }}
-                sx={{
-                  ...sensitivityScoreStyles.weightInput,
-                  ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
-                }}
-                disabled
-              />
-            </Grid>
+            <Typography 
+              variant="caption" 
+              sx={{
+                ...sensitivityScoreStyles.weightLabel,
+                ...(isWeightValid ? {} : sensitivityScoreStyles.weightLabelError)
+              }}
+            >
+              {translations.categories.scientificData}
+            </Typography>
+            <TextField
+              size="small"
+              value={sensitivityScoreSettings.weights.scientificData}
+              onChange={handleWeightChange('scientificData')}
+              variant="outlined"
+              error={!isWeightValid}
+              inputProps={{
+                min: 0,
+                max: 100,
+                type: 'text',
+                'aria-label': translations.categories.scientificData,
+                inputMode: 'numeric',
+                pattern: '[0-9]*'
+              }}
+              sx={{
+                ...sensitivityScoreStyles.weightInput,
+                ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
+              }}
+              disabled
+            />
             
             {/* Location Data Weight */}
-            <Grid item xs={7}>
-              <Typography 
-                variant="caption" 
-                sx={{
-                  ...sensitivityScoreStyles.weightLabel,
-                  ...(isWeightValid ? {} : sensitivityScoreStyles.weightLabelError)
-                }}
-              >
-                {translations.categories.locationData}
-              </Typography>
-            </Grid>
-            <Grid item xs={5}>
-              <TextField
-                size="small"
-                value={sensitivityScoreSettings.weights.locationData}
-                onChange={handleWeightChange('locationData')}
-                variant="outlined"
-                error={!isWeightValid}
-                inputProps={{
-                  min: 0,
-                  max: 100,
-                  type: 'text',
-                  'aria-label': translations.categories.locationData,
-                  inputMode: 'numeric',
-                  pattern: '[0-9]*'
-                }}
-                sx={{
-                  ...sensitivityScoreStyles.weightInput,
-                  ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
-                }}
-                disabled
-              />
-            </Grid>
-          </Grid>
+            <Typography 
+              variant="caption" 
+              sx={{
+                ...sensitivityScoreStyles.weightLabel,
+                ...(isWeightValid ? {} : sensitivityScoreStyles.weightLabelError)
+              }}
+            >
+              {translations.categories.locationData}
+            </Typography>
+            <TextField
+              size="small"
+              value={sensitivityScoreSettings.weights.locationData}
+              onChange={handleWeightChange('locationData')}
+              variant="outlined"
+              error={!isWeightValid}
+              inputProps={{
+                min: 0,
+                max: 100,
+                type: 'text',
+                'aria-label': translations.categories.locationData,
+                inputMode: 'numeric',
+                pattern: '[0-9]*'
+              }}
+              sx={{
+                ...sensitivityScoreStyles.weightInput,
+                ...(isWeightValid ? {} : sensitivityScoreStyles.weightInputError)
+              }}
+              disabled
+            />
+          </Box>
 
           <Box sx={{
             ...sensitivityScoreStyles.totalBox,
@@ -390,7 +380,7 @@ export default function SensitivityScoreSettings() {
           </Box>
 
           {!isWeightValid && (
-            <Box sx={{ mt: 2, p: 2, bgcolor: 'error.lighter', borderRadius: 1 }}>
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'white', borderRadius: 2 }}>
               <Typography variant="body2" color="error" fontWeight={500}>
                 {translations.weightError || "Weights must add up to exactly 100%"}
               </Typography>

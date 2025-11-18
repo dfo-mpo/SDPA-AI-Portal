@@ -15,9 +15,9 @@ import {
   Divider, 
   useTheme 
 } from '@mui/material';
-import { ColorModeIconDropdown } from '../components/common';
+import { ColorModeIconDropdown, LogInButton } from '../components/common';
 import TranslateIcon from '@mui/icons-material/Translate';
-import { useLanguage } from '../contexts';
+import { useLanguage, useAuth } from '../contexts';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 import { getLayoutTranslations } from '../translations/layout';
 import { trackEvent } from '../utils/analytics';
@@ -29,13 +29,17 @@ import { trackEvent } from '../utils/analytics';
  * @param {Function} props.setHeaderHeight - Callback to set header height
  * @returns {JSX.Element} The rendered component
  */
-export default function GovHeader({ setHeaderHeight }) {
+export default function GovHeader({ 
+  setHeaderHeight, 
+  onLogout,
+  onLogin,
+}) {
   const { language, toggleLanguage } = useLanguage();
   const headerTranslations = getLayoutTranslations('header', language);
   const headerRef = useRef(null);
   const theme = useTheme();
-const styles = useComponentStyles('govHeader');
-
+  const styles = useComponentStyles('govHeader');
+  const isAuth = useAuth();
 
   // Measure header height and pass it to parent component
   useEffect(() => {
@@ -64,7 +68,7 @@ const styles = useComponentStyles('govHeader');
               style={styles.logo} 
             />
             <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', height: '100%' }}>
-              <Divider orientation="vertical" sx={{ height: 28, mx: 2 }} />
+              <Divider orientation="vertical" sx={{ height: 20 }} />
               <Typography sx={styles.departmentTitle}>
                 {headerTranslations.department}
               </Typography>
@@ -85,6 +89,9 @@ const styles = useComponentStyles('govHeader');
               {language === 'en' ? 'Français' : 'English'}
             </Button>
             <ColorModeIconDropdown />
+            {!isAuth && (
+              <LogInButton onLogout={onLogout} onLogin={onLogin} />
+            )}
           </Stack>
         </Stack>
       </Box>

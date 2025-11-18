@@ -119,7 +119,7 @@ export default function CSVAnalyzerSettings() {
         </Select>
       </SettingFormControl>
       
-      <SettingDivider />
+      {/* <SettingDivider /> */}
       
       {/* Output Options */}
       <Box>

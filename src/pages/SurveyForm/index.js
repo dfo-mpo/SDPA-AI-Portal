@@ -1,1 +1,1 @@
-export { SurveyForm } from './SurveyForm';
+export { default as SurveyForm } from './SurveyForm';
