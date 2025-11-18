@@ -88,6 +88,96 @@ function disabledUntil(iso) {
   return `${minutes || 1} minute${minutes>1?"s":""}`;
 }
 
+function stripHtml(html) {
+  if (!html) return "";
+  let text = html;
+
+  // Normalize line endings
+  text = text.replace(/\r\n|\r/g, "\n");
+
+  // Remove styles/scripts entirely
+  text = text
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "");
+
+  // Turn common block-level endings into line breaks
+  text = text
+    .replace(/<\/(p|div|section|article|header|footer|h[1-6])>/gi, "\n\n")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/tr>/gi, "\n");
+
+  // Strip remaining tags
+  text = text.replace(/<[^>]+>/g, "");
+
+  // clean up per line: trim and collapse extra blank lines
+  const lines = text
+    .split("\n")
+    .map((line) => line.replace(/[ \t]+/g, " ").trim())
+    .filter((line, idx, arr) => {
+      if (line !== "") return true;
+      // keep at most ONE empty line between content blocks
+      return idx > 0 && arr[idx - 1].trim() !== "";
+    });
+
+  return lines.join("\n");
+}
+
+function downloadChatHistoryForUrl(url, msgs = []) {
+  if (!url || !msgs.length) return;
+
+  // make a safe-ish name from the hostname
+  let safeName = "chat";
+  try {
+    const u = new URL(url);
+    safeName = (u.hostname || "chat").replace(/[^a-z0-9.-]/gi, "_");
+  } catch {
+  }
+
+  // show lines
+  const lines = msgs.map((m) => {
+    const t =
+      m.timestamp instanceof Date
+        ? m.timestamp.toLocaleString()
+        : "";
+
+    const roleMap = {
+      user: "USER",
+      assistant: "ASSISTANT",
+      bot: "ASSISTANT",
+      error: "ERROR",
+    };
+    const role = roleMap[m.role] || (m.role || "unknown").toUpperCase();
+    const rawContent = typeof m.content === "string" ? m.content : "";
+
+    // Strip HTML only for assistant/bot messages
+    const content =
+      m.role === "assistant" || m.role === "bot"
+        ? stripHtml(rawContent)
+        : rawContent;
+
+    return t ? `[${t}] ${role}: ${content}` : `${role}: ${content}`;
+  });
+
+  // show header
+  const header = `Chat history for URL: ${url}\n\n`;
+  const text = header + lines.join("\n\n");
+
+  const blob = new Blob([text], {
+    type: "text/plain;charset=utf-8",
+  });
+  const href = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = `webscraper_chat_${safeName}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  URL.revokeObjectURL(href);
+}
+
 
 /* ---------- preset card ---------- */
 function PresetCard({ item, onRefresh = () => {}, refreshing, onOpen = () => {}, onDownload = () => {} }) {
@@ -480,8 +570,8 @@ export function WebScraper() {
 
     // otherwise, start a fresh chat for this URL
     setMessages([{
-      role: "bot",
-      content: `Chatting over “${url}”. Ask away!`,
+      role: "assistant",
+      content: `Ask away!`,
       timestamp: new Date(),
     }]);
   };
@@ -507,6 +597,25 @@ export function WebScraper() {
       token_limit: 100000,
       isAuth: false
     }));
+  };
+  
+  const handleDownloadChat = () => {
+    const url = selectedUrl || selectedUrlRef.current;
+    if (!url) return;
+
+    const key = (() => {
+      try {
+        return urlKeyStrict(url);
+      } catch {
+        return null;
+      }
+    })();
+    if (!key) return;
+
+    const history = chatByUrl[key] || chatByUrlRef.current[key] || messages;
+    if (!history || !history.length) return;
+
+    downloadChatHistoryForUrl(url, history);
   };
 
   // WS setup/teardown
@@ -699,54 +808,119 @@ export function WebScraper() {
 
           {/* Chat Messages */}
           <Box
-            ref={listRef}
             sx={{
               border: "1px solid",
               borderColor: "divider",
               borderRadius: 2,
-              p: 2,
               background: "#fff",
               height: { xs: 480, sm: 560 },
-              overflowY: "auto",
               display: "flex",
               flexDirection: "column",
-              gap: 1.25,
+              boxSizing: "border-box",
             }}
           >
-            {messages.map((m, i) => (
-              <Box key={i} sx={{
+            {/* Top bar INSIDE the chat box */}
+            <Box
+              sx={{
+                px: 2,
+                py: 1,
+                borderBottom: "1px solid",
+                borderColor: "divider",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
+              }}
+            >
+              {/* URL display */}
+              <Typography variant="body2" color="text.secondary" noWrap>
+                {selectedUrl
+                  ? `Chat history for: ${selectedUrl}`
+                  : "Select a website preset to start chatting"}
+              </Typography>
+
+              {/* Download Button */}
+              <Tooltip title="Download this chat history as a .txt file">
+                <span>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Download size={16} />}
+                    onClick={handleDownloadChat}
+                    disabled={!selectedUrl || !messages.length}
+                  >
+                    Download chat
+                  </Button>
+                </span>
+              </Tooltip>
+            </Box>
+
+            {/* Scrollable chat content */}
+            <Box
+              ref={listRef}
+              sx={{
+                flex: 1,
+                p: 2,
+                overflowY: "auto",
                 display: "flex",
                 flexDirection: "column",
-                alignItems: m.role === "user" ? "flex-end" : "flex-start"
-              }}>
-                <Paper
-                  elevation={0}
+                gap: 1.25,
+              }}
+            >
+              {messages.map((m, i) => (
+                <Box
+                  key={i}
                   sx={{
-                    p: 1.25,
-                    maxWidth: "85%",
-                    borderRadius: 2,
-                    bgcolor: m.role === "user" ? "primary.main" : "grey.100",
-                    color: m.role === "user" ? "primary.contrastText" : "text.primary",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: m.role === "user" ? "flex-end" : "flex-start",
                   }}
                 >
-                  {m.role === "assistant"
-                    ? renderAssistantMessage(m)
-                    : <Typography variant="body2">{m.content}</Typography>}
-                </Paper>
-                {m.timestamp && (
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25 }}>
-                    {m.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </Typography>
-                )}
-              </Box>
-            ))}
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 1.25,
+                      maxWidth: "85%",
+                      borderRadius: 2,
+                      bgcolor: m.role === "user" ? "primary.main" : "grey.100",
+                      color:
+                        m.role === "user" ? "primary.contrastText" : "text.primary",
+                    }}
+                  >
+                    {m.role === "assistant"
+                      ? renderAssistantMessage(m)
+                      : <Typography variant="body2">{m.content}</Typography>}
+                  </Paper>
+                  {m.timestamp && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ mt: 0.25 }}
+                    >
+                      {m.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Typography>
+                  )}
+                </Box>
+              ))}
 
-            {isResponding && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary", mt: 0.5 }}>
-                <CircularProgress size={16} />
-                <Typography variant="body2">Assistant is typing…</Typography>
-              </Box>
-            )}
+              {isResponding && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    color: "text.secondary",
+                    mt: 0.5,
+                  }}
+                >
+                  <CircularProgress size={16} />
+                  <Typography variant="body2">Assistant is typing…</Typography>
+                </Box>
+              )}
+            </Box>
           </Box>
 
           {/* Chat Input */}
