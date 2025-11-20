@@ -283,6 +283,7 @@ export function PDFExtractionTool() {
           my: 2,
           maxWidth: 1320,
           borderRadius: 3,
+          bgcolor: (theme) => theme.palette.background.paper,
         }}
       >
         <Stack sx={{ mb: 1 }}>
@@ -333,8 +334,16 @@ export function PDFExtractionTool() {
             justifyContent: "space-between",
             p: 1.2,
             borderRadius: 1,
-            bgcolor: "grey.100",
-            "&:hover": { bgcolor: "grey.200" },
+            bgcolor: (theme) =>
+              theme.palette.mode === "dark"
+                ? theme.palette.grey[700]
+                : theme.palette.grey[100],
+            "&:hover": {
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? theme.palette.grey[600]
+                  : theme.palette.grey[200],
+            },
           }}
         >
           <Typography variant="h4" fontWeight={700}>Upload PDF(s)</Typography>
@@ -464,8 +473,16 @@ export function PDFExtractionTool() {
             justifyContent: "space-between",
             p: 1.2,
             borderRadius: 1,
-            bgcolor: "grey.100",
-            "&:hover": { bgcolor: "grey.200" },
+            bgcolor: (theme) =>
+              theme.palette.mode === "dark"
+                ? theme.palette.grey[700]
+                : theme.palette.grey[100],
+            "&:hover": {
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? theme.palette.grey[600]
+                  : theme.palette.grey[200],
+            },
           }}
         >
           <Typography variant="h4" fontWeight={700}>Question Fields</Typography>
@@ -749,8 +766,16 @@ export function PDFExtractionTool() {
             justifyContent: "space-between",
             p: 1.2,
             borderRadius: 1,
-            bgcolor: "grey.100",
-            "&:hover": { bgcolor: "grey.200" },
+            bgcolor: (theme) =>
+              theme.palette.mode === "dark"
+                ? theme.palette.grey[700]
+                : theme.palette.grey[100],
+            "&:hover": {
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? theme.palette.grey[600]
+                  : theme.palette.grey[200],
+            },
           }}
         >
           <Typography variant="h4" fontWeight={700}>View Results</Typography>
@@ -893,7 +918,15 @@ export function PDFExtractionTool() {
         anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        PaperProps={{ sx: { width: 380, background: "#f5f5f5" } }}
+        PaperProps={{
+          sx: {
+            width: 380,
+            bgcolor: (theme) =>
+              theme.palette.mode === "dark"
+                ? theme.palette.background.default
+                : theme.palette.grey[50],
+          },
+        }}
       >
         <Box sx={{ p: 2.5 }}>
           {/* Header */}
