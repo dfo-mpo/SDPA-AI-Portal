@@ -112,6 +112,7 @@ export function MLModelsRepo() {
         my: 2,
         maxWidth: 1320,
         borderRadius: 3,
+        bgcolor: (theme) => theme.palette.background.paper,
       }}
     >
       {/* Header / Hero */}
@@ -210,18 +211,21 @@ export function MLModelsRepo() {
               maxWidth="md"
               PaperProps={{
                 sx: {
-                  backgroundColor: "white",
+                  bgcolor: (theme) => theme.palette.background.paper,
                 },
               }}
             >
               <DialogTitle
-                sx={{
+                sx={(theme) => ({
                   display: "flex",
                   alignItems: "center",
-                  bgcolor: "white",
-                }}
+                  bgcolor:
+                    theme.palette.mode === "dark"
+                      ? theme.palette.background.default
+                      : theme.palette.common.white,
+                })}
               >
-                <BookOpen size={25} style={{ marginRight: 8 }}/>
+                <BookOpen size={25} style={{ marginRight: 8 }} />
                 <Typography variant="h5" sx={{ fontWeight: 600 }}>
                   {selectedModel.name} (v{selectedModel.version}) - README
                 </Typography>
@@ -236,10 +240,13 @@ export function MLModelsRepo() {
 
               <DialogContent
                 dividers
-                sx={{
+                sx={(theme) => ({
                   p: 2,
-                  backgroundColor: "white",
-                }}
+                  bgcolor:
+                    theme.palette.mode === "dark"
+                      ? theme.palette.background.default
+                      : theme.palette.common.white,
+                })}
               >
                 <ModelDetail
                   name={selectedModel.name}
@@ -277,125 +284,130 @@ export function MLModelsRepo() {
       </Button>
 
       <Drawer
-  anchor="right"
-  open={helpOpen}
-  onClose={() => setHelpOpen(false)}
-  PaperProps={{
-    sx: { width: 380, background: "#f5f5f5" },
-  }}
->
-  <Box sx={{ p: 2.5 }}>
-    {/* Header */}
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        mb: 1,
-      }}
-    >
-      <Typography variant="h4" fontWeight={700}>
-        How this page works
-      </Typography>
-    </Box>
+        anchor="right"
+        open={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        PaperProps={{
+            sx: {
+              width: 380,
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? theme.palette.background.default
+                  : theme.palette.grey[50],
+            },
+          }}
+        >
+        <Box sx={{ p: 2.5 }}>
+          {/* Header */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 1,
+            }}
+          >
+            <Typography variant="h4" fontWeight={700}>
+              How this page works
+            </Typography>
+          </Box>
 
-    <Divider sx={{ my: 3 }} />
+          <Divider sx={{ my: 3 }} />
 
-    {/* 1. Browse & use existing models */}
-    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-      1. Use existing models
-    </Typography>
+          {/* 1. Browse & use existing models */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+            1. Use existing models
+          </Typography>
 
-    <Typography variant="body2" sx={{ lineHeight: 1.7, mb: 1.5 }}>
-      This page is for <b>discovering and using</b> models that have already
-      been registered in the repository.  
-      <br />
-      <br />
-      You can:
-    </Typography>
+          <Typography variant="body2" sx={{ lineHeight: 1.7, mb: 1.5 }}>
+            This page is for <b>discovering and using</b> models that have already
+            been registered in the repository.  
+            <br />
+            <br />
+            You can:
+          </Typography>
 
-    {/* Bullets with icons + spacing */}
-    <Stack spacing={1.1} sx={{ mb: 2 }}>
-      <Typography
-        variant="body2"
-        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-      >
-        •
-        <Search size={16} />
-        <span>
-          <b>Search</b> by model name or tags using the search bar.
-        </span>
-      </Typography>
+          {/* Bullets with icons + spacing */}
+          <Stack spacing={1.1} sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              •
+              <Search size={16} />
+              <span>
+                <b>Search</b> by model name or tags using the search bar.
+              </span>
+            </Typography>
 
-      <Typography
-        variant="body2"
-        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-      >
-        •
-        <FileText size={16} />
-        <span>
-          Open the <b>README</b> to view details, usage, and documentation.
-        </span>
-      </Typography>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              •
+              <FileText size={16} />
+              <span>
+                Open the <b>README</b> to view details, usage, and documentation.
+              </span>
+            </Typography>
 
-      <Typography
-        variant="body2"
-        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-      >
-        •
-        <History size={16} />
-        <span>
-          Click <b>Version history</b> to browse other versions of the same model.
-        </span>
-      </Typography>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              •
+              <History size={16} />
+              <span>
+                Click <b>Version history</b> to browse other versions of the same model.
+              </span>
+            </Typography>
 
-      <Typography
-        variant="body2"
-        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-      >
-        •
-        <Download size={16} />
-        <span>
-          Click <b>Download</b> to retrieve model weights / artifacts as a ZIP file.
-        </span>
-      </Typography>
-    </Stack>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              •
+              <Download size={16} />
+              <span>
+                Click <b>Download</b> to retrieve model weights / artifacts as a ZIP file.
+              </span>
+            </Typography>
+          </Stack>
 
 
-    <Divider sx={{ my: 3 }} />
+          <Divider sx={{ my: 3 }} />
 
-    {/* 2. Contribute a new model */}
-    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-      2. Contribute a new model
-    </Typography>
-    <Typography variant="body2" sx={{ lineHeight: 1.7 }}>
-      You <b>cannot upload models directly</b> from this page.
-      <br />
-      To register a new model or a new version, use the dedicated{" "}
-      <b>Model Upload</b> experience in Azure ML Studio.
-    </Typography>
+          {/* 2. Contribute a new model */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+            2. Contribute a new model
+          </Typography>
+          <Typography variant="body2" sx={{ lineHeight: 1.7 }}>
+            You <b>cannot upload models directly</b> from this page.
+            <br />
+            To register a new model or a new version, use the dedicated{" "}
+            <b>Model Upload</b> experience in Azure ML Studio.
+          </Typography>
 
-    <Button
-      variant="contained"
-      size="small"
-      sx={{ mt: 2 }}
-      href="https://ml.azure.com/model/list?wsid=/subscriptions/4858d1be-583d-42d6-a4a3-44172168b003/resourcegroups/Merged-AI-Portal-Frontend-RG/providers/Microsoft.MachineLearningServices/workspaces/MLModelRepoAML&tid=8c1a4d93-d828-4d0e-9303-fd3bd611c822"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      Open Azure ML Model Upload
-    </Button>
+          <Button
+            variant="contained"
+            size="small"
+            sx={{ mt: 2 }}
+            href="https://ml.azure.com/model/list?wsid=/subscriptions/4858d1be-583d-42d6-a4a3-44172168b003/resourcegroups/Merged-AI-Portal-Frontend-RG/providers/Microsoft.MachineLearningServices/workspaces/MLModelRepoAML&tid=8c1a4d93-d828-4d0e-9303-fd3bd611c822"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open Azure ML Model Upload
+          </Button>
 
-    <Typography
-      variant="body2"
-      sx={{ mt: 1.5, fontSize: 12, lineHeight: 1.6 }}
-    >
-      Once a model is successfully registered there, it will appear in this
-      list with its tags, flavors, and metadata.
-    </Typography>
-  </Box>
-</Drawer>
-
+          <Typography
+            variant="body2"
+            sx={{ mt: 1.5, fontSize: 12, lineHeight: 1.6 }}
+          >
+            Once a model is successfully registered there, it will appear in this
+            list with its tags, flavors, and metadata.
+          </Typography>
+        </Box>
+      </Drawer>
     </Paper>
   );
 }
