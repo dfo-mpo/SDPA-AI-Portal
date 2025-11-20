@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE = "http://localhost:8000/api";
+const BASE = '/api/api'; // or use your proxy/env
 
 /* tiny helpers: frontend-only mapping for display */
 const toTagArray = (tags) =>

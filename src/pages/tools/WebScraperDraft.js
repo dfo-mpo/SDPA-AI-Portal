@@ -14,8 +14,8 @@ import {
   HelpCircle, Clock, GaugeCircle, Globe2 } from "lucide-react";
 import { flushSync } from "react-dom";
 
-// const API_BASE = "http://localhost:8000"; // for dev
-const API_BASE = "/api"; // for prod
+const API_BASE = "http://localhost:8000";
+// const API_BASE = "/api";
 
 /* ---------- helper functions ---------- */
 function dateFormat(iso) {
@@ -627,9 +627,7 @@ export function WebScraper() {
   useEffect(() => {
     if (!chatOpen) return;
 
-    // const wsUrl = API_BASE.replace(/^http/, "ws") + "/api/ws/website_chat"; // for dev
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws"; // for prod
-    const wsUrl = `${protocol}://${window.location.host}/api/ws/website_chat`; // for prod
+    const wsUrl = API_BASE.replace(/^http/, "ws") + "/api/ws/website_chat";
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
     wsReadyRef.current = false;

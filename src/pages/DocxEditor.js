@@ -14,7 +14,7 @@ const DocxEditor = ({
   const [fileExists, setFileExists] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const apiEndpoint = '/api';
+  const apiEndpoint = '/server';
   const docPath = `${apiEndpoint}/docx/${file}`;
 
   useEffect(() => {
