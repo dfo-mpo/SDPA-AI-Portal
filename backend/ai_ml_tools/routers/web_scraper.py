@@ -39,10 +39,10 @@ class ScrapeReq(BaseModel):
 def _build_embeddings():
     '''Creates and returns an AzureOpenAIEmbeddings client configured from environment variables.'''
     return AzureOpenAIEmbeddings(
-        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview"),
-        azure_deployment=os.getenv("AZURE_OPENAI_EMBED_DEPLOYMENT"),
+        api_key=os.getenv("OPENAI_API_KEY"),
+        azure_endpoint=os.getenv("OPENAI_API_ENDPOINT"),
+        api_version=os.getenv("OPENAI_API_EMBEDDING_VERSION", "2023-05-15"),
+        azure_deployment=os.getenv("AZURE_OPENAI_LARGE_EMBED_DEPLOYMENT"),
     )
 
 # get or create the vector database store

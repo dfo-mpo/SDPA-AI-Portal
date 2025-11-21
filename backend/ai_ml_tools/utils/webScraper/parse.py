@@ -30,20 +30,20 @@ _REDUCE_PROMPT = ChatPromptTemplate.from_template(
 def _make_llm() -> AzureChatOpenAI:
     """
     Build an Azure OpenAI chat model from env:
-      AZURE_OPENAI_API_KEY
-      AZURE_OPENAI_ENDPOINT
-      AZURE_OPENAI_API_VERSION
+      OPENAI_API_KEY
+      OPENAI_API_ENDPOINT
+      OPENAI_API_EMBEDDING_VERSION
       AZURE_OPENAI_DEPLOYMENT
     """
-    api_key = os.getenv("AZURE_OPENAI_API_KEY")
-    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-    version  = os.getenv("AZURE_OPENAI_API_VERSION")
+    api_key = os.getenv("OPENAI_API_KEY")
+    endpoint = os.getenv("OPENAI_API_ENDPOINT")
+    version  = os.getenv("OPENAI_API_EMBEDDING_VERSION")
     deploy   = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
     if not (api_key and endpoint and deploy):
         raise RuntimeError(
-            "Missing one or more Azure env vars: AZURE_OPENAI_API_KEY, "
-            "AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_DEPLOYMENT"
+            "Missing one or more Azure env vars: OPENAI_API_KEY, "
+            "OPENAI_API_ENDPOINT, AZURE_OPENAI_DEPLOYMENT"
         )
 
     # langchain-openai expects azure_deployment as the 'model' identifier

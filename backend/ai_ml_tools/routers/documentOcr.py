@@ -96,7 +96,7 @@ async def extract_per_file(req: ExtractPerDocRequest):
             fields_list=req.fields,
             document_names=req.document_names,
             api_key=None,
-            model_name=os.getenv("AZURE_OPENAI_DEPLOYMENT2"),
+            model_name=os.getenv("AZURE_OPENAI_GPT4_o"),
         )
 
         rows: List[RowPerDoc] = []
