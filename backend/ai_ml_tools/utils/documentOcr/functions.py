@@ -262,10 +262,10 @@ def get_embedding_function(api_key=None):
     Returns:
         OpenAIEmbeddings: An OpenAIEmbeddings object, which can be used to create vector embeddings from text.
     """
-    api_key = os.getenv("AZURE_OPENAI_API_KEY2")
-    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT2")
-    api_version = os.getenv("AZURE_OPENAI_API_VERSION2")
-    embed_deployment = os.getenv("AZURE_OPENAI_EMBED_DEPLOYMENT2")
+    api_key = os.getenv("OPENAI_API_KEY")
+    endpoint = os.getenv("OPENAI_API_ENDPOINT")
+    api_version = os.getenv("OPENAI_API_EMBEDDING_VERSION")
+    embed_deployment = os.getenv("AZURE_OPENAI_SMALL_EMBED_DEPLOYMENT")
 
     return AzureOpenAIEmbeddings(
         azure_endpoint=endpoint,
@@ -454,10 +454,10 @@ def query_document_per_file(vectorstore, fields_list, document_names, api_key=No
     """
     Query a vector store with dynamic fields and return structured responses for each document.
     """
-    api_key = api_key or os.getenv("AZURE_OPENAI_API_KEY2")
-    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT2")
-    api_version = os.getenv("AZURE_OPENAI_API_VERSION2")
-    chat_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT2")
+    api_key = api_key or os.getenv("OPENAI_API_KEY")
+    endpoint = os.getenv("OPENAI_API_ENDPOINT")
+    api_version = os.getenv("OPENAI_API_EMBEDDING_VERSION")
+    chat_deployment = os.getenv("AZURE_OPENAI_GPT4_o")
 
     llm = AzureChatOpenAI(
         azure_endpoint=endpoint,
@@ -556,10 +556,10 @@ def query_document(vectorstore, fields_list, api_key=None, model_name=None):
     Query a vector store with dynamic fields and return a structured response.
     (Keeping this for backward compatibility with single document processing)
     """
-    api_key = api_key or os.getenv("AZURE_OPENAI_API_KEY2")
-    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT2")
-    api_version = os.getenv("AZURE_OPENAI_API_VERSION2")
-    chat_deployment = model_name or os.getenv("AZURE_OPENAI_DEPLOYMENT2")
+    api_key = api_key or os.getenv("OPENAI_API_KEY")
+    endpoint = os.getenv("OPENAI_API_ENDPOINT")
+    api_version = os.getenv("OPENAI_API_EMBEDDING_VERSION")
+    chat_deployment = model_name or os.getenv("AZURE_OPENAI_GPT4_o")
 
     llm = AzureChatOpenAI(
         azure_endpoint=endpoint,
