@@ -3,7 +3,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import PlainTextResponse, JSONResponse
 from pydantic import BaseModel
 from typing import Dict, List
-import uuid, json, re, os, hashlib, threading
+import uuid, json, re, os, hashlib, threading, time, logging
 from ai_ml_tools.utils.webScraper.scrape import scrape_website, split_dom_content
 from ai_ml_tools.utils.webScraper.parse import parse_with_azure_llm
 from langchain_openai import AzureOpenAIEmbeddings
@@ -14,6 +14,7 @@ from urllib.parse import urlparse, urljoin
 from ai_ml_tools.utils.openai import request_openai_chat
 from fastapi import WebSocket, WebSocketDisconnect
 from datetime import datetime, timezone, timedelta
+from openai import RateLimitError
 
 router = APIRouter(prefix="/api", tags=["web-scraper"])
 
@@ -55,9 +56,40 @@ def _get_or_create_vs(emb):
         client_settings=Settings(anonymized_telemetry=False),
     )
 
+def _embed_with_retry(emb, texts: list[str], max_retries: int = 3, base_delay: int = 20):
+    """
+    Try to embed `texts`, retrying on Azure OpenAI rate limits.
+    """
+    for attempt in range(max_retries):
+        try:
+            return emb.embed_documents(texts)
+        except RateLimitError as e:
+            wait = base_delay * (attempt + 1)
+            logging.warning(
+                f"[EMBED] Rate limit hit (attempt {attempt+1}/{max_retries}); "
+                f"sleeping {wait}s. Error: {e}"
+            )
+            time.sleep(wait)
+        except Exception as e:
+            logging.error(f"[EMBED] Unexpected embedding error: {e}")
+            raise
+
+    # If we get here, all retries failed because of rate limits
+    logging.error("[EMBED] Giving up on this batch after repeated rate limits.")
+    return None
+
 # insert chunks into the vector store 
 def upsert_chunks_into_vector_db(chunks: list[str], source_url: str, site_meta: dict | None = None) -> int:
-    '''Embeds the given text chunks, attaches metadata, and upserts them into the Chroma vector database.'''
+    """
+    Embeds the given text chunks, attaches metadata, and upserts them into
+    the Chroma vector database.
+
+    IMPORTANT:
+    - Batches chunks to avoid slamming rate limits.
+    - Retries on RateLimitError with exponential-ish backoff.
+    - If rate limit persists, stops embedding further batches but DOES NOT crash.
+    - Returns the number of chunks that were actually embedded.
+    """
     if not chunks:
         return 0
     emb = _build_embeddings()
@@ -79,14 +111,35 @@ def upsert_chunks_into_vector_db(chunks: list[str], source_url: str, site_meta: 
         "duration_seconds": site_meta.get("duration_seconds"),
     } for i in range(len(chunks))]
 
-    vectors = emb.embed_documents(chunks)
-    vs._collection.upsert(
-        ids=ids,
-        documents=chunks,
-        embeddings=vectors,
-        metadatas=metas,
-    )
-    return len(chunks)
+    # batch + retry logic if rate limit is encountered
+    batch_size = 32
+    embedded = 0
+
+    for start in range(0, len(chunks), batch_size):
+        batch_chunks = chunks[start:start + batch_size]
+        batch_ids = ids[start:start + batch_size]
+        batch_metas = metas[start:start + batch_size]
+
+        vectors = _embed_with_retry(emb, batch_chunks)
+
+        if vectors is None:
+            # Stop embedding more, but don't crash the whole request.
+            logging.error(
+                f"[EMBED] Stopping further upserts for {source_url} "
+                f"after repeated rate limits. Embedded so far: {embedded} chunks."
+            )
+            break
+
+        # Normal upsert
+        vs._collection.upsert(
+            ids=batch_ids,
+            documents=batch_chunks,
+            embeddings=vectors,
+            metadatas=batch_metas,
+        )
+        embedded += len(batch_chunks)
+
+    return embedded
 
 
 def _load_ordered_vectors(url: str) -> tuple[list[str], list[dict]]:
