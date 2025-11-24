@@ -5,16 +5,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Paper, Stack, Alert, AlertTitle, TextField, Button, Drawer, Divider,
-  Typography, Box, Grid, Card, CardActionArea, CardContent, Avatar,
+  Typography, Box, Card, CardActionArea, CardContent, Avatar,
   IconButton, Tooltip, CircularProgress, InputAdornment, Skeleton,
-  Dialog, DialogTitle, DialogContent, DialogActions, Chip,
+  Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
 import { 
   Search, RefreshCw, Send, Bot, Download, AlertTriangle, 
   HelpCircle, Clock, GaugeCircle, Globe2 } from "lucide-react";
 import { flushSync } from "react-dom";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = "http://localhost:8000"; // for dev
+// const API_BASE = "/api"; // for prod
 
 /* ---------- helper functions ---------- */
 function dateFormat(iso) {
@@ -274,11 +275,15 @@ function ConfirmScrapeDialog({
       onClose={inProgress ? undefined : onClose}
       PaperProps={{
         sx: {
-          backgroundColor: "#fff",
+          width: 600,
           borderRadius: 3,
           p: 1,
           boxShadow: 4,
-          width: 600,
+          bgcolor: (theme) =>
+            theme.palette.mode === "dark"
+              ? theme.palette.background.default
+              : theme.palette.grey[50],
+          backgroundImage: "none",
         },
       }}
     >
@@ -295,7 +300,7 @@ function ConfirmScrapeDialog({
           <Alert
             severity="success"
             icon={<CircularProgress size={20} sx={{ mr: 1 }} />}
-            sx={{ display: "flex", alignItems: "center", backgroundColor: "#e8f5e9" }}
+            sx={{ display: "flex", alignItems: "center"}}
           >
             <AlertTitle>Scraping in Progress</AlertTitle>
             Please wait while we extract and analyze data from:
@@ -622,9 +627,12 @@ export function WebScraper() {
   useEffect(() => {
     if (!chatOpen) return;
 
-    const wsUrl = API_BASE.replace(/^http/, "ws") + "/api/ws/website_chat";
+    const wsUrl = API_BASE.replace(/^http/, "ws") + "/api/ws/website_chat"; // for dev
+    // const protocol = window.location.protocol === "https:" ? "wss" : "ws"; // for prod
+    // const wsUrl = `${protocol}://${window.location.host}/api/ws/website_chat`; // for prod
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
+    wsReadyRef.current = false;
 
     ws.onopen = () => { wsReadyRef.current = true; };
 
@@ -633,6 +641,7 @@ export function WebScraper() {
       try { msg = JSON.parse(ev.data); } catch { return; }
 
       if (msg.error) {
+        // stop spinner on error
         setIsResponding(false);
         setMessages(prev => [...prev, { role: "error", content: msg.error, timestamp: new Date() }]);
         return;
@@ -640,40 +649,45 @@ export function WebScraper() {
 
       if (typeof msg.content === "string" && msg.content.length) {
         // stream into the last assistant bubble
-        setMessages(prev => {
+        setMessages((prev) => {
           const next = [...prev];
           if (!next.length || next[next.length - 1].role !== "assistant") {
             next.push({ role: "assistant", content: "", timestamp: new Date() });
           }
           next[next.length - 1] = {
             ...next[next.length - 1],
-            content: (next[next.length - 1].content || "") + msg.content
+            content: (next[next.length - 1].content || "") + msg.content,
           };
           return next;
         });
       }
 
-      if (msg.done === true || msg.finish_reason !== undefined) {
-        const current = messagesRef.current;
-        const last = current[current.length - 1];
-        const hasAssistantContent =
-          last &&
-          last.role === "assistant" &&
-          (last.content || "").trim().length > 0;
-
-        if (hasAssistantContent) {
-          setIsResponding(false);
-        }
+      // if backend says it's done, just stop the spinner
+      if (msg.done === true) {
+        setIsResponding(false);
       }
     };
 
-    ws.onerror = () => { wsReadyRef.current = false; };
-    ws.onclose  = () => { wsReadyRef.current = false; wsRef.current = null; };
+    ws.onerror = () => {
+      wsReadyRef.current = false;
+      // stop spinner on socket error
+      setIsResponding(false);
+    };
+
+    ws.onclose = () => {
+      wsReadyRef.current = false;
+      wsRef.current = null;
+      // stop spinner on close as well
+      setIsResponding(false);
+    };
 
     return () => {
-      try { ws.close(1000, "leaving chat"); } catch {}
+      try {
+        ws.close(1000, "leaving chat");
+      } catch {}
       wsRef.current = null;
       wsReadyRef.current = false;
+      setIsResponding(false);
     };
   }, [chatOpen]);
 
@@ -686,6 +700,7 @@ export function WebScraper() {
         my: 2,
         maxWidth: 1320,
         borderRadius: 3,
+        bgcolor: (theme) => theme.palette.background.paper,
       }}
     >
       {/* ---------- Header + Description (always same) ---------- */}
@@ -730,7 +745,7 @@ export function WebScraper() {
             minWidth: 320,
             borderColor: "divider",
             borderRadius: 2,
-            background: "#fff",
+            bgcolor: (theme) => theme.palette.background.paper,
             height: { xs: "auto", md: 660 },
             display: "flex",
             flexDirection: "column",
@@ -816,7 +831,7 @@ export function WebScraper() {
               border: "1px solid",
               borderColor: "divider",
               borderRadius: 2,
-              background: "#fff",
+              bgcolor: (theme) => theme.palette.background.paper,
               height: { xs: 480, sm: 560 },
               display: "flex",
               flexDirection: "column",
@@ -886,9 +901,16 @@ export function WebScraper() {
                       p: 1.25,
                       maxWidth: "85%",
                       borderRadius: 2,
-                      bgcolor: m.role === "user" ? "primary.main" : "grey.100",
-                      color:
-                        m.role === "user" ? "primary.contrastText" : "text.primary",
+                      bgcolor: (theme) =>
+                        m.role === "user"
+                          ? theme.palette.primary.main
+                          : theme.palette.mode === "dark"
+                          ? theme.palette.grey[900]
+                          : theme.palette.grey[100],
+                      color: (theme) =>
+                        m.role === "user"
+                          ? theme.palette.primary.contrastText
+                          : theme.palette.text.primary,
                     }}
                   >
                     {m.role === "assistant"
@@ -948,16 +970,37 @@ export function WebScraper() {
             />
             <Button
               variant="contained"
-              endIcon={isResponding ? <CircularProgress size={16} sx={{ color: 'white' }} /> : <Send size={16} />}
+              endIcon={
+                isResponding ? (
+                  <CircularProgress
+                    size={16}
+                    sx={{ color: (theme) => theme.palette.background.paper }}
+                  />
+                ) : (
+                  <Send size={16} />
+                )
+              }
               disabled={!currentMessage.trim() || isResponding || !wsReadyRef.current}
               onClick={handleSendMessage}
               sx={{
-                '&.Mui-disabled': {
-                  bgcolor: 'grey.400',
-                  color: 'grey.100',
+                "&.Mui-disabled": {
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? theme.palette.grey[800]
+                      : theme.palette.grey[300],
+                  color: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? theme.palette.grey[400]
+                      : theme.palette.grey[700],
                 },
-                '&.Mui-disabled:hover': {
-                  bgcolor: 'grey.400',
+                "&.Mui-disabled:hover": {
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? theme.palette.grey[800]
+                      : theme.palette.grey[300],
+                },
+                "&.Mui-disabled .MuiButton-endIcon": {
+                  color: "inherit",
                 },
               }}
             >
@@ -997,7 +1040,13 @@ export function WebScraper() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         PaperProps={{
-          sx: { width: 380, background: "#f5f5f5" },
+          sx: {
+            width: 380,
+            bgcolor: (theme) =>
+              theme.palette.mode === "dark"
+                ? theme.palette.background.default
+                : theme.palette.grey[50],
+          },
         }}
       >
         <Box sx={{ p: 2.5 }}>
