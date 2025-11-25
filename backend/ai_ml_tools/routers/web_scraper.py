@@ -431,6 +431,88 @@ def download_combined_text_by_url(url: str = Query(...)):
     headers = {"Content-Disposition": f'attachment; filename="combined_{base}.txt"'}
     return PlainTextResponse(combined, media_type="text/plain", headers=headers)
 
+@router.get("/base-presets")
+def api_base_presets():
+    """Return list of unique base domains from vector DB."""
+    emb = _build_embeddings()
+    vs = _get_or_create_vs(emb)
+
+    metas = vs._collection.get(include=["metadatas"]).get("metadatas") or []
+
+    presets = {}  # base domain → aggregated info
+
+    for m in metas:
+        src = m.get("source")
+        if not src:
+            continue
+
+        try:
+            u = urlparse(src)
+            base = f"{u.scheme}://{u.hostname.lower()}"
+        except:
+            continue
+
+        entry = presets.setdefault(base, {
+            "base": base,
+            "title": "",
+            "description": "",
+            "favicon": f"{u.scheme}://{u.hostname}/favicon.ico",
+            "last_scraped_at": None,
+            "last_scrape_duration": None,
+            "url": base,  # useful for frontend
+        })
+
+        # update metadata
+        t = m.get("scraped_at")
+        dur = m.get("duration_seconds")
+
+        if t and (entry["last_scraped_at"] is None or t > entry["last_scraped_at"]):
+            entry["last_scraped_at"] = t
+            if dur is not None:
+                entry["last_scrape_duration"] = dur
+
+        if not entry["title"] and m.get("site_title"):
+            entry["title"] = m["site_title"]
+
+        if not entry["description"] and m.get("site_description"):
+            entry["description"] = m["site_description"]
+
+        if m.get("favicon"):
+            entry["favicon"] = m["favicon"]
+
+    return {"presets": list(presets.values())}
+
+@router.get("/pages")
+def api_pages(base: str = Query(...)):
+    """Return all pages (full URLs) belonging to a given base domain."""
+    emb = _build_embeddings()
+    vs = _get_or_create_vs(emb)
+
+    base = base.rstrip("/")  # normalize
+    metas = vs._collection.get(include=["metadatas", "documents"]).get("metadatas") or []
+
+    pages = []
+    seen = set()
+
+    for m in metas:
+        src = m.get("source")
+        if not src:
+            continue
+
+        if src.startswith(base) and src not in seen:
+            seen.add(src)
+
+            pages.append({
+                "url": src,
+                "title": m.get("site_title", ""),
+                "description": m.get("site_description", ""),
+                "favicon": m.get("favicon") or f"{base}/favicon.ico",
+                "last_scraped_at": m.get("scraped_at"),
+                "base": base,
+            })
+
+    return {"pages": pages}
+
 
 # ----- Web Socket Routes -----
 @router.websocket("/ws/website_chat")

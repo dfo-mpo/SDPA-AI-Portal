@@ -25,7 +25,7 @@ function dateFormat(iso) {
   return d.toLocaleString();
 }
 
-function usePresets() {
+function useBasePresets() {
   const [presets, setPresets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -34,7 +34,7 @@ function usePresets() {
     setLoading(true);
     setErr("");
     try {
-      const r = await fetch(`${API_BASE}/api/presets`);
+      const r = await fetch(`${API_BASE}/api/base-presets`);
       const j = await r.json();
       setPresets(j?.presets || []);
     } catch (e) {
@@ -397,8 +397,10 @@ function renderAssistantMessage(message) {
 /* ---------- main component ---------- */
 export function WebScraper() {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { presets, loading, err, reload } = usePresets();
+  const { presets: basePresets, loading, err, reload } = useBasePresets();
   const [q, setQ] = useState("");
+  const [allPresets, setAllPresets] = useState([]);
+  const [allPresetsLoaded, setAllPresetsLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(() => new Set());
   const [adding, setAdding] = useState(false);
   const [addErr, setAddErr] = useState("");
@@ -451,15 +453,44 @@ export function WebScraper() {
     }));
   }, [messages]);
 
+  useEffect(() => {
+    // load once on mount
+    (async () => {
+      try {
+        const r = await fetch(`${API_BASE}/api/presets`);
+        const j = await r.json();
+        setAllPresets(j?.presets || []);
+      } catch (e) {
+        console.error("Failed to load ALL presets:", e);
+        // fall back to basePresets only
+        setAllPresets([]);
+      } finally {
+        setAllPresetsLoaded(true);
+      }
+    })();
+  }, []);
+
   const filtered = useMemo(() => {
-    if (!q.trim()) return presets;
-    const needle = q.toLowerCase();
-    return presets.filter((p) =>
-      (p.title || "").toLowerCase().includes(needle) ||
-      (p.description || "").toLowerCase().includes(needle) ||
-      (p.url || "").toLowerCase().includes(needle)
-    );
-  }, [presets, q]);
+    const needle = q.trim().toLowerCase();
+
+    // No search term → show just base presets
+    if (!needle) return basePresets;
+
+    // With search term → search through ALL presets
+    const source = allPresets.length ? allPresets : basePresets;
+
+    return source.filter((p) => {
+      const url = (p.url || "").toLowerCase();
+      const title = (p.title || p.site_title || "").toLowerCase();
+      const desc = (p.description || p.site_description || "").toLowerCase();
+
+      return (
+        url.includes(needle) ||
+        title.includes(needle) ||
+        desc.includes(needle)
+      );
+    });
+  }, [q, basePresets, allPresets]);
 
   const handleRefresh = (url) => {
     setConfirmMode("rescrape");
@@ -470,11 +501,11 @@ export function WebScraper() {
 
   const existingKeys = useMemo(() => {
     const s = new Set();
-    for (const p of presets) {
+    for (const p of [...basePresets, ...allPresets]) {
       try { s.add(urlKeyStrict(p.url)); } catch {}
     }
     return s;
-  }, [presets]);
+  }, [basePresets, allPresets]);
 
   const handleAdd = async () => {
     setAddErr("");
@@ -493,10 +524,11 @@ export function WebScraper() {
 
   const getLastDurationFor = (url) => {
     if (!url) return null;
-    const match = presets.find(p => {
-      try { return urlKeyStrict(p.url) === urlKeyStrict(url); }
-      catch { return p.url === url; }
-    });
+    const match = [...basePresets, ...allPresets].find(p => {
+    try { return urlKeyStrict(p.url) === urlKeyStrict(url); }
+    catch { return p.url === url; }
+  });
+
     const dur = match && match.last_scrape_duration;
     if (typeof dur === "number" && isFinite(dur)) return dur;
     if (dur != null) {
@@ -511,10 +543,12 @@ export function WebScraper() {
       setScrapeInProgress(true);
     });
     setAddErr("");
-
-    const prev = presets.find(p => {
-      try { return urlKeyStrict(p.url) === urlKeyStrict(url); }
-      catch { return p.url === url; }
+    const prev = [...basePresets, ...allPresets].find((p) => {
+    try {
+      return urlKeyStrict(p.url) === urlKeyStrict(url);
+    } catch {
+      return p.url === url;
+    }
     });
     setScrapeEstimate(prev?.last_scrape_duration || null);
 
@@ -546,8 +580,8 @@ export function WebScraper() {
   const dialogNextAllowedAt = useMemo(() => {
     if (!confirmUrl) return null;
     // find the matching preset row for this URL
-    const match = presets.find(p => {
-      try { return urlKeyStrict(p.url) === urlKeyStrict(confirmUrl); }
+    const match = basePresets.find(p => {
+    try { return urlKeyStrict(p.url) === urlKeyStrict(confirmUrl); }
       catch { return p.url === confirmUrl; }
     });
     const last = match?.last_scraped_at;
@@ -558,7 +592,7 @@ export function WebScraper() {
 
     const next = new Date(lastMs + COOLDOWN_DAYS * 86400000);
     return next.getTime() > Date.now() ? next.toISOString() : null;
-  }, [presets, confirmUrl]);
+  }, [basePresets, confirmUrl]);
 
 
   const openChatForUrl = (url) => {
@@ -792,13 +826,13 @@ export function WebScraper() {
               Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} variant="rounded" height={84} sx={{ mb: 1 }} />
               ))
-            ) : presets.length === 0 ? (
+            ) : !q && basePresets.length === 0 ? (
               <Typography align="center" color="text.secondary" sx={{ py: 2 }}>
                 No websites scraped yet. Paste a URL above and click <b>Add</b> to get started.
               </Typography>
             ) : filtered.length ? (
               filtered.map((item) => (
-                <Box key={item.url} sx={{ mb: 1 }}>
+                <Box key={item.url + "_" + q} sx={{ mb: 1 }}>
                   <PresetCard
                     item={item}
                     onRefresh={handleRefresh}
