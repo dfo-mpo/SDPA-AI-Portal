@@ -536,7 +536,7 @@ async def website_chat_min(ws: WebSocket):
                 return
 
             # Build “website blob” from Chroma
-            context = _retrieve_relevant(url, user_msg, k=2, char_cap=2000)
+            context = _retrieve_relevant(url, user_msg, k=6, char_cap=20000)
 
             system_prompt = (
                     "You are a helpful assistant answering questions about a WEBSITE. "
