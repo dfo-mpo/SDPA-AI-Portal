@@ -2,7 +2,12 @@
  * ML Model Repository Dashboard
  */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   Box,
   Tabs,
@@ -20,17 +25,108 @@ import {
   Chip,
   Drawer,
   Button,
-  Divider
+  Divider,
 } from "@mui/material";
-import { Boxes, History, BookOpen, HelpCircle, FileText, Download, Search } from "lucide-react";
+import {
+  Boxes,
+  History,
+  BookOpen,
+  HelpCircle,
+  FileText,
+  Download,
+  Search,
+} from "lucide-react";
 import CloseIcon from "@mui/icons-material/Close";
 import { useLanguage } from "../../../contexts";
 import { getToolTranslations } from "../../../utils";
-import ModelsList from "./views/ModelsList";
+import SearchBar from "./components/SearchBar";
+import ModelCard from "./components/ModelCard";
 import ModelDetail from "./views/ModelDetail";
 import * as modelsApi from "./services/repoApi";
 
-// Main Dashboard
+/* -------------------- Local layout components -------------------- */
+
+// Simple grid wrapper for model cards
+function CardsGrid({ children, gap = 2, sx }) {
+  return (
+    <Box
+      sx={{
+        display: "grid",
+        gap,
+        // Each column is ~370–417px, packed from the left
+        gridTemplateColumns: "repeat(auto-fill, minmax(370px, 417px))",
+        justifyContent: "flex-start",
+        alignItems: "stretch",
+        width: "100%",
+        ...sx,
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+// List view with search + grid of cards
+function ModelsList({ rows = [], onSelect, onHistory, showSearch = true }) {
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        (r.tags || []).some((tag) => tag.toLowerCase().includes(q))
+    );
+  }, [rows, query]);
+
+  return (
+    <>
+      {showSearch && (
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          sx={{ mb: 2, flexWrap: { xs: "wrap", sm: "nowrap" } }}
+        >
+          <SearchBar
+            value={query}
+            onChange={setQuery}
+            placeholder="Search by name or tag"
+            sx={{
+              flex: "1 1 520px",
+              minWidth: 300,
+              width: { xs: "100%", sm: "auto" },
+            }}
+          />
+        </Stack>
+      )}
+
+      <Box sx={{ mt: 2, width: "100%", overflow: "visible" }}>
+        <CardsGrid sx={{ width: "100%", maxWidth: "100%", mx: 0, px: 0 }}>
+          {filtered.map((item) => (
+            <Box key={item.id ?? `${item.name}-${item.version}`}>
+              <ModelCard
+                item={item}
+                onReadme={() => onSelect && onSelect(item)}
+                onHistory={onHistory ? () => onHistory(item) : undefined}
+              />
+            </Box>
+          ))}
+        </CardsGrid>
+
+        {filtered.length === 0 && (
+          <Typography sx={{ mt: 2 }} variant="body2" color="text.secondary">
+            No models match your search.
+          </Typography>
+        )}
+      </Box>
+    </>
+  );
+}
+
+/* -------------------------- Main Dashboard -------------------------- */
+
 export function MLModelsRepo() {
   const { language } = useLanguage();
   const t = getToolTranslations("mlModelsRepo", language);
