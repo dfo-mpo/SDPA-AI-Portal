@@ -10,11 +10,15 @@ from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urldefrag, urlparse, urlunparse
 from typing import List, Dict, Optional, Set, Tuple
-import requests, tempfile, os, hashlib, re, json
+import requests, tempfile, os, hashlib, re, json, urllib3, warnings
 import pandas as pd
 import pdfplumber
 from docx import Document
+from urllib3.exceptions import InsecureRequestWarning
 
+# ---------- Ignore verify=False warnings ----------
+warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+urllib3.disable_warnings(InsecureRequestWarning)
 
 # ---------- Variables ----------
 LOW_QUALITY_PATTERNS = ["contact", "privacy", "terms", "login", "disclaimer", "account", "signup",
