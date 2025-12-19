@@ -74,6 +74,29 @@ function downloadCombinedByUrl(u) {
 
 const COOLDOWN_DAYS = 30;
 
+function formatDurationSmart(seconds) {
+  const s = Number(seconds);
+  if (!isFinite(s) || s <= 0) return null;
+
+  const totalMinutes = Math.round(s / 60);
+
+  if (totalMinutes < 60) {
+    return `${totalMinutes} minute${totalMinutes !== 1 ? "s" : ""}`;
+  }
+
+  const totalHours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (totalHours < 24) {
+    return `${totalHours} hour${totalHours !== 1 ? "s" : ""}${minutes ? ` ${minutes}m` : ""}`;
+  }
+
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+
+  return `${days} day${days !== 1 ? "s" : ""}${hours ? ` ${hours}h` : ""}`;
+}
+
 function disabledUntil(iso) {
   if (!iso) return null;
   const now = Date.now();
@@ -181,13 +204,21 @@ function downloadChatHistoryForUrl(url, msgs = []) {
 
 
 /* ---------- preset card ---------- */
-function PresetCard({ item, onRefresh = () => {}, refreshing, onOpen = () => {}, onDownload = () => {} }) {
-  const title = item.title || item.site_title;
+function PresetCard({
+  item,
+  onRefresh = () => {},
+  refreshing,
+  onOpen = () => {},
+  onDownload = () => {},
+}) {
+  const title = item.title || item.site_title || "Untitled";
   const fav = item.favicon;
-  const descr =
-    item.description ||
-    item.site_description ||
-    (item.url ? new URL(item.url).origin : "");
+
+  const descRaw = (item.description || item.site_description || "").trim();
+  const hasDesc = descRaw.length > 0;
+
+  const url = item.url || "";
+  const urlLabel = url; // or new URL(url).origin if you prefer shorter
 
   return (
     <Card
@@ -200,50 +231,84 @@ function PresetCard({ item, onRefresh = () => {}, refreshing, onOpen = () => {},
     >
       <CardActionArea disableRipple onClick={() => onOpen(item.url)}>
         <CardContent sx={{ p: 2 }}>
+          {/* Header row */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mb: 1 }}>
             <Avatar
               src={fav}
               alt={title}
               sx={{ width: 28, height: 28, bgcolor: "grey.100" }}
             />
+
             <Typography variant="subtitle1" fontWeight={700} noWrap title={title}>
               {title}
             </Typography>
+
             <Box sx={{ flex: 1 }} />
+
             <Tooltip title="Download already scraped data">
               <span>
                 <IconButton
                   size="small"
-                  onClick={(e) => { e.stopPropagation(); onDownload(item.url); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownload(item.url);
+                  }}
                   aria-label="Download already-scraped data"
                 >
                   <Download size={18} />
                 </IconButton>
               </span>
             </Tooltip>
+
             <Tooltip title="Refresh (re-scrape)">
               <span>
                 <IconButton
                   size="small"
-                  onClick={(e) => { e.stopPropagation(); onRefresh(item.url); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRefresh(item.url);
+                  }}
                   disabled={refreshing}
                 >
-                  {refreshing ? <CircularProgress size={18} /> : <RefreshCw size={18} />}
+                  {refreshing ? (
+                    <CircularProgress size={18} />
+                  ) : (
+                    <RefreshCw size={18} />
+                  )}
                 </IconButton>
               </span>
             </Tooltip>
           </Box>
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ minHeight: 38 }}
-            noWrap
-            title={descr}
-          >
-            {descr || "No description"}
-          </Typography>
+          {/* Body: fixed two-line block so ALL cards are the same height */}
+          <Box sx={{ minHeight: 44 }}>
+            {/* Line 1: description (reserve space even if empty) */}
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              noWrap
+              title={hasDesc ? descRaw : ""}
+              sx={{
+                minHeight: 20, // reserve 1 line
+                visibility: hasDesc ? "visible" : "hidden",
+              }}
+            >
+              {descRaw || "—"}
+            </Typography>
 
+            {/* Line 2: URL (always shown) */}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              noWrap
+              title={urlLabel}
+              sx={{ display: "block", mt: 0.25, wordBreak: "break-all" }}
+            >
+              {urlLabel}
+            </Typography>
+          </Box>
+
+          {/* Footer row */}
           <Box sx={{ display: "flex", alignItems: "center", mt: 1.25, gap: 1 }}>
             <Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>
               Last scraped: {dateFormat(item.last_scraped_at)}
@@ -266,7 +331,7 @@ function ConfirmScrapeDialog({
   nextAllowedAt = null,
 }) {
   const isRescrape = mode === "rescrape";
-  const minutes = estimatedDuration ? Math.ceil(estimatedDuration / 60) : null;
+  const prettyDuration = estimatedDuration ? formatDurationSmart(estimatedDuration) : null;
   const rescrapeLocked = isRescrape && Boolean(nextAllowedAt);
 
   return (
@@ -316,12 +381,11 @@ function ConfirmScrapeDialog({
             {isRescrape
               ? `Re-scraping ${url} may take several hours depending on site size.`
               : `Scraping ${url} may take several hours depending on website complexity.`}
-            {minutes && (
+            {prettyDuration && (
               <>
                 <br />
                 <br />
-                <strong>Estimated scrape duration:</strong> around {minutes} minute
-                {minutes > 1 ? "s" : ""}.
+                <strong>Estimated scrape duration:</strong> around {prettyDuration}.
               </>
             )}
             {isRescrape && nextAllowedAt && (
