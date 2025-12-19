@@ -7,10 +7,11 @@ import uuid, json, re, os, hashlib, threading, time, logging
 from ai_ml_tools.utils.webScraper.scrape import scrape_website, split_dom_content
 from ai_ml_tools.utils.webScraper.parse import parse_with_azure_llm
 from langchain_openai import AzureOpenAIEmbeddings
+import chromadb, logging
 from langchain_chroma import Chroma
 from chromadb.config import Settings
 from datetime import datetime, timezone
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse, urljoin, urldefrag
 from ai_ml_tools.utils.openai import request_openai_chat
 from fastapi import WebSocket, WebSocketDisconnect
 from datetime import datetime, timezone, timedelta
@@ -55,6 +56,15 @@ def _get_or_create_vs(emb):
         embedding_function=emb,
         client_settings=Settings(anonymized_telemetry=False),
     )
+# Using local server to make several scrapes at once, useful if we want to host the chromadb as a seperate server
+"""def _get_or_create_vs(emb):
+    '''Returns a Chroma vector store (persisted on disk) that uses the provided embedding function.'''
+    client = chromadb.HttpClient(host="localhost", port=8002)  # chroma server port
+    return Chroma(
+        client=client,
+        collection_name=COLLECTION,
+        embedding_function=emb,
+    ) """
 
 def _embed_with_retry(emb, texts: list[str], max_retries: int = 3, base_delay: int = 20):
     """
@@ -165,14 +175,28 @@ def _load_website_blob(url: str, cap: int = 200_000) -> str:
     docs, _ = _load_ordered_vectors(url)
     return ("\n\n".join(docs))[:cap]
 
-def _retrieve_relevant(url: str, query: str, k: int = 2, char_cap: int = 4000) -> str:
-    '''Retrieve most relevant chunks'''
+def _retrieve_relevant(url: str, query: str, k: int = 6, char_cap: int = 20000) -> str:
+    """ Normalize URL, check for candidates and conduct similarity search between the query vector and chromadb vectors"""
     emb = _build_embeddings()
     vs  = _get_or_create_vs(emb)
 
-    docs = vs.similarity_search(query, k=k, filter={"source": url})
-    text = "\n\n".join(getattr(d, "page_content", str(d)) for d in docs)
-    return text[:char_cap]
+    # normalize incoming url
+    url = (url or "").strip()
+    url = urldefrag(url)[0]  # remove #fragment
+
+    candidates = [url]
+    if url.endswith("/"):
+        candidates.append(url.rstrip("/"))
+    else:
+        candidates.append(url + "/")
+
+    for u in candidates:
+        docs = vs.similarity_search(query, k=k, filter={"source": u})
+        if docs:
+            text = "\n\n".join(d.page_content for d in docs)
+            return text[:char_cap]
+    logging.warning("[WS] No docs for url=%r. Tried: %r", url, candidates)
+    return ""
 
 def _list_presets() -> list[dict]:
     '''Builds a list of cached URLs with chunk counts and last-scraped timestamps, sorted newest first.'''
@@ -293,6 +317,61 @@ def _get_url_lock(url: str) -> threading.Lock:
             _url_locks[url] = lock
         return lock
 
+def _get_existing_site_description(url: str) -> str:
+    """If this URL already has a stored description in Chroma, return it."""
+    try:
+        emb = _build_embeddings()
+        vs  = _get_or_create_vs(emb)
+        res = vs._collection.get(
+            where={"source": {"$eq": url}},
+            include=["metadatas"],
+            limit=1,
+        )
+        metas = res.get("metadatas") or []
+        if not metas:
+            return ""
+        return (metas[0].get("site_description") or "").strip()
+    except Exception:
+        return ""
+
+
+def _ensure_site_description(site_meta: dict, url: str, text: str) -> dict:
+    site_meta = site_meta or {}
+
+    # 1) If scrape_website already gave one, keep it
+    existing_desc = (site_meta.get("site_description") or "").strip()
+    if existing_desc:
+        return site_meta
+
+    # 2) If Chroma already has one, reuse it
+    existing = _get_existing_site_description(url)
+    if existing:
+        site_meta["site_description"] = existing
+        return site_meta
+
+    # 3) Otherwise generate once
+    desc = ""
+    try:
+        sample = (text or "")[:12000]
+        if sample.strip():
+            desc = parse_with_azure_llm(
+                [sample],
+                "Write a 1–2 sentence description of what this website is about."
+            ).strip()
+    except Exception as e:
+        logging.warning(f"[DESC] Could not generate description for {url}: {e}")
+
+    # 4) Fallback so it's never empty
+    if not desc:
+        try:
+            host = urlparse(url).netloc or "unknown host"
+        except Exception:
+            host = "unknown host"
+        desc = f"Website content scraped from {host}."
+
+    site_meta["site_description"] = desc
+    return site_meta
+
 # ----- POST Requests -----
 
 # Scrape POST request
@@ -376,6 +455,7 @@ def api_scrape(req: ScrapeReq):
         site_meta = data.get("site_meta") or {
             "site_title": "", "site_description": "", "favicon": _host_favicon(req.url)
         }
+        site_meta = _ensure_site_description(site_meta, req.url, text)
 
         session_id = str(uuid.uuid4())
         _session_url[session_id] = req.url
@@ -449,27 +529,28 @@ def api_base_presets():
         try:
             u = urlparse(src)
             base = f"{u.scheme}://{u.hostname.lower()}"
-        except:
+        except Exception:
             continue
 
         entry = presets.setdefault(base, {
             "base": base,
+            "url": src,
             "title": "",
             "description": "",
-            "favicon": f"{u.scheme}://{u.hostname}/favicon.ico",
+            "favicon": f"{base}/favicon.ico",
             "last_scraped_at": None,
             "last_scrape_duration": None,
-            "url": base,  # useful for frontend
         })
 
         # update metadata
         t = m.get("scraped_at")
         dur = m.get("duration_seconds")
 
+        # If this metadata is newer, update representative URL to THIS src
         if t and (entry["last_scraped_at"] is None or t > entry["last_scraped_at"]):
             entry["last_scraped_at"] = t
-            if dur is not None:
-                entry["last_scrape_duration"] = dur
+            entry["last_scrape_duration"] = dur
+            entry["url"] = src
 
         if not entry["title"] and m.get("site_title"):
             entry["title"] = m["site_title"]
@@ -536,7 +617,13 @@ async def website_chat_min(ws: WebSocket):
                 return
 
             # Build “website blob” from Chroma
+            logging.warning("[WS] payload url=%r", url)
             context = _retrieve_relevant(url, user_msg, k=6, char_cap=20000)
+            # Show context in terminal
+            logging.warning(
+                "\n===== WS CONTEXT START =====\n%s\n===== WS CONTEXT END =====\n",
+                context
+            )
 
             system_prompt = (
                     "You are a helpful assistant answering questions about a WEBSITE. "
