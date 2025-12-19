@@ -10,11 +10,15 @@ from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urldefrag, urlparse, urlunparse
 from typing import List, Dict, Optional, Set, Tuple
-import requests, tempfile, os, hashlib, re, json
+import requests, tempfile, os, hashlib, re, json, urllib3, warnings
 import pandas as pd
 import pdfplumber
 from docx import Document
+from urllib3.exceptions import InsecureRequestWarning
 
+# ---------- Ignore verify=False warnings ----------
+warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+urllib3.disable_warnings(InsecureRequestWarning)
 
 # ---------- Variables ----------
 LOW_QUALITY_PATTERNS = ["contact", "privacy", "terms", "login", "disclaimer", "account", "signup",
@@ -100,10 +104,10 @@ def resolve_head(url: str, timeout: float = 3.0) -> Optional[str]:
     - None on network/timeout errors (caller can decide what to do).
     """
     try:
-        r = requests.head(url, allow_redirects=True, timeout=timeout)
+        r = requests.head(url, allow_redirects=True, timeout=timeout, verify=False)
         # Some origins disallow HEAD; try a lightweight GET
         if r.status_code in (405, 403) or r.is_redirect:
-            r = requests.get(url, allow_redirects=True, timeout=timeout, stream=True)
+            r = requests.get(url, allow_redirects=True, timeout=timeout, stream=True, verify=False)
         final = r.url or url
         return normalizeUrl(final)
     except Exception:
@@ -131,7 +135,7 @@ def extract_xlsx_text(url):
 def extract_pdf_text(url):
     """Download PDF and extract text from all pages (basic text layer only)."""
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=10, verify=False)
         response.raise_for_status()
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(response.content)
@@ -147,7 +151,7 @@ def extract_pdf_text(url):
 def extract_docx_text(url):
     """Download DOCX and extract paragraph text."""
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=10, verify=False)
         response.raise_for_status()
         with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
             tmp.write(response.content)
