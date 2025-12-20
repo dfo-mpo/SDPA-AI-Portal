@@ -25,7 +25,7 @@ _session_url: Dict[str, str] = {}
 _url_locks: Dict[str, threading.Lock] = {}
 _url_locks_guard = threading.Lock()
 
-PERSIST_DIR = "chroma_store"
+PERSIST_DIR = "/data/chroma_store"
 COLLECTION  = "web_chunks_v6"
 
 os.environ.setdefault("CHROMA_TELEMETRY_ENABLED", "false")
