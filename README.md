@@ -9,6 +9,11 @@ Any file that communicates to the backend or server using an HTTP request to 'lo
 ## Backend Image Logic
 The backend is implemented using fastapi/uvicorn, the backend folder contains the dockerfile for creating its image. It uses Python 3.10 and imports all packages specified in the requirments.txt file. It is exposed to port 8000 but the port is not directly used by the frontend due to the reverse proxy.<br>
 <b>Important:</b> There are 2 urls for HTTP requests to the VM that need to be manually uncommented (one for Azure and one for a local machine). This is in routers/age_scale.py and routers/french_translations.py
+### Chroma Storage
+Since Azure does not support volumes like native docker does, a file share is used. The steps in setting this are:
+1. Create a new file share in an Azure Storage Account, call it chroma.
+2. In the Azure web app resource go to path mappings and add a new storage mount. Call it chroma-store, connect it to the file share just created, and set the mount path to /home/chroma_store.
+3. In the Azure web app resource go to enviroment variables and set WEBSITES_ENABLE_APP_SERVICE_STORAGE to true.
 
 ## Server Image Logic
 The server image is implemented using express JS (version 5.1.0). The server folder contains all of the code used by this image. The dockerfile is in the project root called Dockerfile.server and uses the same package and package-lock files as the frontend image. It is exposed to port 4000 but the port is not directly used by the frontend due to the reverse proxy.

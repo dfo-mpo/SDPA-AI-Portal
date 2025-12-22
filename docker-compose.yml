@@ -18,7 +18,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile  
     volumes:
-      - "chroma_store:/data/chroma_store"
+      - "chroma_store:/home/chroma_store"
     ports:  
       - "8080:8000"
 
