@@ -198,7 +198,7 @@ export function SurveyForm() {
         <div className="text-center mb-6 px-6">
           <h1 className="text-4xl font-extrabold text-black dark:text-white mb-3">Core Intake Form AI Activity</h1>
           <div className="text-sm text-black dark:text-white">
-            This form is meant to be use as guide to support business users in articulating and imagining the potential of using Data, Artificial Intelligence, and Machine Learning to improve productivity, efficiencies, and generate value for program and service delivery, operations, and other business processes. It is meant to help users determine the value and potential of new data innovation from a value proposition, scalability, and sustainability lens rather than a technical implementation perspective. Complete responses will help regional management along with Data and AI Scientist to determine how feasible a solution could be. 
+            This form is meant to be use as guide to support business users in articulating and imagining the potential of using Data, Artificial Intelligence, and Machine Learning to improve productivity, efficiencies, and generate value for program and service delivery, operations, and other business processes. It is meant to help users determine the value and potential of new data innovation from a value proposition, scalability, and sustainability lens rather than a technical implementation perspective. Complete responses will help Data and AI Scientist to determine how feasible a solution could be. 
           </div>
         </div>
 
