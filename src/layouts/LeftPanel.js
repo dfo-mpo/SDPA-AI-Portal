@@ -44,6 +44,7 @@ import {
   FrenchTranslationSettings,
   CSVAnalyzerSettings,
   WebScraperSettings,
+  PDFExtractionToolSettings,
 } from '../components/tools/settings';
 
 import { getToolByName } from '../utils';
@@ -84,7 +85,8 @@ export default function NewLeftPanel({
     'PDF Chatbot': <PDFChatbotSettings />,
     'French Translation': <FrenchTranslationSettings />,
     'CSV/PDF Analyzer': <CSVAnalyzerSettings />,
-    'Web Scraper' : <WebScraperSettings />
+    'Web Scraper' : <WebScraperSettings />,
+    'Document OCR' : <PDFExtractionToolSettings />
   };
 
   // Component-specific styles

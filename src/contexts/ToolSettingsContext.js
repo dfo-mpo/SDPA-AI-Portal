@@ -77,6 +77,11 @@ const [fenceCountingSettings, setFenceCountingSettings] = useState({
     modelType: 'gpt4omini',
   });
 
+  // Web Scraper settings (simple for now)
+  const [PDFExtractionToolSettings, setPDFExtractionToolSettings] = useState({
+    modelType: 'gpt4omini',
+  });
+
 // PII Redactor settings with improved Canadian-specific information detection
 const [piiRedactorSettings, setPiiRedactorSettings] = useState({
   redactionMethod: 'mask', // 'mask' or 'typePlaceholder'
@@ -165,7 +170,7 @@ const [piiRedactorSettings, setPiiRedactorSettings] = useState({
   };
 
    /**
-   * Update PDF Chatbot settings
+   * Update Web Scraper Chatbot settings
    * 
    * @param {Object} settings - New settings object or update function
    */
@@ -174,6 +179,22 @@ const [piiRedactorSettings, setPiiRedactorSettings] = useState({
       setWebScraperSettings(settings);
     } else {
       setWebScraperSettings((prev) => ({
+        ...prev,
+        ...settings,
+      }));
+    }
+  };
+
+  /**
+   * Update PDF Extraction Tool settings
+   * 
+   * @param {Object} settings - New settings object or update function
+   */
+  const updatePDFExtractionToolSettings = (settings) => {
+    if (typeof settings === 'function') {
+      setPDFExtractionToolSettings(settings);
+    } else {
+      setPDFExtractionToolSettings((prev) => ({
         ...prev,
         ...settings,
       }));
@@ -257,6 +278,9 @@ const [piiRedactorSettings, setPiiRedactorSettings] = useState({
     // Web Scraper
     webScraperSettings,
     updateWebScraperSettings,
+
+    PDFExtractionToolSettings,
+    updatePDFExtractionToolSettings,
   };
 
   return (
