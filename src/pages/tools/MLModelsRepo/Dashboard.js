@@ -128,6 +128,21 @@ export function MLModelsRepo() {
         </p>
       </Stack>
 
+      <Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
+        <AlertTitle>Model Source & Access</AlertTitle>
+        All models are sourced from <strong>DFO Azure AML</strong>.
+        <br />
+        To upload your AI models onto AML and to have access, please contact{" "}
+        <a
+          href="mailto:OCDS-DFO.OCDS-BIPD.MPO@dfo-mpo.gc.ca"
+          style={{ fontWeight: 600 }}
+        >
+          OCDS - DFO.OCDS-BIPD.MPO@dfo-mpo.gc.ca
+        </a>.
+      </Alert>
+
+      <br></br>
+
       {/* Disclaimer */}
       <Alert severity="warning" variant="outlined" sx={{ mb: 2 }}>
         <AlertTitle>Disclaimer</AlertTitle>
@@ -384,20 +399,9 @@ export function MLModelsRepo() {
           <Typography variant="body2" sx={{ lineHeight: 1.7 }}>
             You <b>cannot upload models directly</b> from this page.
             <br />
-            To register a new model or a new version, use the dedicated{" "}
-            <b>Model Upload</b> experience in Azure ML Studio.
+            To register a new model or a new version, please contact{" "}
+            <strong>OCDS - DFO.OCDS-BIPD.MPO@dfo-mpo.gc.ca</strong>.
           </Typography>
-
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ mt: 2 }}
-            href="https://ml.azure.com/model/list?wsid=/subscriptions/4858d1be-583d-42d6-a4a3-44172168b003/resourcegroups/Merged-AI-Portal-Frontend-RG/providers/Microsoft.MachineLearningServices/workspaces/MLModelRepoAML&tid=8c1a4d93-d828-4d0e-9303-fd3bd611c822"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open Azure ML Model Upload
-          </Button>
 
           <Typography
             variant="body2"
