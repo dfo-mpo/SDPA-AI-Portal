@@ -47,14 +47,14 @@ export default function WebScraperSettings({ onSettingsChange = () => {} }) {
           value={webScraperSettings.modelType}
           onChange={handleChange('modelType')}
         >
-          <MenuItem value="gpt4omini">
-            {translations.gpt4omini || 'GPT-4o mini (default)'}
+          <MenuItem value="gpt41mini">
+            {translations.gpt41mini || 'GPT-4.1-mini'}
           </MenuItem>
           <MenuItem value="gpt4o">
             {translations.gpt4o || 'GPT-4o'}
           </MenuItem>
-          <MenuItem value="gpt35">
-            {translations.gpt35 || 'GPT-3.5'}
+          <MenuItem value="gpt4omini">
+            {translations.gpt4omini || 'GPT-4o mini (default)'}
           </MenuItem>
         </Select>
       </SettingFormControl>
