@@ -318,7 +318,7 @@ export function PDFExtractionTool() {
         {/* Visual Step Guide */}
         <Box sx={{ mb: 3 }}>
           <Stepper activeStep={activeStep} alternativeLabel>
-            {["Upload PDF", "Add Field Questions", "View Results"].map((label) => (
+            {["Upload PDF", "Add Fields", "View Results"].map((label) => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
               </Step>
@@ -462,7 +462,7 @@ export function PDFExtractionTool() {
         </Alert>
       )}
 
-      {/* Field Questions Section */}
+      {/* Fields Section */}
       <Box sx={{ maxWidth: 800, mx: "auto", mt: 3 }}>
         <Box
           onClick={() => {
@@ -489,7 +489,7 @@ export function PDFExtractionTool() {
             },
           }}
         >
-        <Typography variant="h4" fontWeight={700}>Field Questions</Typography>
+        <Typography variant="h4" fontWeight={700}>Extract Fields</Typography>
           {fieldsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
         </Box>
 
@@ -756,7 +756,7 @@ export function PDFExtractionTool() {
             {/* Extracted Fields list */}
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
               <Typography variant="subtitle1" fontWeight={700}>
-                Extracted Fields
+                Fields to be extracted
               </Typography>
             </Box>
 
@@ -1045,7 +1045,7 @@ export function PDFExtractionTool() {
 
           {/* 2. Define fields */}
           <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-            2. Define Field Questions
+            2. Define Fields
           </Typography>
           <Stack spacing={1.1} sx={{ mb: 2 }}>
             <Typography
