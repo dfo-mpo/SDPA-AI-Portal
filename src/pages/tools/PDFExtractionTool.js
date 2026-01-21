@@ -497,7 +497,7 @@ export function PDFExtractionTool() {
           <Box sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
             {/* brief explaination of all the optionss */}
             <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-              Choose <b>one</b> way to define your extraction fields.
+              Define your extraction fields here.
             </Typography>
 
             {/* Choice cards */}
