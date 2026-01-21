@@ -51,6 +51,7 @@ export function PDFExtractionTool() {
   const visibleRows = selectedDocName && resultsByDoc[selectedDocName]
     ? resultsByDoc[selectedDocName]
     : [];
+  const [fieldMode, setFieldMode] = useState(null);
 
   /* Functions */
   function handleFileInput(e) {
@@ -314,7 +315,7 @@ export function PDFExtractionTool() {
         {/* Visual Step Guide */}
         <Box sx={{ mb: 3 }}>
           <Stepper activeStep={activeStep} alternativeLabel>
-            {["Upload PDF", "Add Question Fields", "View Results"].map((label) => (
+            {["Upload PDF", "Add Field Questions", "View Results"].map((label) => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
               </Step>
@@ -458,7 +459,7 @@ export function PDFExtractionTool() {
         </Alert>
       )}
 
-      {/* Question Fields Section */}
+      {/* Field Questions Section */}
       <Box sx={{ maxWidth: 800, mx: "auto", mt: 3 }}>
         <Box
           onClick={() => {
@@ -485,7 +486,7 @@ export function PDFExtractionTool() {
             },
           }}
         >
-          <Typography variant="h4" fontWeight={700}>Question Fields</Typography>
+        <Typography variant="h4" fontWeight={700}>Field Questions</Typography>
           {fieldsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
         </Box>
 
@@ -493,249 +494,314 @@ export function PDFExtractionTool() {
           <Box sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
             {/* brief explaination of all the optionss */}
             <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-              You can either <b>upload a CSV/JSON schema</b> or <b>define fields manually</b>.
+              Choose <b>one</b> way to define your extraction fields.
             </Typography>
 
-            {/* Option 1: Upload CSV/JSON Schema */}
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-              <Chip label="Option 1" size="small" color="primary" variant="outlined" />
+            {/* Choice cards */}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                gap: 2,
+                mb: 3,
+              }}
+            >
+              {/* Option 1: Schema */}
+              <Paper
+                onClick={() => setFieldMode("schema")}
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  cursor: "pointer",
+                  borderWidth: 2,
+                  borderColor: fieldMode === "schema" ? "primary.main" : "divider",
+                  bgcolor: fieldMode === "schema" ? "primary.50" : "background.paper",
+                  transition: "all .2s ease",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                  },
+                }}
+              >
+                <Stack spacing={1}>
+                  <Chip
+                    label="Option 1"
+                    size="small"
+                    color="primary"
+                    variant={fieldMode === "schema" ? "filled" : "outlined"}
+                    sx={{ width: "fit-content" }}
+                  />
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Upload CSV / JSON Schema
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Automatically generate fields from column headers or JSON keys.
+                    Best for structured documents.
+                  </Typography>
+                </Stack>
+              </Paper>
+
+              {/* Option 2: Manual */}
+              <Paper
+                onClick={() => setFieldMode("manual")}
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  cursor: "pointer",
+                  borderWidth: 2,
+                  borderColor: fieldMode === "manual" ? "primary.main" : "divider",
+                  bgcolor: fieldMode === "manual" ? "primary.50" : "background.paper",
+                  transition: "all .2s ease",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                  },
+                }}
+              >
+                <Stack spacing={1}>
+                  <Chip
+                    label="Option 2"
+                    size="small"
+                    color="primary"
+                    variant={fieldMode === "manual" ? "filled" : "outlined"}
+                    sx={{ width: "fit-content" }}
+                  />
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Manual Fields (with presets)
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Define custom questions or apply common presets like Research Papers,
+                    Business Docs, or Invoices.
+                  </Typography>
+                </Stack>
+              </Paper>
+            </Box>
+
+            {fieldMode === "schema" && (
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="body2" sx={{ mt: 0.5, color: "text.secondary", mb: 1 }}>
+                  CSV uses column headers; JSON uses object keys. New fields merge automatically.
+                </Typography>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  size="small"
+                  sx={{ textTransform: "none" }}
+                >
+                  Upload CSV / JSON
+                  <input hidden type="file" accept=".csv,.json" onChange={handleSchemaUpload} />
+                </Button>
+
+                {schemaStatus && (
+                  <Alert severity={schemaStatus.type} sx={{ mt: 1 }}>
+                    <AlertTitle sx={{ fontWeight: 600 }}>
+                      {schemaStatus.type === "success" ? "✓ Schema loaded" : "Schema status"}
+                    </AlertTitle>
+                    {schemaStatus.msg}
+                  </Alert>
+                )}
+              </Box>
+            )}
+
+            {/* Option 2: Manual Fields + Presets */}
+            {fieldMode === "manual" && (
+              <Box sx={{ mb: 1 }}>
+                {/* Manual input row */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    alignItems: "center",
+                    mb: 1,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label="Add a field (e.g. 'Authors', 'Methodology')"
+                    value={newField}
+                    onChange={(e) => setNewField(e.target.value)}
+                  />
+
+                {/* Quick presets under the input */}
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1, flexBasis: "100%" }}>
+
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => {
+                      const preset = [
+                        "Paper Title",
+                        "Authors",
+                        "Publication Year",
+                        "Abstract",
+                        "Methodology",
+                        "Results",
+                        "Conclusion",
+                      ];
+                      const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
+                      const toAdd = preset.filter(
+                        (p) => !seen.has(p.toLowerCase().trim())
+                      );
+                      setFields((prev) => [...prev, ...toAdd]);
+                      setPresetStatus({
+                        type: "success",
+                        msg: `Research Paper preset added: ${preset.length} fields (${toAdd.length} new).`,
+                      });
+                    }}
+                    sx={{ textTransform: "none", px: 1 }}
+                  >
+                    + Research Paper
+                  </Button>
+
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => {
+                      const preset = [
+                        "Document Title",
+                        "Company Name",
+                        "Date",
+                        "Executive Summary",
+                        "Key Findings",
+                        "Recommendations",
+                      ];
+                      const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
+                      const toAdd = preset.filter(
+                        (p) => !seen.has(p.toLowerCase().trim())
+                      );
+                      setFields((prev) => [...prev, ...toAdd]);
+                      setPresetStatus({
+                        type: "success",
+                        msg: `Business Document preset added: ${preset.length} fields (${toAdd.length} new).`,
+                      });
+                    }}
+                    sx={{ textTransform: "none", px: 1 }}
+                  >
+                    + Business Document
+                  </Button>
+
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => {
+                      const preset = [
+                        "Invoice Number",
+                        "Invoice Date",
+                        "Subtotal",
+                        "Taxes",
+                        "Total Amount Due",
+                        "Currency",
+                        "Payment Terms",
+                      ];
+                      const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
+                      const toAdd = preset.filter(
+                        (p) => !seen.has(p.toLowerCase().trim())
+                      );
+                      setFields((prev) => [...prev, ...toAdd]);
+                      setPresetStatus({
+                        type: "success",
+                        msg: `Invoice preset added: ${preset.length} fields (${toAdd.length} new).`,
+                      });
+                    }}
+                    sx={{ textTransform: "none", px: 1 }}
+                  >
+                    + Invoice
+                  </Button>
+                </Box>
+                <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={addField}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Add
+                  </Button>
+                </Box>
+
+                {/* Alerts: manual + preset */}
+                {manualStatus && (
+                  <Alert severity={manualStatus.type} sx={{ mt: 1 }}>
+                    <AlertTitle sx={{ fontWeight: 600 }}>
+                      {manualStatus.type === "success"
+                        ? "✓ Field updated"
+                        : manualStatus.type === "error"
+                        ? "Field error"
+                        : "Working…"}
+                    </AlertTitle>
+                    {manualStatus.msg}
+                  </Alert>
+                )}
+
+                {presetStatus && (
+                  <Alert severity={presetStatus.type} sx={{ mt: 1 }}>
+                    <AlertTitle sx={{ fontWeight: 600 }}>
+                      {presetStatus.type === "success"
+                        ? "✓ Preset applied"
+                        : presetStatus.type === "error"
+                        ? "Preset error"
+                        : "Working…"}
+                    </AlertTitle>
+                    {presetStatus.msg}
+                  </Alert>
+                )}
+              </Box>
+            )}
+            {/* Divider */}
+            <Divider sx={{ my: 4 }}>
+            </Divider>
+
+            {/* Extracted Fields list */}
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
               <Typography variant="subtitle1" fontWeight={700}>
-                Upload CSV/JSON Schema
-              </Typography>
-            </Stack>
-            <Box sx={{ p: 1, mb: 2 }}>
-              <Button variant="outlined" component="label" size="small" sx={{ textTransform: "none" }}>
-                Upload CSV/JSON
-                <input hidden type="file" accept=".csv,.json" onChange={handleSchemaUpload} />
-              </Button>
-              <Typography variant="body2" sx={{ mt: .5, color: "text.secondary" }}>
-                CSV uses column headers; JSON uses object keys. New fields get merged automatically.
+                Extracted Fields
               </Typography>
             </Box>
 
-            {/* Schema Upload Alert Status (Success, info or faiilure) */}
-            {schemaStatus && (
-              <Alert
-                severity={schemaStatus.type}
-                sx={{ mt: 1 }}
-              >
-                <AlertTitle sx={{ fontWeight: 600 }}>
-                  {schemaStatus.type === "success" ? "✓ Schema loaded"
-                    : schemaStatus.type === "error" ? "Schema error" : "Working…"}
-                </AlertTitle>
-                {schemaStatus.msg}
-              </Alert>
+            {fields.length > 0 ? (
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                {fields.map((f, i) => (
+                  <Chip
+                    key={`${f}-${i}`}
+                    label={f}
+                    onDelete={() => setFields(prev => prev.filter((_, idx) => idx !== i))}
+                    sx={{ bgcolor: "background.paper", border: "1px solid", borderColor: "divider" }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                No fields yet. Upload a schema, select a preset, or add manually.
+              </Typography>
             )}
 
-            {/* OR divider */}
-            <Divider sx={{ my: 2 }}>
-              <Typography variant="caption" color="text.secondary">OR</Typography>
-            </Divider>
-
-            {/* Option 2: Manual Fields + Presets */}
-            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-              Option 2 – Manual fields (with presets)
-            </Typography>
-
-            <Box sx={{ p: 1, mb: 2 }}>
-              {/* Manual input row */}
-              <Box
+            <Box sx={{ my: 2 }} />
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button
+                size="small"
+                variant="contained"
+                disabled={extracting || !fields.length || (!vstoreId && !files.length)}
+                onClick={handleExtract}
+                startIcon={extracting || indexing ? <CircularProgress sx={{ color: 'common.white' }} size={16} /> : null}
                 sx={{
-                  display: "flex",
-                  gap: 1,
-                  alignItems: "center",
-                  mb: 1,
-                  flexWrap: "wrap",
+                  textTransform: "none",
+                  "&.Mui-disabled": {
+                    opacity: 1,
+                    color: "grey.600",
+                    WebkitTextFillColor: "unset",
+                  },
                 }}
               >
-                <TextField
-                  size="small"
-                  fullWidth
-                  label="Add a field (e.g. 'Authors', 'Methodology')"
-                  value={newField}
-                  onChange={(e) => setNewField(e.target.value)}
-                />
-
-              {/* Quick presets under the input */}
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1, flexBasis: "100%" }}>
-
-                <Button
-                  variant="text"
-                  size="small"
-                  onClick={() => {
-                    const preset = [
-                      "Paper Title",
-                      "Authors",
-                      "Publication Year",
-                      "Abstract",
-                      "Methodology",
-                      "Results",
-                      "Conclusion",
-                    ];
-                    const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
-                    const toAdd = preset.filter(
-                      (p) => !seen.has(p.toLowerCase().trim())
-                    );
-                    setFields((prev) => [...prev, ...toAdd]);
-                    setPresetStatus({
-                      type: "success",
-                      msg: `Research Paper preset added: ${preset.length} fields (${toAdd.length} new).`,
-                    });
-                  }}
-                  sx={{ textTransform: "none", px: 1 }}
-                >
-                  + Research Paper
-                </Button>
-
-                <Button
-                  variant="text"
-                  size="small"
-                  onClick={() => {
-                    const preset = [
-                      "Document Title",
-                      "Company Name",
-                      "Date",
-                      "Executive Summary",
-                      "Key Findings",
-                      "Recommendations",
-                    ];
-                    const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
-                    const toAdd = preset.filter(
-                      (p) => !seen.has(p.toLowerCase().trim())
-                    );
-                    setFields((prev) => [...prev, ...toAdd]);
-                    setPresetStatus({
-                      type: "success",
-                      msg: `Business Document preset added: ${preset.length} fields (${toAdd.length} new).`,
-                    });
-                  }}
-                  sx={{ textTransform: "none", px: 1 }}
-                >
-                  + Business Document
-                </Button>
-
-                <Button
-                  variant="text"
-                  size="small"
-                  onClick={() => {
-                    const preset = [
-                      "Invoice Number",
-                      "Invoice Date",
-                      "Subtotal",
-                      "Taxes",
-                      "Total Amount Due",
-                      "Currency",
-                      "Payment Terms",
-                    ];
-                    const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
-                    const toAdd = preset.filter(
-                      (p) => !seen.has(p.toLowerCase().trim())
-                    );
-                    setFields((prev) => [...prev, ...toAdd]);
-                    setPresetStatus({
-                      type: "success",
-                      msg: `Invoice preset added: ${preset.length} fields (${toAdd.length} new).`,
-                    });
-                  }}
-                  sx={{ textTransform: "none", px: 1 }}
-                >
-                  + Invoice
-                </Button>
-              </Box>
+                {extracting || indexing ? "Extracting…" : "Extract Information"}
+              </Button>
               <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={addField}
-                  sx={{ textTransform: "none" }}
-                >
-                  Add
-                </Button>
-              </Box>
-
-              {/* Alerts: manual + preset */}
-              {manualStatus && (
-                <Alert severity={manualStatus.type} sx={{ mt: 1 }}>
-                  <AlertTitle sx={{ fontWeight: 600 }}>
-                    {manualStatus.type === "success"
-                      ? "✓ Field updated"
-                      : manualStatus.type === "error"
-                      ? "Field error"
-                      : "Working…"}
-                  </AlertTitle>
-                  {manualStatus.msg}
-                </Alert>
-              )}
-
-              {presetStatus && (
-                <Alert severity={presetStatus.type} sx={{ mt: 1 }}>
-                  <AlertTitle sx={{ fontWeight: 600 }}>
-                    {presetStatus.type === "success"
-                      ? "✓ Preset applied"
-                      : presetStatus.type === "error"
-                      ? "Preset error"
-                      : "Working…"}
-                  </AlertTitle>
-                  {presetStatus.msg}
-                </Alert>
-              )}
-
-               {/* Divider */}
-              <Divider sx={{ my: 4 }}>
-              </Divider>
-
-               {/* Extracted Fields list */}
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  Extracted Fields
-                </Typography>
-              </Box>
-
-              {fields.length > 0 ? (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                  {fields.map((f, i) => (
-                    <Chip
-                      key={`${f}-${i}`}
-                      label={f}
-                      onDelete={() => setFields(prev => prev.filter((_, idx) => idx !== i))}
-                      sx={{ bgcolor: "background.paper", border: "1px solid", borderColor: "divider" }}
-                    />
-                  ))}
-                </Box>
-              ) : (
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  No fields yet. Upload a schema, select a preset, or add manually.
-                </Typography>
-              )}
-
-              <Box sx={{ my: 2 }} />
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <Button
-                  size="small"
-                  variant="contained"
-                  disabled={extracting || !fields.length || (!vstoreId && !files.length)}
-                  onClick={handleExtract}
-                  startIcon={extracting || indexing ? <CircularProgress sx={{ color: 'common.white' }} size={16} /> : null}
-                  sx={{
-                    textTransform: "none",
-                    "&.Mui-disabled": {
-                      opacity: 1,
-                      color: "grey.600",
-                      WebkitTextFillColor: "unset",
-                    },
-                  }}
-                >
-                  {extracting || indexing ? "Extracting…" : "Extract Information"}
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={clearFields}
-                  disabled={extracting || fields.length === 0}
-                  sx={{ textTransform: "none" }}
-                >
-                  Clear
-                </Button>
-              </Box>
+                size="small"
+                variant="outlined"
+                onClick={clearFields}
+                disabled={extracting || fields.length === 0}
+                sx={{ textTransform: "none" }}
+              >
+                Clear
+              </Button>
             </Box>
           </Box>
         </Collapse>
@@ -976,7 +1042,7 @@ export function PDFExtractionTool() {
 
           {/* 2. Define fields */}
           <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-            2. Define question fields
+            2. Define Field Questions
           </Typography>
           <Stack spacing={1.1} sx={{ mb: 2 }}>
             <Typography
