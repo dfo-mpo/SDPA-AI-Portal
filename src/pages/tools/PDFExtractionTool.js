@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   ListChecks,
 } from "lucide-react";
+import { useToolSettings } from "../../contexts";
 
 // const API_BASE = "http://localhost:8000";
 const API_BASE = "/api";
@@ -52,6 +53,8 @@ export function PDFExtractionTool() {
     ? resultsByDoc[selectedDocName]
     : [];
   const [fieldMode, setFieldMode] = useState(null);
+  const { PDFExtractionToolSettings } = useToolSettings();
+  const selectedModel = PDFExtractionToolSettings?.modelType || "gpt4omini";
 
   /* Functions */
   function handleFileInput(e) {
@@ -201,7 +204,7 @@ export function PDFExtractionTool() {
       const res = await fetch(`${API_BASE}/api/extract_per_file`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vectorstore_id: vsId, fields, document_names: docs }),
+        body: JSON.stringify({ vectorstore_id: vsId, fields, document_names: docs, model_type: selectedModel }),
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();

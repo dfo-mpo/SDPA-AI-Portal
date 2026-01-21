@@ -31,6 +31,7 @@ class ExtractPerDocRequest(BaseModel):
     vectorstore_id: str
     fields: List[str]
     document_names: List[str]
+    model_type: str | None = None
 
 class RowPerDoc(BaseModel):
     document: str
@@ -42,6 +43,11 @@ class RowPerDoc(BaseModel):
 class ExtractPerDocResponse(BaseModel):
     results: List[RowPerDoc]
 
+MODEL_MAP = {
+    "gpt4o": os.getenv("AZURE_OPENAI_GPT4_o"),
+    "gpt4omini": os.getenv("AZURE_OPENAI_GPT4_o_mini"),
+    "gpt41mini": os.getenv("AZURE_OPENAI_GPT4_1_MINI"),
+}
 
 # ------ Routes ------
 @router.get("/health")
@@ -96,9 +102,13 @@ async def extract_per_file(req: ExtractPerDocRequest):
             fields_list=req.fields,
             document_names=req.document_names,
             api_key=None,
-            model_name=os.getenv("AZURE_OPENAI_GPT4_o"),
+            model_name = MODEL_MAP.get(
+                req.model_type,
+                os.getenv("AZURE_OPENAI_GPT4_o_mini")  # safe default
+            )
         )
 
+        print(f"[PDF Extraction] Using model: {req.model_type}")
         rows: List[RowPerDoc] = []
         for doc_name, df in per_doc.items():
             if getattr(df, "iterrows", None):
