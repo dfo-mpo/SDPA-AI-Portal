@@ -16,9 +16,20 @@ import {
   LinearProgress,
   Chip,
   Grid,
+  Drawer, 
 } from "@mui/material";
-import { Upload, Sparkles, X } from "lucide-react";
-import { predictCatDog } from "../../services/apiService"; // adjust path
+import {
+  HelpCircle,
+  Upload,
+  Sparkles,
+  X,
+  Image as ImageIcon,
+  Bot,
+  AlertTriangle,
+  ShieldCheck,
+  GaugeCircle,
+} from "lucide-react";
+import { predictCatDog } from "../../services/apiService";
 
 // Global Variable
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/bmp"];
@@ -42,6 +53,7 @@ export function ClassificationModel() {
     setPreviewUrl("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // helper function for file input
   const onPickFile = (f) => {
@@ -362,6 +374,182 @@ export function ClassificationModel() {
             </Grid>
           </Grid>
         )}
+
+        {/* Help button to open drawer */}
+        <Button
+          onClick={() => setHelpOpen(true)}
+          variant="contained"
+          sx={{
+            position: "fixed",
+            right: 0,
+            top: "50%",
+            transform: "translateY(-50%)",
+            minWidth: 0,
+            width: 36,
+            height: 48,
+            borderTopLeftRadius: 12,
+            borderBottomLeftRadius: 12,
+            borderTopRightRadius: 0,
+            borderBottomRightRadius: 0,
+            p: 0,
+            fontWeight: 800,
+            zIndex: 1300,
+          }}
+          aria-label="Open instructions"
+          title="Open instructions"
+        >
+          <HelpCircle size={18} />
+        </Button>
+
+        {/* Drawer / Help Guide */}
+        <Drawer
+          anchor="right"
+          open={helpOpen}
+          onClose={() => setHelpOpen(false)}
+          PaperProps={{
+            sx: {
+              width: 380,
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? theme.palette.background.default
+                  : theme.palette.grey[50],
+            },
+          }}
+        >
+          <Box sx={{ p: 2.5 }}>
+          {/* Header */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 1,
+            }}
+          >
+            <Typography variant="h4" fontWeight={700}>
+              About this page
+            </Typography>
+          </Box>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* 1. Upload & preview */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+            1. Upload & preview
+          </Typography>
+
+          <Typography variant="body2" sx={{ lineHeight: 1.7, mb: 1.5 }}>
+            Select a single image (cat or dog). A preview is created instantly in your browser.
+          </Typography>
+
+          <Stack spacing={1.1} sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Upload size={13} />
+              <span>
+                Click <b>Choose Image</b> to select a file.
+              </span>
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <ImageIcon size={13} />
+              <span>
+                You’ll see a <b>preview</b> immediately after selecting the file.
+              </span>
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <X size={13} />
+              <span>
+                Use <b>Clear</b> to reset the selected image + results.
+              </span>
+            </Typography>
+          </Stack>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* 2. Predict */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+            2. Predict
+          </Typography>
+
+          <Typography variant="body2" sx={{ lineHeight: 1.7, mb: 1.5 }}>
+            When you click <b>Predict</b>, the image is sent to the backend, which calls the
+            Azure Custom Vision model and returns a label + confidence.
+          </Typography>
+
+          <Stack spacing={1.1} sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Sparkles size={13} />
+              <span>
+                Press <b>Predict</b> to run classification.
+              </span>
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Bot size={13} />
+              <span>
+                Results show the <b>top label</b> and <b>confidence</b>.
+              </span>
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{ mt: 1, fontSize: 12, lineHeight: 1.6 }}
+            >
+              Tip: If confidence is low, try a clearer photo with the animal centered and good lighting.
+            </Typography>
+          </Stack>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* 4. Be aware */}
+          <Typography
+            variant="subtitle1"
+            fontWeight={700}
+            sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <AlertTriangle size={18} />
+            Be aware
+          </Typography>
+
+          <Stack spacing={1.1} sx={{ mb: 1.5 }}>
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
+            >
+              <ShieldCheck size={22} style={{ marginTop: 2 }} />
+              <span>
+                Use only <b>public / non-sensitive</b> images. Avoid faces, IDs, medical, or confidential data.
+              </span>
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
+            >
+              <AlertTriangle size={22} style={{ marginTop: 2 }} />
+              <span>
+                This is a <b>demo</b> model and can misclassify unusual angles, low-res images, or cluttered backgrounds.
+              </span>
+            </Typography>
+          </Stack>
+        </Box>
+        </Drawer>
       </Paper>
     </Paper>
   );
