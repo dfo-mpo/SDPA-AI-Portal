@@ -380,3 +380,30 @@ export async function* askOpenAI(chatHistory, currentMessage, documentContent, s
     }
   }
 }
+
+/**
+ * Predict cat vs dog using the already-built Custom Vision model
+ * @param {File} imageFile - Image to classify
+ * @returns {Promise<{label: string|null, confidence: number, predictions: Array<{label: string, confidence: number}>}>}
+ */
+export const predictCatDog = async (imageFile) => {
+  const formData = new FormData();
+  formData.append("image", imageFile);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/predict`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Predict failed (${response.status}): ${text}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error in predictCatDog:", error);
+    throw error;
+  }
+};

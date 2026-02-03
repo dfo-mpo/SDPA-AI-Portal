@@ -149,6 +149,16 @@ import {
       showInDemo:false
     },
 
+    CLASSIFICATIONMODEL: {
+      id: 'classificationmodel',
+      name: 'Classification Model',
+      category: 'Large Language Models',
+      icon: Brain,
+      backgroundImage: '/assets/OCR.gif',
+      actionText: 'Create a Classification Model',
+      showInDemo:false
+    },
+
     // Optical Character Recognition Tools
     DOCUMENT_OCR: {
       id: 'document-ocr',
@@ -217,7 +227,8 @@ import {
       TOOLS.PII_REDACTOR,
       TOOLS.SENSITIVITY_CALCULATOR,
       TOOLS.FRENCH_TRANSLATION,
-      TOOLS.WEBSCRAPE
+      TOOLS.WEBSCRAPE,
+      TOOLS.CLASSIFICATIONMODEL
     ],
     'Optical Character Recognition': [
       TOOLS.DOCUMENT_OCR

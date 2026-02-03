@@ -33,7 +33,8 @@ import {
   FrenchTranslation,
   MLModelsRepo,
   WebScraper,
-  PDFExtractionTool
+  PDFExtractionTool,
+  ClassificationModel
 } from '../pages/tools';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
@@ -155,6 +156,7 @@ export default function Dashboard({ onLogout, onLogin }) {
     'Document': DocxEditor,
     'Models' : MLModelsRepo,
     'Web Scraper' : WebScraper,
+    'Classification Model' : ClassificationModel,
   };
 
   const getToolComponent = (toolName) => {
