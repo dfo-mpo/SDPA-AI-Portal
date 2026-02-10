@@ -7,27 +7,46 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 
 # load env keys
 load_dotenv()
-PREDICTION_URL = os.getenv("CUSTOM_VISION_PREDICTION_URL")
-PREDICTION_KEY = os.getenv("CUSTOM_VISION_PREDICTION_KEY")
-if not PREDICTION_URL or not PREDICTION_KEY:
-    raise RuntimeError(
-        "Missing CUSTOM_VISION_PREDICTION_URL or CUSTOM_VISION_PREDICTION_KEY in .env"
-    )
+MODEL_CONFIG = {
+  "dog-cat": {
+    "url": os.getenv("CUSTOM_VISION_DOG_VS_CAT_PREDICTION_URL"),
+    "key": os.getenv("CUSTOM_VISION_DOG_VS_CAT_PREDICTION_KEY"),
+  },
+  "car-bike": {
+    "url": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_URL"),
+    "key": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY"),
+  },
+  "pizza-not-pizza": {
+    "url": os.getenv("CUSTOM_VISION_PIZZA_VS_NOT_PIZZA_PREDICTION_URL"),
+    "key": os.getenv("CUSTOM_VISION_PIZZA_VS_NOT_PIZZA_PREDICTION_KEY"),
+  },
+  "apple-orange": {
+    "url": os.getenv("CUSTOM_VISION_APPLE_VS_ORANGE_PREDICTION_URL"),
+    "key": os.getenv("CUSTOM_VISION_APPLE_VS_ORANGE_PREDICTION_KEY"),
+  },
+}
+
+MODEL_META = {
+    "dog-cat": {"name": "Cat vs Dog", "description": "Binary classifier"},
+    "apple-orange": {"name": "Apple vs Orange", "description": "Binary classifier"},
+    "pizza-not-pizza": {"name": "Pizza vs Not Pizza", "description": "Binary classifier"},
+    "car-bike": {"name": "Car vs Bike", "description": "Binary classifier"},
+}
 
 # define global vars
 ALLOWED_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 MAX_BYTES = 8 * 1024 * 1024  # 8MB
 
 # helper function
-async def call_custom_vision(image_bytes: bytes) -> Dict[str, Any]:
+async def call_custom_vision(url: str, key: str, image_bytes: bytes) -> Dict[str, Any]:
     headers = {
-        "Prediction-Key": PREDICTION_KEY,
+        "Prediction-Key": key,
         "Content-Type": "application/octet-stream",
     }
 
     # Reuse a client per request
     async with httpx.AsyncClient(timeout=60) as client:
-        r = await client.post(PREDICTION_URL, headers=headers, content=image_bytes)
+        r = await client.post(url, headers=headers, content=image_bytes)
 
     if r.status_code >= 400:
         raise HTTPException(
@@ -48,9 +67,25 @@ router = APIRouter(prefix="/api", tags=["classification_model"])
 def health():
     return {"status": "ok"}
 
-# Predict endpoint
-@router.post("/predict")
-async def predict(image: UploadFile = File(...)):
+# get router (static for now, will be dynamic later on)
+@router.get("/classificationmodels")
+def list_models():
+    items = []
+    for model_id, cfg in MODEL_CONFIG.items():
+        # Only return models that are actually configured
+        if cfg.get("url") and cfg.get("key"):
+            meta = MODEL_META.get(model_id, {"name": model_id, "description": ""})
+            items.append({"id": model_id, **meta})
+
+    return {"items": items}
+
+# Predict endpoint (model-specific)
+@router.post("/predict/{model_id}")
+async def predict(model_id: str, image: UploadFile = File(...)):
+    cfg = MODEL_CONFIG.get(model_id)
+    if not cfg or not cfg.get("url") or not cfg.get("key"):
+        raise HTTPException(status_code=400, detail=f"Unknown/unconfigured model: {model_id}")
+
     filename = (image.filename or "").lower()
     ext = "." + filename.split(".")[-1] if "." in filename else ""
     if ext and ext not in ALLOWED_EXTS:
@@ -65,7 +100,8 @@ async def predict(image: UploadFile = File(...)):
     if len(img_bytes) > MAX_BYTES:
         raise HTTPException(status_code=413, detail=f"File too large (> {MAX_BYTES} bytes).")
 
-    data = await call_custom_vision(img_bytes)
+    # call the correct Custom Vision model
+    data = await call_custom_vision(cfg["url"], cfg["key"], img_bytes)
     preds: List[Dict[str, Any]] = data.get("predictions", [])
 
     if not preds:
