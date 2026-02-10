@@ -20,8 +20,8 @@ import {
  * Base URL for the FastAPI backend.
  * Note: For HTTP requests we use http://, and for WebSocket connections we’ll use ws://.
  */
-// const API_BASE_URL = 'localhost:8080';
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'http://localhost:8080';
+// const API_BASE_URL = '/api';
 
 /**
  * Process a video for fish counting
@@ -384,14 +384,15 @@ export async function* askOpenAI(chatHistory, currentMessage, documentContent, s
 /**
  * Predict cat vs dog using the already-built Custom Vision model
  * @param {File} imageFile - Image to classify
+ * @param {string} modelId - Model type (e.g. cat vs dog, apple vs orange, ...)
  * @returns {Promise<{label: string|null, confidence: number, predictions: Array<{label: string, confidence: number}>}>}
  */
-export const predictCatDog = async (imageFile) => {
+export const predictWithModel = async (modelId, imageFile) => {
   const formData = new FormData();
   formData.append("image", imageFile);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/predict`, {
+    const response = await fetch(`${API_BASE_URL}/api/predict/${encodeURIComponent(modelId)}`, {
       method: "POST",
       body: formData,
     });
@@ -403,7 +404,16 @@ export const predictCatDog = async (imageFile) => {
 
     return await response.json();
   } catch (error) {
-    console.error("Error in predictCatDog:", error);
+    console.error("Error in predictWithModel:", error);
     throw error;
   }
+};
+
+export const listClassificationModels = async () => {
+  const res = await fetch(`${API_BASE_URL}/api/classificationmodels`);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Models fetch failed (${res.status}): ${text}`);
+  }
+  return await res.json();
 };
