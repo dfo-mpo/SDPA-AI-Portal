@@ -12,13 +12,14 @@ import base64
 import json
 import os
 import re
+from utils.azure_key_vault import get_DI_API_KEY
 
 # Load enviroment variables
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 
 # Configure Azure Document Analysis settings
 endpoint = os.getenv('DI_API_ENDPOINT')
-key = os.getenv('DI_API_KEY')
+key = get_DI_API_KEY()
 
 """
 Extracts and refines the content of a document using Document Intelligence.

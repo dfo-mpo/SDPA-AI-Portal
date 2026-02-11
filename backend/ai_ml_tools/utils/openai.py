@@ -8,7 +8,8 @@ import tiktoken
 import chromadb
 import json
 import os
-
+from utils.azure_key_vault import get_OPENAI_API_KEY, get_OPENAI_API_KEY_US
+    
 # Load enviroment variables, was in main but backend failed to run unless placed here
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 
@@ -16,13 +17,13 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 US_models = ['o1', 'o3-mini']
 openAIClient_US_models = AzureOpenAI( # Current deployments: o1, o3-mini
   azure_endpoint = os.getenv('OPENAI_API_ENDPOINT_US'), 
-  api_key = os.getenv('OPENAI_API_KEY_US'),  
+  api_key = get_OPENAI_API_KEY_US(),  
   api_version = os.getenv('OPENAI_API_VERSION')
 )
 CAD_models = ['gpt-4o', 'gpt-4o-mini']
 openAIClient_CAD_models = AzureOpenAI( # Current deployments: gpt-4o, gpt-4o-mini
   azure_endpoint = os.getenv('OPENAI_API_ENDPOINT'), 
-  api_key = os.getenv('OPENAI_API_KEY'),  
+  api_key = get_OPENAI_API_KEY(),  
   api_version = os.getenv('OPENAI_API_VERSION')
 )
 
@@ -30,7 +31,7 @@ openAIClient_CAD_models = AzureOpenAI( # Current deployments: gpt-4o, gpt-4o-min
 embeddings = AzureOpenAIEmbeddings(
     model="text-embedding-3-large",
     azure_endpoint = os.getenv('OPENAI_API_EMBEDDING_ENDPOINT'), 
-    api_key = os.getenv('OPENAI_API_KEY'),
+    api_key = get_OPENAI_API_KEY(),
     openai_api_version = os.getenv('OPENAI_API_EMBEDDING_VERSION')
 )
 

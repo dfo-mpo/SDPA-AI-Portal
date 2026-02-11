@@ -7,6 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List
+from utils.azure_key_vault import get_OPENAI_API_KEY
 
 import fitz  # PyMuPDF
 import os
@@ -262,7 +263,7 @@ def get_embedding_function(api_key=None):
     Returns:
         OpenAIEmbeddings: An OpenAIEmbeddings object, which can be used to create vector embeddings from text.
     """
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = get_OPENAI_API_KEY()
     endpoint = os.getenv("OPENAI_API_ENDPOINT")
     api_version = os.getenv("OPENAI_API_EMBEDDING_VERSION")
     embed_deployment = os.getenv("AZURE_OPENAI_SMALL_EMBED_DEPLOYMENT")
@@ -454,7 +455,7 @@ def query_document_per_file(vectorstore, fields_list, document_names, api_key=No
     """
     Query a vector store with dynamic fields and return structured responses for each document.
     """
-    api_key = api_key or os.getenv("OPENAI_API_KEY")
+    api_key = api_key or get_OPENAI_API_KEY()
     endpoint = os.getenv("OPENAI_API_ENDPOINT")
     api_version = os.getenv("OPENAI_API_EMBEDDING_VERSION")
     chat_deployment = os.getenv("AZURE_OPENAI_GPT4_o")
@@ -556,7 +557,7 @@ def query_document(vectorstore, fields_list, api_key=None, model_name=None):
     Query a vector store with dynamic fields and return a structured response.
     (Keeping this for backward compatibility with single document processing)
     """
-    api_key = api_key or os.getenv("OPENAI_API_KEY")
+    api_key = api_key or get_OPENAI_API_KEY()
     endpoint = os.getenv("OPENAI_API_ENDPOINT")
     api_version = os.getenv("OPENAI_API_EMBEDDING_VERSION")
     chat_deployment = model_name or os.getenv("AZURE_OPENAI_GPT4_o")

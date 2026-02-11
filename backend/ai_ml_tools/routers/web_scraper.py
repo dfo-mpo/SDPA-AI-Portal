@@ -16,6 +16,7 @@ from ai_ml_tools.utils.openai import request_openai_chat
 from fastapi import WebSocket, WebSocketDisconnect
 from datetime import datetime, timezone, timedelta
 from openai import RateLimitError
+from utils.azure_key_vault import get_OPENAI_API_KEY
 
 router = APIRouter(prefix="/api", tags=["web-scraper"])
 
@@ -36,12 +37,11 @@ class ScrapeReq(BaseModel):
     url: str
     force: bool = False
 
-
 # Functions
 def _build_embeddings():
     '''Creates and returns an AzureOpenAIEmbeddings client configured from environment variables.'''
     return AzureOpenAIEmbeddings(
-        api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=get_OPENAI_API_KEY(),
         azure_endpoint=os.getenv("OPENAI_API_ENDPOINT"),
         api_version=os.getenv("OPENAI_API_EMBEDDING_VERSION", "2023-05-15"),
         azure_deployment=os.getenv("AZURE_OPENAI_LARGE_EMBED_DEPLOYMENT"),

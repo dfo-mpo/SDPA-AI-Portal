@@ -1,6 +1,7 @@
 import os
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import AzureChatOpenAI
+from utils.azure_key_vault import get_OPENAI_API_KEY
 
 # Template for prompt
 _MAP_PROMPT = ChatPromptTemplate.from_template(
@@ -35,7 +36,7 @@ def _make_llm() -> AzureChatOpenAI:
       OPENAI_API_EMBEDDING_VERSION
       AZURE_OPENAI_DEPLOYMENT
     """
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = get_OPENAI_API_KEY() 
     endpoint = os.getenv("OPENAI_API_ENDPOINT")
     version  = os.getenv("OPENAI_API_EMBEDDING_VERSION")
     deploy   = os.getenv("AZURE_OPENAI_DEPLOYMENT")
