@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List
-from utils.azure_key_vault import get_OPENAI_API_KEY
+from ai_ml_tools.utils.azure_key_vault import get_OPENAI_API_KEY
 
 import fitz  # PyMuPDF
 import os

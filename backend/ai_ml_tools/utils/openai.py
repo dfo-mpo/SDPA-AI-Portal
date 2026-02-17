@@ -8,7 +8,7 @@ import tiktoken
 import chromadb
 import json
 import os
-from utils.azure_key_vault import get_OPENAI_API_KEY, get_OPENAI_API_KEY_US
+from ai_ml_tools.utils.azure_key_vault import get_OPENAI_API_KEY, get_OPENAI_API_KEY_US
     
 # Load enviroment variables, was in main but backend failed to run unless placed here
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))

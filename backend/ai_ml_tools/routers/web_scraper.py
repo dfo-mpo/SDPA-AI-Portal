@@ -16,7 +16,7 @@ from ai_ml_tools.utils.openai import request_openai_chat
 from fastapi import WebSocket, WebSocketDisconnect
 from datetime import datetime, timezone, timedelta
 from openai import RateLimitError
-from utils.azure_key_vault import get_OPENAI_API_KEY
+from ai_ml_tools.utils.azure_key_vault import get_OPENAI_API_KEY
 
 router = APIRouter(prefix="/api", tags=["web-scraper"])
 

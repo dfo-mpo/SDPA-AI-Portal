@@ -1,7 +1,7 @@
 import os
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import AzureChatOpenAI
-from utils.azure_key_vault import get_OPENAI_API_KEY
+from ai_ml_tools.utils.azure_key_vault import get_OPENAI_API_KEY
 
 # Template for prompt
 _MAP_PROMPT = ChatPromptTemplate.from_template(

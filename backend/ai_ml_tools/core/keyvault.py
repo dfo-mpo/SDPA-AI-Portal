@@ -1,9 +1,15 @@
 import os  
+from dotenv import load_dotenv  
 from azure.identity import DefaultAzureCredential  
 from azure.keyvault.secrets import SecretClient  
-  
-KEY_VAULT_NAME = os.environ["KEY_VAULT_NAME"]  
-KV_URI = f"https://{KEY_VAULT_NAME}.vault.azure.net"  
-  
+
+load_dotenv()  # loads .env into os.environ 
+
+KEY_VAULT_NAME = os.environ.get("KEY_VAULT_NAME")
+KV_URI = f"https://{KEY_VAULT_NAME}.vault.azure.net"
+
 credential = DefaultAzureCredential()  
-secret_client = SecretClient(vault_url=KV_URI, credential=credential)  
+secret_client = SecretClient(vault_url=KV_URI, credential=credential) if  KEY_VAULT_NAME else None
+
+if not KEY_VAULT_NAME:
+    print("No KEY_VAULT_NAME provided, will need keys stored in local .env file.")
