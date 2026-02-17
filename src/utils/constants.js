@@ -156,7 +156,8 @@ import {
       icon: Brain,
       backgroundImage: '/assets/OCR.gif',
       actionText: 'Create a Classification Model',
-      showInDemo:false
+      showInDemo:false,
+      disabled:true
     },
 
     // Optical Character Recognition Tools

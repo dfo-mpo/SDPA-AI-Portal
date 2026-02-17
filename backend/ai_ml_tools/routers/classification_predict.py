@@ -24,6 +24,10 @@ MODEL_CONFIG = {
     "url": os.getenv("CUSTOM_VISION_APPLE_VS_ORANGE_PREDICTION_URL"),
     "key": os.getenv("CUSTOM_VISION_APPLE_VS_ORANGE_PREDICTION_KEY"),
   },
+  "salmon-species": {
+    "url": os.getenv("CUSTOM_VISION_SALMON_SPECIES_CLASSIFIER_URL"),
+    "key": os.getenv("CUSTOM_VISION_SALMON_SPECIES_CLASSIFIER_KEY")
+  }
 }
 
 MODEL_META = {
@@ -31,6 +35,7 @@ MODEL_META = {
     "apple-orange": {"name": "Apple vs Orange", "description": "Binary classifier"},
     "pizza-not-pizza": {"name": "Pizza vs Not Pizza", "description": "Binary classifier"},
     "car-bike": {"name": "Car vs Bike", "description": "Binary classifier"},
+    "salmon-species" : {"name": "Salmon Species", "description": "Multi Classifier"}
 }
 
 # define global vars
