@@ -392,7 +392,7 @@ export function ClassificationModel() {
 
                     {preds.length > 0 && (
                       <Stack spacing={1}>
-                        {preds.slice(0, 2).map((p) => {
+                        {preds.slice(0, 20).map((p) => {
                           const pct = Math.max(0, Math.min(100, Number(p.confidence) * 100));
                           return (
                             <Box
