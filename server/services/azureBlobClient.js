@@ -14,7 +14,7 @@ function getBlobServiceClient() {
     const kvUri = `https://${KEY_VAULT_NAME}.vault.azure.net`;
     const credential = new DefaultAzureCredential();  
     const client = new SecretClient(kvUri, credential);
-    accountKey = client.getSecret("AZURE_STORAGE_ACCOUNT_KEY");
+    accountKey = client.getSecret("azure-storage-key");
   }
 
   const AZURE_STORAGE_CONNECTION_STRING = `DefaultEndpointsProtocol=https;AccountName=${AZURE_STORAGE_ACCOUNT_NAME};AccountKey=${accountKey};EndpointSuffix=core.windows.net`;

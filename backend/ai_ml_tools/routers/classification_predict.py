@@ -4,31 +4,36 @@ from typing import Any, Dict, List, Optional
 import httpx
 from dotenv import load_dotenv
 from fastapi import APIRouter, File, HTTPException, UploadFile
+import ai_ml_tools.utils.azure_key_vault as keys
 
 # load env keys
 load_dotenv()
-MODEL_CONFIG = {
-  "dog-cat": {
-    "url": os.getenv("CUSTOM_VISION_DOG_VS_CAT_PREDICTION_URL"),
-    "key": os.getenv("CUSTOM_VISION_DOG_VS_CAT_PREDICTION_KEY"),
-  },
-  "car-bike": {
-    "url": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_URL"),
-    "key": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY"),
-  },
-  "pizza-not-pizza": {
-    "url": os.getenv("CUSTOM_VISION_PIZZA_VS_NOT_PIZZA_PREDICTION_URL"),
-    "key": os.getenv("CUSTOM_VISION_PIZZA_VS_NOT_PIZZA_PREDICTION_KEY"),
-  },
-  "apple-orange": {
-    "url": os.getenv("CUSTOM_VISION_APPLE_VS_ORANGE_PREDICTION_URL"),
-    "key": os.getenv("CUSTOM_VISION_APPLE_VS_ORANGE_PREDICTION_KEY"),
-  },
-  "salmon-species": {
-    "url": os.getenv("CUSTOM_VISION_SALMON_SPECIES_CLASSIFIER_URL"),
-    "key": os.getenv("CUSTOM_VISION_SALMON_SPECIES_CLASSIFIER_KEY")
-  }
-}
+
+MODEL_CONFIG = None
+def set_MODEL_CONFIG():
+    if not MODEL_CONFIG:
+        MODEL_CONFIG = {
+            "dog-cat": {
+                "url": os.getenv("CUSTOM_VISION_DOG_VS_CAT_PREDICTION_URL"),
+                "key": keys.get_CUSTOM_VISION_DOG_VS_CAT_PREDICTION_KEY(),
+            },
+            "car-bike": {
+                "url": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_URL"),
+                "key": keys.get_CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY(),
+            },
+            "pizza-not-pizza": {
+                "url": os.getenv("CUSTOM_VISION_PIZZA_VS_NOT_PIZZA_PREDICTION_URL"),
+                "key": keys.get_CUSTOM_VISION_PIZZA_VS_NOT_PIZZA_PREDICTION_KEY(),
+            },
+            "apple-orange": {
+                "url": os.getenv("CUSTOM_VISION_APPLE_VS_ORANGE_PREDICTION_URL"),
+                "key": keys.get_CUSTOM_VISION_APPLE_VS_ORANGE_PREDICTION_KEY(),
+            },
+            "salmon-species": {
+                "url": os.getenv("CUSTOM_VISION_SALMON_SPECIES_CLASSIFIER_URL"),
+                "key": keys.get_CUSTOM_VISION_SALMON_SPECIES_CLASSIFIER_KEY()
+            }
+        }
 
 MODEL_META = {
     "dog-cat": {"name": "Cat vs Dog", "description": "Binary classifier"},
@@ -76,6 +81,7 @@ def health():
 @router.get("/classificationmodels")
 def list_models():
     items = []
+    set_MODEL_CONFIG()
     for model_id, cfg in MODEL_CONFIG.items():
         # Only return models that are actually configured
         if cfg.get("url") and cfg.get("key"):
@@ -87,6 +93,7 @@ def list_models():
 # Predict endpoint (model-specific)
 @router.post("/predict/{model_id}")
 async def predict(model_id: str, image: UploadFile = File(...)):
+    await set_MODEL_CONFIG()
     cfg = MODEL_CONFIG.get(model_id)
     if not cfg or not cfg.get("url") or not cfg.get("key"):
         raise HTTPException(status_code=400, detail=f"Unknown/unconfigured model: {model_id}")

@@ -15,25 +15,39 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 
 # Configure OpenAI settings
 US_models = ['o1', 'o3-mini']
-openAIClient_US_models = AzureOpenAI( # Current deployments: o1, o3-mini
-  azure_endpoint = os.getenv('OPENAI_API_ENDPOINT_US'), 
-  api_key = get_OPENAI_API_KEY_US(),  
-  api_version = os.getenv('OPENAI_API_VERSION')
-)
+_openai_client_us = None  
+def get_openai_client_us(): # Client created lazily (in function) so import that connects to managed identity is always ready
+    global _openai_client_us
+    if _openai_client_us is None:
+        _openai_client_us = AzureOpenAI( # Current deployments: o1, o3-mini
+            azure_endpoint = os.getenv('OPENAI_API_ENDPOINT_US'), 
+            api_key = get_OPENAI_API_KEY_US(),  
+            api_version = os.getenv('OPENAI_API_VERSION')
+        )
+    return _openai_client_us
 CAD_models = ['gpt-4o', 'gpt-4o-mini']
-openAIClient_CAD_models = AzureOpenAI( # Current deployments: gpt-4o, gpt-4o-mini
-  azure_endpoint = os.getenv('OPENAI_API_ENDPOINT'), 
-  api_key = get_OPENAI_API_KEY(),  
-  api_version = os.getenv('OPENAI_API_VERSION')
-)
-
+_openai_client_cad = None
+def get_openai_client_cad(): # Client created lazily (in function) so import that connects to managed identity is always ready
+    global _openai_client_cad
+    if _openai_client_cad is None:
+        _openai_client_cad = AzureOpenAI( # Current deployments: gpt-4o, gpt-4o-mini
+            azure_endpoint = os.getenv('OPENAI_API_ENDPOINT'), 
+            api_key = get_OPENAI_API_KEY(),  
+            api_version = os.getenv('OPENAI_API_VERSION')
+        )
+    return _openai_client_cad
 # Configure embeddings for RAG
-embeddings = AzureOpenAIEmbeddings(
-    model="text-embedding-3-large",
-    azure_endpoint = os.getenv('OPENAI_API_EMBEDDING_ENDPOINT'), 
-    api_key = get_OPENAI_API_KEY(),
-    openai_api_version = os.getenv('OPENAI_API_EMBEDDING_VERSION')
-)
+_openai_client_embeddings = None
+def get_openai_client_embeddings(): # Client created lazily (in function) so import that connects to managed identity is always ready
+    global _openai_client_embeddings
+    if _openai_client_embeddings is None:
+        _openai_client_embeddings = AzureOpenAIEmbeddings(
+            model="text-embedding-3-large",
+            azure_endpoint = os.getenv('OPENAI_API_EMBEDDING_ENDPOINT'), 
+            api_key = get_OPENAI_API_KEY(),
+            openai_api_version = os.getenv('OPENAI_API_EMBEDDING_VERSION')
+        )
+    return _openai_client_embeddings
 
 '''
 Determines the amount of tokens for OpenAI's newer models a given string will consume.
@@ -76,6 +90,7 @@ async def request_openai_chat(chat_history: list, document_content: str, type="c
     else:
         try:
             if model in CAD_models:
+                openAIClient_CAD_models = get_openai_client_cad()
                 stream = openAIClient_CAD_models.chat.completions.create(
                     model=model,
                     messages=messages,
@@ -86,6 +101,7 @@ async def request_openai_chat(chat_history: list, document_content: str, type="c
                     stream=True
                 )
             elif model in US_models:
+                openAIClient_US_models = get_openai_client_us()
                 stream = openAIClient_US_models.chat.completions.create(
                     model=model,
                     messages=messages,
@@ -120,6 +136,7 @@ def get_relevent_chunks(chat_history: list[dict], document_chunks: list[str], do
         # print("Number of document objects sent: " + str(len(document_objects)))
         
         # Create vector store
+        embeddings = get_openai_client_embeddings()
         vector_store = Chroma("example_collection", embedding_function=embeddings)
         uuids = [str(uuid4()) for _ in range(len(document_objects))]
 
@@ -152,6 +169,7 @@ def request_openai_response(question, conversation_input, model="gpt-4o-mini", t
     print(conversation_input)
 
     if model in CAD_models:
+        openAIClient_CAD_models = get_openai_client_cad()
         response = openAIClient_CAD_models.chat.completions.create(
             model=model,
             messages=conversation_input,
@@ -160,6 +178,7 @@ def request_openai_response(question, conversation_input, model="gpt-4o-mini", t
             presence_penalty=0,
             stop=None)
     elif model in US_models:
+        openAIClient_US_models = get_openai_client_us()
         response = openAIClient_US_models.chat.completions.create(
             model=model,
             messages=conversation_input,
