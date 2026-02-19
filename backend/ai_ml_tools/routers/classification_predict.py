@@ -10,6 +10,7 @@ import ai_ml_tools.utils.azure_key_vault as keys
 load_dotenv()
 
 MODEL_CONFIG = None
+CUSTOM_VISION_PREDICTION_KEY = os.getenv("CUSTOM_VISION_PREDICTION_KEY")
 def set_MODEL_CONFIG():
     if not MODEL_CONFIG:
         MODEL_CONFIG = {
@@ -21,26 +22,16 @@ def set_MODEL_CONFIG():
                 "url": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_URL"),
                 "key": keys.get_CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY(),
             },
-            "pizza-not-pizza": {
-                "url": os.getenv("CUSTOM_VISION_PIZZA_VS_NOT_PIZZA_PREDICTION_URL"),
-                "key": keys.get_CUSTOM_VISION_PIZZA_VS_NOT_PIZZA_PREDICTION_KEY(),
-            },
-            "apple-orange": {
-                "url": os.getenv("CUSTOM_VISION_APPLE_VS_ORANGE_PREDICTION_URL"),
-                "key": keys.get_CUSTOM_VISION_APPLE_VS_ORANGE_PREDICTION_KEY(),
-            },
-            "salmon-species": {
-                "url": os.getenv("CUSTOM_VISION_SALMON_SPECIES_CLASSIFIER_URL"),
-                "key": keys.get_CUSTOM_VISION_SALMON_SPECIES_CLASSIFIER_KEY()
+            "fresh-vs-infected-salmon": {
+                "url": os.getenv("CUSTOM_VISION_FRESH_VS_INFECTED_SALMON_SPECIES_CLASSIFIER_URL"),
+                "key": keys.get_CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY(),
             }
         }
 
 MODEL_META = {
     "dog-cat": {"name": "Cat vs Dog", "description": "Binary classifier"},
-    "apple-orange": {"name": "Apple vs Orange", "description": "Binary classifier"},
-    "pizza-not-pizza": {"name": "Pizza vs Not Pizza", "description": "Binary classifier"},
     "car-bike": {"name": "Car vs Bike", "description": "Binary classifier"},
-    "salmon-species" : {"name": "Salmon Species", "description": "Multi Classifier"}
+    "fresh-vs-infected-salmon" : {"name": "Fresh vs Infected Salmon", "description": "Binary Classifier"}
 }
 
 # define global vars

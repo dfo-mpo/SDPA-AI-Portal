@@ -14,7 +14,7 @@ import {
   HelpCircle, Clock, GaugeCircle, Globe2 } from "lucide-react";
 import { flushSync } from "react-dom";
 
-// const API_BASE = "http://localhost:8000"; // for dev
+// const API_BASE = "http://localhost:8080"; // for dev
 const API_BASE = "/api"; // for prod
 
 /* ---------- helper functions ---------- */
@@ -622,19 +622,33 @@ export function WebScraper() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url, force }),
       });
-      const j = await r.json();
+      const raw = await r.text();
+      let j = null;
+      try { j = raw ? JSON.parse(raw) : null; } catch {}
 
-      if (j.cache_hit) {
-        if (j.last_scrape_duration != null) {
-          setScrapeEstimate(j.last_scrape_duration);
+      if (!r.ok) {
+        if (r.status === 429 && j?.status === "cooldown") {
+          setAddErr("This site is on cooldown. Please return later.");
+          return;
         }
-      } else if (j.duration_seconds != null) {
-        setScrapeEstimate(j.duration_seconds);
+
+        if (r.status === 400) {
+          setAddErr(j?.message || "Invalid URL. Please include http(s)://");
+          return;
+        }
+
+        if (r.status === 502 && j?.reason === "unreachable") {
+          setAddErr("We couldn’t reach that website. It may be down or blocked.");
+          return;
+        }
+
+        setAddErr("Scrape started. Please return later and refresh presets.");
+        return;
       }
 
       await reload();
     } catch {
-      setAddErr("Failed to start scraping. Please try again.");
+      setAddErr("Scrape started. Please return later and refresh presets.");
     } finally {
       setScrapeInProgress(false);
       setConfirmOpen(false);
