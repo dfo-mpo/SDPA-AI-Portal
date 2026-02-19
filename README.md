@@ -1,211 +1,24 @@
-# Deploying the AI/ML Portal Using Docker
-## IMPORTANT: Required Routing Paths for Server/Backend Communication
-To simplify communication between the images/containers, a reverse nginx proxy is setup to reroute all requests from the frontend to the server or backend images. The nginx-app.conf file contains all reverse proxy logic.
+# DFO AI Hub
+This repository is for the DFO Office of the Chief Data Steward (OCDS) and Strategic Data Policy and Analytics (SDPA) AI Hub, a platform designed to explore the potential of artificial intelligence in fisheries and oceans research. Our initiatives harness the power of advanced data and A.I. technologies like machine learning, computer vision, and natural language processing to revolutionize how to support marine conservation and rebuilding efforts in the modern data and digital era.
 
-Any file that communicates to the backend or server using an HTTP request to 'localhost' will need to have it's path updated to be '/api' for backend requests or '/server' for server requests.
+These tools are prototypes designed to illustrate possible AI applications for DFO scientists, therefore, are strictly for educational purposes and are not to be used in any work processes. Please avoid uploading any sensitive or operational data if using this tool.
 
-<b>Important:</b> src/services/apiService.js is in the gitignore, if you are pulling from a different branch, changes to this file need to be manually pasted in. This is because the routing between the docker images differs due to a proxy.
-
-## Backend Image Logic
-The backend is implemented using fastapi/uvicorn, the backend folder contains the dockerfile for creating its image. It uses Python 3.10 and imports all packages specified in the requirments.txt file. It is exposed to port 8000 but the port is not directly used by the frontend due to the reverse proxy.<br>
-<b>Important:</b> There are 2 urls for HTTP requests to the VM that need to be manually uncommented (one for Azure and one for a local machine). This is in routers/age_scale.py and routers/french_translations.py
-### Chroma Storage
-Since Azure does not support volumes like native docker does, a file share is used. The steps in setting this are:
-1. Create a new file share in an Azure Storage Account, call it chroma.
-2. In the Azure web app resource go to path mappings and add a new storage mount. Call it chroma-store, connect it to the file share just created, and set the mount path to /home/chroma_store.
-3. In the Azure web app resource go to enviroment variables and set WEBSITES_ENABLE_APP_SERVICE_STORAGE to true.
-
-## Server Image Logic
-The server image is implemented using express JS (version 5.1.0). The server folder contains all of the code used by this image. The dockerfile is in the project root called Dockerfile.server and uses the same package and package-lock files as the frontend image. It is exposed to port 4000 but the port is not directly used by the frontend due to the reverse proxy.
-
-## Frontend Image Logic
-The frontend is implemented using Reactjs, the root of this project contains the dockerfile.frontend for creating its image. It uses Node 22.12.0 and for installing depedencies the package and package-lock jsons. The nginx-app.conf file will create a reverse proxy that allows HTTPS and WSS requests from the frontend image to be internally sent to the backend image as HTTP and WS requests. This allows the frontend and backend images communcate with out exposing non secure requests. The nginx-app.conf file also has a max file size limit set for all requests passed through the reverse proxy. It is exposed to port 80.<br>
-Due to nginx proxy, requests to the express server should begin with /server/ while requests to the backend should begin with /api/. The backend will receive requests with the /api/ part removed while the express server will receive requests with the /server/ part replaced with /api/.
-
-## Building the Docker Container Locally
-The docker-compose.yml file will allow for a docker container be created using the frontend and backend images. It reroutes the frontend exposure port to 3080 while rerouting the backend port to 8080. To set up your container locally:
-1. In the backend/ai_ml_tools folder, copy and rename the '.env.sample' file to '.env'. Fill in the keys for OpenAI and Document Intelligence.
-2. In the server/ folder, copy and rename the '.env.sample' file to 'env'. Fill in the details for an Azure storage account.
-3. In the src/components/auth/ folder, copy and rename the 'authConfig.example.js' into 'authConfig.js'. Make sure to add in the values for clientId, authority, redirectURI, and postLogoutRedirectUri.
-4. Build the local docker container using the command:
-```bash
-docker-compose up --build
-```
-You can now use the web app locally from, http://127.0.0.1:3080
-
-#### (Optional) Building the Demonstration Version Locally
-* Build the demonstration version image use:
-  ```bash
-  docker-compose -f docker-compose.yml -f docker-compose.demo.yml build
-  ```
-* This command uses `docker-compose.demo.yml` as an override to the base `docker-compose.yml`.
-* To run the demonstration manually after finished building the image, run
-    ```bash
-    docker-compose -f docker-compose.yml -f docker-compose.demo.yml up
-    ```
-* The demonstration frontend image is built with specific name and tag:
-    ```bash
-    sdpa-ai-portal-frontend:demo
-    ```
-* The demonstration build injects a `REACT_APP_MODE=demo` flag, enabling demo-specific behavior.
-* Alternatively, if you prefer to build and run the demonstration image at the same time, use: 
-  ```bash
-  docker-compose -f docker-compose.yml -f docker-compose.demo.yml up --build
-  ```
-
-## Deploying the Docker Container on Azure Webapps
-This approach will use Azure Container Registry to host the docker images and the Azure Web App will use a docker-compose file to build the container. This will require an already existing ACR resource, Azure Web App resource (with runtime set to container on creation), and both Docker and Azure CLI installed locally on your machine. 
-
-### Prerequisites
-#### Setup Web App Resource
-1. Create an Azure Web App resource. Make sure that the option for Publish is set to *Container*.
-2. Once the resource is created, open it and go into the *Configuration* page under settings and apply the following changes the click on save:
-    * Set SCM Basic Auth Publishing Credentials to 'On'
-    * Set FTP Basic Auth Publishing Credentials to 'On'
-    * Set HTTPS Only to 'Off' (Only if any of your code makes external HTTP requests, the AI portal backend does to a VM with high GPU, make sure to understand the risks of non secure requests)
-    * Set Always on to 'On' (Recomended)
-    * Ensure HTTP version is set to 1.1, the proxy in frontend dockerfile is set up to use 1.1
-3. Now go to the *Identity* page under the *System assigned* tab, set Status to 'On', press save, and copy the Object ID that is generated.
-#### Setup Container Registry Resource
-4. Create an Azure Container Registry, using defualt configurations.
-5. Once the resouce is created, open it and go to the *Access control (IAM)* page. Then create a new role assignment for the Web App resource:
-    * Click on the '+ Add' option to go to the role creation page. 
-    * Under 'Role' select *AcrPull* then click next.
-    * Under 'Memebers click on *Select members* and under the Object ID copied from step 3 into the search bar. Select the web app resource that appears. Click Next and finish the creation of the role assignment.
-6. Now go to the *Properties* page and make sure the Admin user option is selected.
-#### Install Docker Desktop (If you don't already have it on your device)
-7. First you need to install the Linux subsystem for Windows, open a PowerShell or Command Prompt terminal using Admin Privileges and run the following command: 
-```bash
-wsl --install 
-```
-You may need to restart the computer after this step.
-
-8. Download and install Docker Desktop from the Docker Website [Docker Downloads](https://docs.docker.com/desktop/setup/install/windows-install/). 
-
-When prompted, ensure the Use WSL 2 instead of Hyper-V option on the Configuration page is selected 
-#### Setup Terminal Connection
-9. Download and install Azure CLI from Microsoft:
-[Azure CLI Downloads](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?pivots=msi). Note that you may need admin privileges to run the msi file.
-10. Open a terminal on your PC and log into the azure subscription you wish to use:
-```bash
-az login
-```
-You will be shown all available subscriptions, select the one with your Azure Container registry. <br>
-If the subscription you are looking for is in a tenant that does not appear, then you will need to login to that specific tenant: 
-```bash
-az login --tenant <tenantID>
-```
-Note SSC 163Oxygen tenantID is 8c1a4d93-d828-4d0e-9303-fd3bd611c822. You can find it as Directory ID when viewing directories in Azure. 
-
-11. Log into your Azure Container Registry resource using the following command:
-```bash
-az acr login --name <acr_resource_name>
-```
-Where acr_resource is the name of the resource you want to push your docker images too.
-
-### Create Deployment on Web App
-1. In the backend/ai_ml_tools folder, copy and rename the '.env.sample' file to '.env'. Fill in the keys for OpenAI and Document Intelligence.
-2. Build the local docker container using the command:
-```bash
-docker-compose up --build
-```
-3. Once you have built your local docker container you need to tag the images that have modifications.<br>
-<b>Important:</b> If you tag and push a version (eg. v1, v2, ...) that already exists in the ACR resource, it will overwrite it.<br>
-```bash
-docker tag <project-foldername-lowercase>-backend <acr_resource_name>.azurecr.io/ai-ml-tools-backend:v1
-docker tag <project-foldername-lowercase>-frontend <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1
-docker tag <project-foldername-lowercase>-server <acr_resource_name>.azurecr.io/ai-ml-tools-server:v1
-```
-4. Push your local images with changes to the ACR:
-```bash
-docker push <acr_resource_name>.azurecr.io/ai-ml-tools-backend:v1
-docker push <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1
-docker push <acr_resource_name>.azurecr.io/ai-ml-tools-server:v1
-```
-5. Go to your Azure Web App resource to the *Deployment Center* page then set up the container:
-    * Make sure 'Source' is set to Container Registry.
-    * Make sure 'Container type' is set to Docker Compose.
-    * 'Authentication' Needs to be set to Admin Credentials
-    * For 'Config' enter the following compose file (Replace the term 'latest' with the version you want to use such as v1, v2, ect):
-    ```
-    version: '3.8'  
-    services:  
-      frontend:  
-        image: <your_registry_name>.azurecr.io/frontend:latest  
-        ports:  
-        - "3080:80"  
-        depends_on:  
-        - backend  
-        - server
-      backend:  
-        image: <your_registry_name>.azurecr.io/backend:latest  
-        ports:  
-        - "8080:8000" 
-      server:  
-        image: <your_registry_name>.azurecr.io/server:latest  
-        ports:  
-        - "4080:4000"
-    ```
-    * (Optional) Set 'Continuous deployment' to 'On' if you want the website to update if push a new image versions.
-    * Press Save, after your web app refreshes it will be running of the frontend and backend containers.
-
-#### (Optional) Deploying the Demonstration Version
-1. **Build the demonstration version image** using the demo-specific compose override:
-    ```bash
-    docker-compose -f docker-compose.yml -f docker-compose.demo.yml build
-    ```
-    * The demonstration frontend image is built with specific name and tag:
-    ```bash
-    sdpa-ai-portal-frontend:demo
-    ```
-    * To **run the demonstration** manually after finished building the image:
-    ```bash
-    docker-compose -f docker-compose.yml -f docker-compose.demo.yml up
-    ```
-    * Alternatively, to **build and run the demonstration** at the same time: 
-    ```bash
-    docker-compose -f docker-compose.yml -f docker-compose.demo.yml up --build
-    ```
-2. **Tag the built demonstration image** for ACR. The tag should align with the standard version, with a `-demo` suffix:
-```bash
-docker tag sdpa-ai-portal-frontend:demo <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1-demo
-```
-3. **Push the tagged demonstration image** to ACR:
-```bash
-docker push <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1-demo
-```
-4. In the Azure portal, navigate to the **Web App resource for the demonstration version**.
-    * Go to **Deployment Center**, and configure the container settings similarly to the standard version.
-    * Update the frontend image tag to match the demonstration version (with a `-demo` suffix):
-    ```bash
-    services:  
-      frontend:  
-        image: <your_registry_name>.azurecr.io/frontend:v1-demo  
-        ...
-    ```
-    * Save the configuration to trigger deployment.
-
-# DFO OCDS and SDPA AI Hub
-## Description
-The DFO OCDS and SDPA AI Hub is a web application equipped with a suite of AI and computer vision tools designed for document interaction and analysis. This application enables users to leverage powerful AI capabilities directly through their web browser. Built using FastAPI/Uvicorn, Python, CSS, HTML, React, Express, and JavaScript.
-
-## Tools Included
-- **AI ChatBot**: Allows real-time conversations with PDF documents, making it suitable for general inquiries and simple prompts.
-- **CSV/PDF Analyzer**: Analyzes and extracts information from PDF documents by uploading the document along with a CSV file containing engineered prompts.
-- **Sensitivity Score Calculator**: Computes the sensitivity level of uploaded documents based on custom parameters.
-- **Redactor**: Scans and redacts specific information from uploaded PDF documents.
-  
-## Integration with Azure AI and Document Intelligence
-### Azure AI
-We utilize Azure AI to power the AI ChatBot and CSV/PDF Analyzer. Azure AI provides advanced machine learning models that can interpret and respond to user queries, and analyze text data extracted from documents. This integration allows for:
-- Enhanced natural language processing for real-time conversation with documents.
-- Sophisticated data extraction and analysis from CSV and PDF files, enabling deep insights into document contents.
-
-### Document Intelligence
-Document Intelligence is used to read and interpret the contents of documents uploaded to the web application. It helps in:
-- Automatically extracting text and data from structured and unstructured documents.
+If you plan on contributing to new features, imporving the AI Hub, or updating Azure hosted instance check out the [CONTRIBUTE](CONTRIBUTE.md) page.
 
 ## Code Overview
+The AI Hub is made up of 3 components:
+- Frontend: Responsible for the interface users interact with and the authentication of users.
+- Server: Handles requests from the frontend for forms and documents hosted on the AI Hub.
+- Backend: Handles requests from the frontend for all AI, ML, and computer vision models including the model repository.
+### Frontend Framework
+
+
+See [FRONTEND](src/FRONTEND.md) for more details on this component. 
+### Server Framework
+
+
+See [SERVER](server/SERVER.md) for more details on this component. 
+
 ### Backend Framework
 The backend is implemented using Python with a FastAPI and Uvicorn framework. The code can be found in the backend/ai_ml_tools folder and intiated with the main.py file. The backend is structured as so:
 - routers - contains logic for handeling and responding to API requests.
@@ -214,96 +27,25 @@ The backend is implemented using Python with a FastAPI and Uvicorn framework. Th
 - core - contains any configuration files as needed
 - data - contains cached responces for dev use
 
-### Frontend Framework
-TODO: add high level overview
+See [BACKEND](backend/BACKEND.md) for more details on this component.
 
-### Frontend/Backend API calls supported
-- HTTP"/age_scale/" - Takes a TIFF image, preprocess it, then calls external VM with HTTP request to get scale age which is returned.
-- HTTP"/to_png" - Takes a TIFF image and returns it converted to PNG.
-- HTTP"/openai_csv_analyze/" - Takes both a CSV and PDF. Reads the CSV and applies those prompts to the PDF using LLM. Returns the model responces.
-- HTTP"/di_extract_document/" - Uses document intelligence to convert a PDF into a stringified JSON and return it.
-- WS"/ws/chat_stream" - Web socket that will ask a question on a document with a LLM, the responce is returned as a stream (in chunks)
-- HTTP"/di_chunk_document/" - Uses document intelligence to convert a PDF into markdown chunks, they are combined into a single string and returned.
-- WS"/ws/rag_stream/" - Web socket that will create chunked objects with documents string, get relvent chunks to the given question, then ask the question on the selected document chunks with a LLM, the responce is returned as a stream (in chunks)
-- HTTP"/fence_counting/" - Preprocess uploaded mp4 video and calls external VM with HTTP request and returns the responce which is an anotated video.
-- HTTP"/pdf_to_french/" - Takes in a PDF, extracts the raw text, then redirects to "/text_to_french/" HTTP request.
-- HTTP"/text_to_french/" - Takes in raw text then calls external VM with HTTP request to convert the text to French, the responce is returned.
-- HTTP"/pii_redact/" - Takes in a PDF, determines sensitive information, redacts sensitive information, then returns the redacted PDF.
-- HTTP"/sensitivity_score/" - Takes in a PDF, determines all sensitive information by type, then returns a calculated sensitivity score.
 
-## Prerequisites
-Before you begin the setup process, make sure to install the following:
-- Python 3.10
-- pip (Python package installer)
-- Node.js v22
-
-## Setup Instructions
-
-### 1. Install Python
-Download and install Python 3.10 from the official website:
-[Python Downloads](https://www.python.org/downloads/)
-During installation, ensure to check the box that says 'Add Python 3.10 to PATH'.
-
-### 2. Install Node.js
-Download and install Node.js v22 from the official website:
-[Node Downloads](https://nodejs.org/en/download)
-Note that you will need admin privileges to run the install.
-
-### 3. Clone the Repository
-Clone the repository to your local machine with the following command:
+## Building the Docker Container Locally
+This branch is setup to use docker for running the AI Hub, checkout the [local_dev](https://github.com/dfo-mpo/SDPA-AI-Portal/tree/local_dev) branch for running each component in terminal. <br>
+The docker-compose.yml file will allow for a docker container be created using the frontend, server, and backend images. It reroutes the frontend exposure port to 3080 while rerouting the backend port to 8080.
+### Prerequisites
+Ensure you have docker installed on your device, see link to [downloading docker](https://docs.docker.com/desktop/setup/install/windows-install/).
+### Steps to run container locally
+To set up your container locally:
+1. In the backend/ai_ml_tools folder, copy and rename the '.env.sample' file to '.env'. Fill in the keys for OpenAI, Document Intelligence, and other APIs used.
+2. In the server/ folder, copy and rename the '.env.sample' file to 'env'. Fill in the details for an Azure storage account to connect too.
+3. In the src/components/auth/ folder, copy and rename the 'authConfig.example.js' into 'authConfig.js'. Make sure to add in the values for clientId, authority, redirectURI, and postLogoutRedirectUri.
+4. Build the local docker container using the command:
 ```bash
-git clone https://github.com/dfo-mpo/openAI-Chatbot.git
-cd openAI-Chatbot
-```
+# Use this command if your docker engine version is below 20.10
+docker-compose up --build
 
-### 4. Run the Frontend and JS Server
-#### 4.1 Setup .env File
-Go to server/, then copy and rename the '.env.example' file to '.env'. Make sure to add in the keys needed for connecting to the Azure storage account.
-#### 4.2 Setup Authentication Config
-Go to src/components/auth/, then copy and rename the 'authConfig.example.js' into 'authConfig.js'. Make sure to add in the values for clientId, authority, redirectURI, and postLogoutRedirectUri.
-#### 4.3 Install Dependencies
-Install all required dependencies by running the following command in the project directory:
-```bash
-npm install
+# Use this command if you have docker engine v20.10 or newer
+docker compose up --build
 ```
-#### 4.4 Start React Project
-To run the frontend project use the following command:
-```bash
-npm run dev
-```
-The terminal will output the local host path that can be pasted into a web brower to use the React frontend.
-
-### 5. Run the Backend
-#### 5.1 Setup .env File
-Go to backend/ai_ml_tools, then copy and rename the '.env.example' file to '.env'. Make sure to add in the keys needed for OpenAI and Document Intelligence.
-#### 5.2 Setup and Run (With Bash Script)
-Open a new terminal window at the root of the repository and go the backend, install the requirments into a virtual enviroment, and run the backend with the following commands:
-```bash
-cd backend
-./setup_and_run.sh
-```
-
-#### 5.3 Running in the Future (With Bash Script) (if having issues use 5.4 method instead)
-
-After intially using the setup_and_run script, you can use the dev script instead to run the backend in the future:
-```bash
-./dev.sh
-```
-#### 5.4 (Optional) Manually Running the backend
-Without the bash scripts, you need to start by going into the backend folder again:
-```bash
-cd backend
-```
-(Optional) You can then create and activate a virtual enviroment with the commands:
-```bash
-python -m venv venv
-./venv/Scripts/activate
-```
-Install required packages if you haven't already:
-```bash
-pip install -r requirements.txt 
-```
-To start the backend use the command:
-```bash
-python -m uvicorn ai_ml_tools.main:app --reload
-```
+You can now use the web app locally from, http://localhost:3080

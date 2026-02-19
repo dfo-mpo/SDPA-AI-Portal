@@ -1,0 +1,2 @@
+## Server Image Logic
+The server image is implemented using express JS (version 5.1.0). The server folder contains all of the code used by this image. The dockerfile is in the project root called Dockerfile.server and uses the same package and package-lock files as the frontend image. It is exposed to port 4000 but the port is not directly used by the frontend due to the reverse proxy.
