@@ -208,7 +208,7 @@ import {
     },
 
     OBJECT_MODEL_DETECTION: {
-      id: 'ahmed-website',
+      id: 'object-model-detection',
       name: "Object Model Detection",
       category: 'Test',
       icon: Eye, 
