@@ -32,7 +32,7 @@ If you are using the existing deployment in Azure, you can jump to [docker requi
     * Under 'Role' select *AcrPull* then click next.
     * Under 'Memebers click on *Select members* and under the Object ID copied from step 3 into the search bar. Select the web app resource that appears. Click Next and finish the creation of the role assignment.
 6. Now go to the *Properties* page and make sure the Admin user option is selected.
-#### Setup Service Principle (if using Authentication)
+#### Setup App Registration (if using Authentication)
 7. You will need to create an App Registration for the Azure Web App used and the users that will have the ability to authenticate when logging in. You will likely need to reach out to IT for creating this, see [this documentation](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app) for more details.
 8. Get the application ID of the App Registration and the application ID of the service principle tied to the web application. They will be needed later.
 
@@ -46,20 +46,28 @@ If you are using the existing deployment in Azure, you can jump to [docker requi
     * Set the *Name* to `KEY_VAULT_NAME`
     * Set the *Value* to the name of your Azure Key Vault resource.
     * Click *Apply* to add the variable, then click *Apply* again to save the change.
+
+#### Setup Azure Storage Account
+15. Create an Azure Storage account resource.
+    * You can use the default settings but it is recommended to select `Enable hierarchical namespace` under the *Advanced* window.
+16. Once the resource is created open it and go to the `Containers` page and add a new container (pick any name you want).
+17. In this container, create 2 folders:
+    * `ds_use_case_survey`, this will be where survey responces are outputted.
+    * `ai_ml_document`, you will need to upload a `pdf` and `docx` version of the `Statistical and ML algorthms Guide` into this folder.
 #### Install Docker Desktop (If you don't already have it on your device)
-15. First you need to install the Linux subsystem for Windows, open a PowerShell or Command Prompt terminal using Admin Privileges and run the following command: 
+18. First you need to install the Linux subsystem for Windows, open a PowerShell or Command Prompt terminal using Admin Privileges and run the following command: 
 ```bash
 wsl --install 
 ```
 You may need to restart the computer after this step.
 
-16. Download and install Docker Desktop from the Docker Website [Docker Downloads](https://docs.docker.com/desktop/setup/install/windows-install/). 
+19. Download and install Docker Desktop from the Docker Website [Docker Downloads](https://docs.docker.com/desktop/setup/install/windows-install/). 
 
 When prompted, ensure the Use WSL 2 instead of Hyper-V option on the Configuration page is selected 
 #### Setup Terminal Connection
-17. Download and install Azure CLI from Microsoft:
+20. Download and install Azure CLI from Microsoft:
 [Azure CLI Downloads](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?pivots=msi). Note that you may need admin privileges to run the msi file.
-18. Open a terminal on your PC and log into the azure subscription you wish to use:
+21. Open a terminal on your PC and log into the azure subscription you wish to use:
 ```bash
 az login
 ```
@@ -70,7 +78,7 @@ az login --tenant <tenantID>
 ```
 Note SSC 163Oxygen tenantID is 8c1a4d93-d828-4d0e-9303-fd3bd611c822. You can find it as Directory ID when viewing directories in Azure. 
 
-19. Log into your Azure Container Registry resource using the following command:
+22. Log into your Azure Container Registry resource using the following command:
 ```bash
 az acr login --name <acr_resource_name>
 ```
