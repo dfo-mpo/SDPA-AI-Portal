@@ -212,7 +212,7 @@ import {
       name: "Object Model Detection",
       category: 'Test',
       icon: Eye, 
-      backgroundImage: '/assets/ahmed-website-banner.jpg',
+      backgroundImage: '/assets/website-banner.jpg',
       actionText: 'Open Website',
       disabled: true,
       showInDemo: false
