@@ -206,6 +206,19 @@ import {
       actionText: 'Coming Soon',
       disabled: true
     },
+
+    OBJECT_MODEL_DETECTION: {
+      id: 'object-model-detection',
+      name: "Object Model Detection",
+      category: 'Test',
+      icon: Eye, 
+      backgroundImage: '/assets/website-banner.jpg',
+      actionText: 'Open Website',
+      disabled: true,
+      showInDemo: false
+    },
+
+    
   };
   
   /**
@@ -245,6 +258,9 @@ import {
     ],
     'AI Resources': [
       TOOLS.AI_RESOURCES,
+    ],
+    'Test': [
+      TOOLS.OBJECT_MODEL_DETECTION,
     ]
   };
   
