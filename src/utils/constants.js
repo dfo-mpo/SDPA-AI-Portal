@@ -91,6 +91,15 @@ import {
       backgroundImage: '/assets/fence-counting-banner.jpg',
       actionText: 'Upload Video'
     },
+    CLASSIFICATIONMODEL: {
+      id: 'classificationmodel',
+      name: 'Classification Model',
+      category: 'Computer Vision',
+      icon: Brain,
+      actionText: 'Create a Classification Model',
+      showInDemo:false,
+      disabled:true
+    },
     
     // Large Language Model Tools
     CSV_ANALYZER: {
@@ -147,17 +156,6 @@ import {
       backgroundImage: '/assets/OCR.gif',
       actionText: 'Scrape Website',
       showInDemo:false
-    },
-
-    CLASSIFICATIONMODEL: {
-      id: 'classificationmodel',
-      name: 'Classification Model',
-      category: 'Large Language Models',
-      icon: Brain,
-      backgroundImage: '/assets/OCR.gif',
-      actionText: 'Create a Classification Model',
-      showInDemo:false,
-      disabled:true
     },
 
     // Optical Character Recognition Tools
@@ -233,7 +231,8 @@ import {
       TOOLS.Underwater_Marine_Life_Annotation,
       TOOLS.Fish_Population_Estimation,
       TOOLS.Dectection_of_Ghost_Gear,
-      TOOLS.CTD_Data_Quality_Control
+      TOOLS.CTD_Data_Quality_Control,
+      TOOLS.CLASSIFICATIONMODEL,
     ],
     'Large Language Models': [
       TOOLS.CSV_ANALYZER,
@@ -242,7 +241,6 @@ import {
       TOOLS.SENSITIVITY_CALCULATOR,
       TOOLS.FRENCH_TRANSLATION,
       TOOLS.WEBSCRAPE,
-      TOOLS.CLASSIFICATIONMODEL
     ],
     'Optical Character Recognition': [
       TOOLS.DOCUMENT_OCR
