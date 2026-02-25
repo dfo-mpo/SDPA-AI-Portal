@@ -33,27 +33,27 @@ If you are using the existing deployment in Azure, you can jump to [docker requi
     * Under 'Memebers click on *Select members* and under the Object ID copied from step 3 into the search bar. Select the web app resource that appears. Click Next and finish the creation of the role assignment.
 6. Now go to the *Properties* page and make sure the Admin user option is selected.
 #### Setup App Registration (if using Authentication)
-7. You will need to create an App Registration for the Azure Web App used and the users that will have the ability to authenticate when logging in. You will likely need to reach out to IT for creating this, see [this documentation](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app) for more details.
+7. You will need to create an App Registration for the Azure Web App used and the users that will have the ability to authenticate when logging in. You will likely need to reach out to IT to create this, see [this documentation](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app) for more details.
 8. Get the application ID of the App Registration and the application ID of the service principle tied to the web application. They will be needed later.
 
 #### Setup Azure Key Vault
 9. Create an Azure Key Vault resource using default configurations.
 10. Go to the resource once it is created and open the `Access Control (IAM)` page
 11. Create a new role granting at least `Get` and `List` for secrets for the Object ID for the Azure Web App **AND** the application ID from the service principle tied to the Azure Web App.
-12. Go to the `Secrets` page and create secrets for each key as identified in the [backend](backend/ai_ml_tools/utils/azure_key_vault.py) and [server](server/services/azureBlobClient.js).
+12. Go to the `Secrets` page and create secrets for each key as identified in the [backend](backend/ai_ml_tools/utils/azure_key_vault.py) and [server](server/services/azureBlobClient.js). The name of the keys must match as they are shown in these files as Azure Key Vault uses different naming conventions than what is used in `.env` files.
 13. Go back to the Azure Web App resource created earlier.
-14. Go to the `Environment variables` page. Click on *Add* to create a new enviroment variable: 
+14. Go to the `Environment variables` page. Click on *Add* to create a new environment variable: 
     * Set the *Name* to `KEY_VAULT_NAME`
     * Set the *Value* to the name of your Azure Key Vault resource.
     * Click *Apply* to add the variable, then click *Apply* again to save the change.
 
 #### Setup Azure Storage Account
 15. Create an Azure Storage account resource.
-    * You can use the default settings but it is recommended to select `Enable hierarchical namespace` under the *Advanced* window.
-16. Once the resource is created open it and go to the `Containers` page and add a new container (pick any name you want).
+    * You can use the default settings, but it is recommended to select `Enable hierarchical namespace` under the *Advanced* window.
+16. Once the resource is created, open it and go to the `Containers` page and add a new container (pick any name you want).
 17. In this container, create 2 folders:
-    * `ds_use_case_survey`, this will be where survey responces are outputted.
-    * `ai_ml_document`, you will need to upload a `pdf` and `docx` version of the `Statistical and ML algorthms Guide` into this folder.
+    * `ds_use_case_survey`, this will be where survey responses are outputted.
+    * `ai_ml_document`, you will need to upload a `pdf` and `docx` version of the `Statistical and ML Algorithms Guide` into this folder.
 #### Install Docker Desktop (If you don't already have it on your device)
 18. First you need to install the Linux subsystem for Windows, open a PowerShell or Command Prompt terminal using Admin Privileges and run the following command: 
 ```bash
