@@ -42,32 +42,65 @@ A complication is introduced when deploying the AI Hub on Azure Web Apps. This i
 3. In the Azure web app resource, go to environment variables and set `WEBSITES_ENABLE_APP_SERVICE_STORAGE` to `true`. Click on Apply to update the variable, then click Apply on the variables page to save the change. 
 
 ## Adding a New API Route
+1. Go to the `backend/ai_ml_tools/routers` folder. 
+    * If you are adding a route for a new tool, copy and rename the `template_router.py` file. 
+    *  If a file for your tool already exits, open that file. 
+
+2. Add the logic for the HTTP and/or WS routes as needed. Helper functions can be added to the `ai_ml_tools/utils` folder and class definitions can be added to the `ai_ml_tools/models` folder then imported into the router file. 
+
+3. After building the new routers, go to the `backend/ai_ml_tools/routers/__init__.py` file. Ensure your router file is imported and included using the `include_router()` function. 
+
+Next time the backend is run, it will now serve the new routes that have been added.
 
 ## Supported APIs 
 ### HTTP Requests Handled Internally 
-- HTTP"/age_scale/" - Takes a TIFF image, preprocess it, then calls external VM with HTTP request to get scale age which is returned. 
+Requests handled in the `ai_ml_tools/routers/age_scale.py` file: 
+- HTTP"/age_scale/" - `POST` request that takes a `TIFF` image, preprocess it, then calls an external VM with HTTP post request to obtain and return the model predicted age of the fish. 
+- HTTP"/to_png" - `POST` request that a `TIFF` image, convert it to a `PNG` file, then return it. 
 
-- HTTP"/to_png" - Takes a TIFF image and returns it converted to PNG. 
+Requests handled in the `ai_ml_tools/routers/aml.py` file: 
+- HTTP”/models” - `GET` request that retrieves all models in the Azure Machine Learning Workspace. 
+- HTTP "/models/{name}/versions" - `GET` request that retrieves all versions of the model based on name provided in `{name}`. 
+- HTTP "/models/{name}/versions/{version}/download.zip" - `GET` request that retrieves the files and folders for the model and version specified by `{name}` and `{version}` respectively. The retrieved files are converted into a `.zip` file before being returned.  
+- HTTP "/models/{name}/versions/{version}/readme" - `GET` request that retrieves the `README` file if it exists from the model and version specified by `{name}` and `{version}` respectively. 
 
-- HTTP"/openai_csv_analyze/" - Takes both a CSV and PDF. Reads the CSV and applies those prompts to the PDF using LLM. Returns the model responces. 
+Requests handled in the `ai_ml_tools/routers/analyzer.py` file: 
+- HTTP"/openai_csv_analyze/" - `POST` request that takes both a `CSV` and `PDF`. Reads the `CSV` and applies those prompts to the `PDF` using LLM. Returns the model responses in the from of a `JSON`, `CSV`, or `TXT` depending on what the `outputType` input is set too. 
 
-- HTTP"/di_extract_document/" - Uses document intelligence to convert a PDF into a stringified JSON and return it. 
+Requests handled in the `ai_ml_tools/routers/chatbot.py` file: 
+- HTTP"/di_extract_document/" - `POST` request that takes a `PDF` document then uses an Azure document intelligence prebuilt model to convert the `PDF` into a stringified `JSON` and return it. 
+- WS"/ws/chat_stream" - `Web socket` that will create chunked objects with documents string, get relevant chunks to the given question using an embedding model, then ask the question on the selected document chunks with a LLM, the response is returned as a stream (in chunks). 
+- HTTP"/di_chunk_single_document/" - `POST` request that takes a single `PDF` document and uses an Azure document intelligence prebuilt model to convert a `PDF` into markdown chunks, they are combined into a `JSON` containing text chunks and metadata then returned. 
+- HTTP"/di_chunk_ multi_document/" - `POST` request that takes multiple `PDF` documents and uses an Azure document intelligence prebuilt model to convert a `PDF` into markdown chunks, they are combined into a `JSON` containing text chunks and metadata then returned. 
 
-- WS"/ws/chat_stream" - Web socket that will ask a question on a document with a LLM, the responce is returned as a stream (in chunks) 
+Requests handled in the `ai_ml_tools/routers/classification_predict.py` file: <br>
+**This tool is currently under development**, and requests are activity changing in this file. Documentation will be added once this tool is complete. 
 
-- HTTP"/di_chunk_document/" - Uses document intelligence to convert a PDF into markdown chunks, they are combined into a single string and returned. 
+Requests handled in the `ai_ml_tools/routers/documentOcr.py` file: 
+- HTTP”/index” - `POST` request that takes a set of PDF files, extracts text from multiple documents using Azure document intelligence, creates a vector store, then returns the vector store. 
+- HTTP” /extract_per_file” - `POST` request that takes the vector store ID, fields, document names, and model type. It will apply a LLM to extract the specified fields from the documents and return for each document the name, fields, LLM answers, sources, and reasonings. 
 
-- WS"/ws/rag_stream/" - Web socket that will create chunked objects with documents string, get relvent chunks to the given question, then ask the question on the selected document chunks with a LLM, the responce is returned as a stream (in chunks) 
+Requests handled in the `ai_ml_tools/routers/fence_count.py` file: 
+- HTTP"/fence_counting/" - `POST` request that takes a file name and returns a cached output video based on the inputted file name. 
 
-- HTTP"/fence_counting/" - Preprocess uploaded mp4 video and calls external VM with HTTP request and returns the responce which is an anotated video. 
+Requests handled in the `ai_ml_tools/routers/french_translation.py` file: 
+- HTTP"/pdf_to_french/" - `POST` request that takes in a `PDF`, extracts the raw text, then redirects to `/text_to_french/` HTTP request. 
+- HTTP"/text_to_french/" - `POST` request that takes in raw text then calls external VM with HTTP request to convert the text to French, the text response from the VM is returned. 
 
-- HTTP"/pdf_to_french/" - Takes in a PDF, extracts the raw text, then redirects to "/text_to_french/" HTTP request. 
+Requests handled in the `ai_ml_tools/routers/pii_redact.py` file: 
+- HTTP"/pii_redact/" - `POST` request that takes in a `PDF`, uses the `fitz` library to extract the text, determines sensitive information using `presidio`, redacts sensitive information, then returns the redacted `PDF`. 
 
-- HTTP"/text_to_french/" - Takes in raw text then calls external VM with HTTP request to convert the text to French, the responce is returned. 
+Requests handled in the `ai_ml_tools/routers/sensitivity_score.py` file: 
+- HTTP"/sensitivity_score/" - `POST` request that takes in a `PDF`, uses the `fitz` library to extract the text, determines all sensitive information by type using `presidio`, then returns a calculated sensitivity score. 
 
-- HTTP"/pii_redact/" - Takes in a PDF, determines sensitive information, redacts sensitive information, then returns the redacted PDF. 
-
-- HTTP"/sensitivity_score/" - Takes in a PDF, determines all sensitive information by type, then returns a calculated sensitivity score. 
+Requests handled in the `ai_ml_tools/routers/web_scraper.py` file: 
+- HTTP "/scrape" - `POST` request that takes a `URL` and scrapes a it (or uses cached data), stores chunks in memory, upserts them to `Chroma`, and returns a session_id. 
+- HTTP "/scrape/{session_id}/combined.txt" - `GET` request that retrieves and returns the raw combined scraped text for a fresh scrape as a downloadable `TXT` file. Scraped text is from the `URL` scape tied to the provided `{session_id}`. 
+- HTTP "/presets" - `GET` request that returns a list of cached `URLs` (presets) discovered in the vector store. 
+- HTTP "/combined-by-url" - `GET` request that combines all the chunks from a single `URL` into a string which is then returned in a `TXT` file. 
+- HTTP "/base-presets" - `GET` request that retrieves and returns a list of the unique base domains from vector DB. 
+- HTTP "/pages" - `GET` request that retrieves and returns all pages (full `URLs`) belonging to a given base domain. 
+- WS "/ws/website_chat" - `Web socket` that takes a user’s question, retrieves relevant chunks from the vector store for the given `URL`, then applied LLM to generate a response that gets returned.  
 
 ### External APIs Used 
 #### Azure OpenAI 
