@@ -54,6 +54,7 @@ If you are using the existing deployment in Azure, you can jump to [docker requi
 17. In this container, create 2 folders:
     * `ds_use_case_survey`, this will be where survey responses are outputted.
     * `ai_ml_document`, you will need to upload a `pdf` and `docx` version of the `Statistical and ML Algorithms Guide` into this folder.
+18. See additional setup needed in the Azure Storage Account if using the Web Scraper tool in [BACKEND.md at Chroma Storage in Volumes and File Share](./backend/BACKEND.md#choma-storage-in-volumes-and-file-share). 
 #### Install Docker Desktop (If you don't already have it on your device)
 18. First you need to install the Linux subsystem for Windows, open a PowerShell or Command Prompt terminal using Admin Privileges and run the following command: 
 ```bash
