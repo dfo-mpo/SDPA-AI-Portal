@@ -16,7 +16,7 @@ The server is implemented mainly using Node.js, Express.js and `@azure/storage-b
 The server acts as an API layer between `Frontend (React) -> Express Server -> Azure Blob Storage`. All persistent data handled by this server is stored in Azure Blob Storage. No database is used. 
 
 ## Environment Configuration 
-Ther server uses environment variables stored in `server\.env`. The required environment variables are used to construct a connecting string dynamically inside `server\services\azureBlobClient.js`. The Azure Blob client is instantiated per request using the Azure SDK. 
+The server uses environment variables stored in `server\.env`. The required environment variables are used to construct a connecting string dynamically inside `server\services\azureBlobClient.js`. The Azure Blob client is instantiated per request using the Azure SDK. 
 
 ## Route Structure 
 The server organizes functionality into modular route files under `server\routes`. Each route file registers endpoints under `/api`. 
