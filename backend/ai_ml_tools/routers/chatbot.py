@@ -23,7 +23,7 @@ async def pdf_to_json_string(file: UploadFile = File(...)):
             content={"error": f"An error occurred: {str(e)}"}
         )
 
-# Web socket for asking a LLM a question and streaming the responce
+# Web socket for asking a LLM a question and streaming the responce, uses RAG
 @router.websocket("/ws/chat_stream")
 async def llm_responce(websocket: WebSocket):
     await websocket.accept()
@@ -117,33 +117,34 @@ async def pdf_to_chunks(files: List[UploadFile] = File(...)):
         )
 
 # Web socket for asking a LLM a question and streaming the responce for chunked documents
-@router.post("/ws/rag_stream")
-async def llm_responce_rag(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        data = await websocket.receive_json()  
-        chat_history = data['chat_history']  
-        document_vectors = data['document_vectors']
-        model = data.get('model', 'gpt-4o-mini')  
-        temperature = data.get('temperature', 0.3)  
-        reasoning_effort = data.get('reasoning_effort', 'high')
-        token_limit = data['token_limit']
-        # isAuth = data.get('isAuth', False)
+# This version of the web socket had routing issues so chat_steam has been replaced by this logic (instead of RAG and non RAG websockets, its only RAG now)
+# @router.post("/ws/rag_stream")
+# async def llm_responce_rag(websocket: WebSocket):
+#     await websocket.accept()
+#     try:
+#         data = await websocket.receive_json()  
+#         chat_history = data['chat_history']  
+#         document_vectors = data['document_vectors']
+#         model = data.get('model', 'gpt-4o-mini')  
+#         temperature = data.get('temperature', 0.3)  
+#         reasoning_effort = data.get('reasoning_effort', 'high')
+#         token_limit = data['token_limit']
+#         # isAuth = data.get('isAuth', False)
 
-        document_chunks = document_vectors['text_chunks']
-        document_metadata = document_vectors['metadata']
-        document_content = get_relevent_chunks(chat_history, document_chunks, document_metadata) 
+#         document_chunks = document_vectors['text_chunks']
+#         document_metadata = document_vectors['metadata']
+#         document_content = get_relevent_chunks(chat_history, document_chunks, document_metadata) 
 
-        llm_stream = request_openai_chat(chat_history, document_content=document_content, model=model, temperature=temperature, reasoning_effort=reasoning_effort, token_remaining=token_limit)
+#         llm_stream = request_openai_chat(chat_history, document_content=document_content, model=model, temperature=temperature, reasoning_effort=reasoning_effort, token_remaining=token_limit)
             
-        # Simulate processing and responding with chunks  
-        async for chunk in llm_stream:
-            chunk_data = json.loads(chunk[6:])  # Removing 'data: ' part
-            await websocket.send_json(chunk_data)
+#         # Simulate processing and responding with chunks  
+#         async for chunk in llm_stream:
+#             chunk_data = json.loads(chunk[6:])  # Removing 'data: ' part
+#             await websocket.send_json(chunk_data)
 
-    except WebSocketDisconnect:  
-        print("Client disconnected")  
-    except Exception as e:  
-        print(e)
-        await websocket.send_json({"error": str(e)})  
-        await websocket.close() 
+#     except WebSocketDisconnect:  
+#         print("Client disconnected")  
+#     except Exception as e:  
+#         print(e)
+#         await websocket.send_json({"error": str(e)})  
+#         await websocket.close() 

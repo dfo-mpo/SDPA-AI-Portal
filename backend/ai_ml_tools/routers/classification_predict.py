@@ -63,11 +63,6 @@ async def call_custom_vision(url: str, key: str, image_bytes: bytes) -> Dict[str
 # FastAPI router and endpoints
 router = APIRouter(prefix="/api", tags=["classification_model"])
 
-# Health endpoint
-@router.get("/health")
-def health():
-    return {"status": "ok"}
-
 # get router (static for now, will be dynamic later on)
 @router.get("/classificationmodels")
 def list_models():

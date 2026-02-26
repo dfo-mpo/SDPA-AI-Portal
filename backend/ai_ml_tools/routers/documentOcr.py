@@ -50,10 +50,6 @@ MODEL_MAP = {
 }
 
 # ------ Routes ------
-@router.get("/health")
-def health():
-    return {"ok": True}
-
 # Index PDFs
 @router.post("/index", response_model=IndexResponse)
 async def index_pdfs(files: List[UploadFile] = File(...)):
