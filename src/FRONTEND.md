@@ -75,24 +75,39 @@ Due to the unreliability of automatic translation tools/libraries especially in 
 
 When the language toggle button is used, the `contexts/LanguageContext.js` file is used by the toggle and all AI Hub pages to keep track of what the current language is. 
 
+## Google Analytics 
+Google Analytics has been setup to track various events and pages in the AI Hub to better understand user behavior. The `react-ga4` library is used in the file `src/utils/analytics.js` to set up helper functions to track page views and specific events. It is then called in `src/App.js` to initialize the Google Analytics connection and page tracking. Any page in the AI Hub can then track specific events by importing `trackEvent()` from `analytics.js` and calling it during an event (such as a button click or API request failure). The name of the tool, description of the event, and label of the event type should always be passed to the `trackEvent()` function. 
+
+For documentation on setting up and tracking events in a Google Analytics workspace see the document [How to Track Web App Traffic Using Google Analytics 4.docx](https://086gc.sharepoint.com/:w:/r/sites/PacificSalmonTeam/Shared%20Documents/General/02%20-%20PSSI%20Secretariat%20Teams/04%20-%20Strategic%20Salmon%20Data%20Policy%20and%20Analytics/10%20-%20Documentation/01%20-%20Data%20Analytics%20Team/08%20-%20Google%20Analytics/How%20to%20Track%20Web%20App%20Traffic%20Using%20Google%20Analytics%204.docx?d=w3290d776fea34e8d916826fe338dd091&csf=1&web=1&e=vExLV4). 
+
 ## Adding a New Tool/Page 
-1. Go to the `pages/tools/` folder and create a new JS file for your tool. Add the logic this tools UI. 
-2. For any calls/requests made to the backend call one of the functions defined in `services/apiService.js`. 
+1. Go to the `pages/tools/` folder and create a new JS file for your tool. Add the logic this tools UI.
+2. If your tool has parameters that require user input, you can set those up in the left side menu. To do so, follow these steps: 
+    1. Go to the `src/components/tools/settings` folder and copy the `settings_template.py` file then rename it with your tool name. 
+    2. Address all the `TODO` comment statements in the template and add in your settings logic. 
+    3. Within the same folder, go to the `index.js` file and add your new settings component as an export. 
+    4. Go to the file `src/layouts/LeftPanel.js` and add your settings component to both the `../components/tools/settings` import and to the `toolSettings` dictionary, add your tool name as the key. 
+    5. Go to the file `src/contexts/ToolSettingsContext.js`, create a new React `useState` for the left panel parameter default states. Then add a function to update the React state with new parameter values. Include both in the `value` object at the bottom of the file. 
+    6. (Optional) To prevent issues with passing the parameters to the backend, cleaning/processing can be done to ensure compatibility. Go to the file `src/utils/settingsAdapter.js` create a new export function for your tool left panel parameters and add it to the adapters dictionary at the bottom of the file.
+3. For any calls/requests made to the backend call one of the functions defined in `services/apiService.js`. 
 If you need to add a new API route for the backend: 
     1. Follow section 4.5 Adding a New API Route. 
     2. Create a new function in `services/apiService.js` that makes this new API request. 
-3. Add in the language/translation logic: 
+4. Add in the language/translation logic: 
     1. Create a new JS file for your tool in the `translations/tools/` folder.  
     2. In this new file, export 2 dictionaries, one called `en` for all text used in the tool’s UI page and `fr` for all the translated text. Both dictionaries must share the same keys. 
-    3. Add in the name of your tool in English and French in the list of tools found in `translations/layout.js` and `translations/components/aiToolsDropdown.js` files. 
-    4. In the `utils/translations/toolTranslations.js` file, add a mapping for the new translation page for the tool. The name used should match the filename and will be key used in the UI tool page for accessing its English/French text. 
-    5. In the new tool UI file, import `useLanguage` from the contexts folder and `getToolTranslations` from utils. You can then retreive the language dictionaries as so: 
+    3. In the same folder, go to the `index.js` file. Import the translation page, then add it to both the export and the `toolMap` dictionary. 
+    4. Add in the name of your tool in English and French in the list of tools found in `translations/layout.js` and `translations/components/aiToolsDropdown.js` files. 
+    5. In the `utils/translations/toolTranslations.js` file, add a mapping for the new translation page for the tool. The name used should match the filename and will be key used in the UI tool page for accessing its English/French text. 
+    6. In the new tool UI file, import `useLanguage` from the contexts folder and `getToolTranslations` from utils. You can then retreive the language dictionaries as so: 
 ``` javascript
 const { language } = useLanguage(); 
 const toolData = getToolTranslations("toolName", language);
 ```
-4. Add tool to menu options so users can find it by following these steps: <br>
-**This important and will be added in the future**.
+5. Add tool to menu options so users can see the tool by following these steps: 
+    1. Go to the `src/page/tools/index.js` file and add your new tool UI page as an export. 
+    2. Go to the `src/layouts/Dashboard.js` file, import your tool’s UI page, and add it to the `toolComponents` dictionary. 
+    3. Go to the file `src/utils/constants.js` define a new object for your tool, then add your new object to the `TOOL_CATEGORIES` export under the most relevant section (for example if the tool uses OpenAI put it under Large Language Models) 
  
 ## Current AI Hub Tools 
 This section covers all of the tools currently deployed on the AI Hub. More technical details on how some of these tools are implemented in the backend are found in [BACKEND.md at Supported APIs](../backend/BACKEND.md#supported-apis). <br>
