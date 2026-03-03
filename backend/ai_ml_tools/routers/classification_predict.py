@@ -10,23 +10,29 @@ import ai_ml_tools.utils.azure_key_vault as keys
 load_dotenv()
 
 MODEL_CONFIG = None
-CUSTOM_VISION_PREDICTION_KEY = os.getenv("CUSTOM_VISION_PREDICTION_KEY")
+
+CUSTOM_VISION_PREDICTION_KEY = keys.get_CUSTOM_VISTION_PREDICTION_KEY() # Prod work (key vault)
+# CUSTOM_VISION_PREDICTION_KEY = os.getenv("CUSTOM_VISION_PREDICTION_KEY") # Dev work
+
 def set_MODEL_CONFIG():
-    if not MODEL_CONFIG:
-        MODEL_CONFIG = {
-            "dog-cat": {
-                "url": os.getenv("CUSTOM_VISION_DOG_VS_CAT_PREDICTION_URL"),
-                "key": keys.get_CUSTOM_VISION_DOG_VS_CAT_PREDICTION_KEY(),
-            },
-            "car-bike": {
-                "url": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_URL"),
-                "key": keys.get_CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY(),
-            },
-            "fresh-vs-infected-salmon": {
-                "url": os.getenv("CUSTOM_VISION_FRESH_VS_INFECTED_SALMON_SPECIES_CLASSIFIER_URL"),
-                "key": keys.get_CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY(),
-            }
+    global MODEL_CONFIG
+    MODEL_CONFIG = {
+        "dog-cat": {
+            "url": os.getenv("CUSTOM_VISION_DOG_VS_CAT_PREDICTION_URL"),
+            "key": keys.get_CUSTOM_VISION_DOG_VS_CAT_PREDICTION_KEY(), # Prod work (key vault)
+            # "key": CUSTOM_VISION_PREDICTION_KEY, # Dev work
+        },
+        "car-bike": {
+            "url": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_URL"),
+            "key": keys.get_CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY(), # Prod work (key vault)
+            # "key": CUSTOM_VISION_PREDICTION_KEY, # Dev work
+        },
+        "fresh-vs-infected-salmon": {
+            "url": os.getenv("CUSTOM_VISION_FRESH_VS_INFECTED_SALMON_SPECIES_CLASSIFIER_URL"),
+            "key": keys.get_CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY(), # Prod work (key vault)
+            # "key": CUSTOM_VISION_PREDICTION_KEY, # Dev work
         }
+    }
 
 MODEL_META = {
     "dog-cat": {"name": "Cat vs Dog", "description": "Binary classifier"},
@@ -79,7 +85,7 @@ def list_models():
 # Predict endpoint (model-specific)
 @router.post("/predict/{model_id}")
 async def predict(model_id: str, image: UploadFile = File(...)):
-    await set_MODEL_CONFIG()
+    set_MODEL_CONFIG()
     cfg = MODEL_CONFIG.get(model_id)
     if not cfg or not cfg.get("url") or not cfg.get("key"):
         raise HTTPException(status_code=400, detail=f"Unknown/unconfigured model: {model_id}")

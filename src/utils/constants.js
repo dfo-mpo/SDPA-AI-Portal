@@ -98,7 +98,7 @@ import {
       icon: Brain,
       actionText: 'Create a Classification Model',
       showInDemo:false,
-      disabled:true
+      disabled:false
     },
     
     // Large Language Model Tools
