@@ -1,5 +1,9 @@
 /**
  * PDF Extraction Tool
+ *
+ * Changes from previous version (marked with  ← CHANGED):
+ *   1. Read `apiKey` from PDFExtractionToolSettings context
+ *   2. Forward `api_key` in the /extract_per_file request body
  */
 
 import React, { useState, useEffect} from "react";
@@ -53,8 +57,11 @@ export function PDFExtractionTool() {
     ? resultsByDoc[selectedDocName]
     : [];
   const [fieldMode, setFieldMode] = useState(null);
+
+  // ← CHANGED: also read apiKey from settings
   const { PDFExtractionToolSettings } = useToolSettings();
   const selectedModel = PDFExtractionToolSettings?.modelType || "gpt4omini";
+  const userApiKey    = PDFExtractionToolSettings?.apiKey    || null;
 
   /* Functions */
   function handleFileInput(e) {
@@ -117,8 +124,8 @@ export function PDFExtractionTool() {
     const v = (newField || "").trim();
     if (!v) return;
     const exists = fields.some((x) => x.toLowerCase().trim() === v.toLowerCase());
-    if (exists) setManualStatus({ type: "info", msg: `Field “${v}” already exists.` });
-    else { setFields((prev)=>[...prev, v]); setManualStatus({ type: "success", msg: `Added field: “${v}”.` }); }
+    if (exists) setManualStatus({ type: "info", msg: `Field "${v}" already exists.` });
+    else { setFields((prev)=>[...prev, v]); setManualStatus({ type: "success", msg: `Added field: "${v}".` }); }
     setNewField("");
   }
 
@@ -178,6 +185,15 @@ export function PDFExtractionTool() {
   }
 
   async function handleExtract() {
+    // ← CHANGED: guard – non-default models must have a key before we even try
+    if (selectedModel !== "gpt4omini" && !userApiKey) {
+      setExtractionStatus({
+        type: "warning",
+        msg: `${selectedModel} requires an API key. Please enter it in the left-panel settings.`,
+      });
+      return;
+    }
+
     if (!fields.length) {
       setExtractionStatus({ type: "info", msg: "Add at least one field before extracting." });
       return;
@@ -204,7 +220,14 @@ export function PDFExtractionTool() {
       const res = await fetch(`${API_BASE}/api/extract_per_file`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vectorstore_id: vsId, fields, document_names: docs, model_type: selectedModel }),
+        // ← CHANGED: include api_key alongside model_type
+        body: JSON.stringify({
+          vectorstore_id: vsId,
+          fields,
+          document_names: docs,
+          model_type: selectedModel,
+          api_key: userApiKey || null,
+        }),
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
@@ -252,11 +275,9 @@ export function PDFExtractionTool() {
     if (which === "upload") {
       setUploadOpen((v) => !v);
     } else if (which === "fields") {
-      // only allow opening if step unlockedd
       if (!fieldsOpen && activeStep < 1) return;
       setFieldsOpen((v) => !v);
     } else if (which === "results") {
-      // Only allow opening if step unlockedd
       if (!resultsOpen && activeStep < 2) return;
       setResultsOpen((v) => !v);
     }
@@ -355,7 +376,6 @@ export function PDFExtractionTool() {
         </Box>
 
         <Collapse in={uploadOpen} timeout="auto" unmountOnExit>
-          {/* Upload PDF button */}
           <Box
             sx={{
               mt: 2,
@@ -376,7 +396,6 @@ export function PDFExtractionTool() {
               />
             </Button>
 
-            {/* Preview selector when multiple PDFs */}
             {files.length > 1 && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Typography variant="body2">Preview:</Typography>
@@ -395,14 +414,12 @@ export function PDFExtractionTool() {
             )}
           </Box>
 
-          {/* file count */}
           {files.length > 0 && (
             <Typography variant="caption" sx={{ display: "block", mt: 1, ml: 0.5, color: "text.secondary" }}>
               {files.length} file(s) selected.
             </Typography>
           )}
 
-          {/* file names */}
           {files.length > 0 && (
             <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
               {files.map((f, i) => (
@@ -432,7 +449,6 @@ export function PDFExtractionTool() {
             </Box>
           )}
           
-          {/* PDF viewer */}
           <Box sx={{ mt: 2 }}>
             {previews.length > 0 ? (
               <iframe
@@ -451,7 +467,6 @@ export function PDFExtractionTool() {
         </Collapse>
       </Box>
 
-      {/* PDF Upload Alert Status (Success, info or faiilure) */}
       {pdfStatus && (
         <Alert severity={pdfStatus.type} sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
           <AlertTitle sx={{ fontWeight: 600 }}>
@@ -495,12 +510,10 @@ export function PDFExtractionTool() {
 
         <Collapse in={fieldsOpen} timeout="auto" unmountOnExit>
           <Box sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
-            {/* brief explaination of all the optionss */}
             <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
               Define your extraction fields here.
             </Typography>
 
-            {/* Choice cards */}
             <Box
               sx={{
                 display: "grid",
@@ -509,7 +522,6 @@ export function PDFExtractionTool() {
                 mb: 3,
               }}
             >
-              {/* Option 1: Schema */}
               <Paper
                 onClick={() => setFieldMode("schema")}
                 variant="outlined"
@@ -520,30 +532,18 @@ export function PDFExtractionTool() {
                   borderColor: fieldMode === "schema" ? "primary.main" : "divider",
                   bgcolor: fieldMode === "schema" ? "primary.50" : "background.paper",
                   transition: "all .2s ease",
-                  "&:hover": {
-                    borderColor: "primary.main",
-                  },
+                  "&:hover": { borderColor: "primary.main" },
                 }}
               >
                 <Stack spacing={1}>
-                  <Chip
-                    label="Option 1"
-                    size="small"
-                    color="primary"
-                    variant={fieldMode === "schema" ? "filled" : "outlined"}
-                    sx={{ width: "fit-content" }}
-                  />
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    Upload CSV / JSON Schema
-                  </Typography>
+                  <Chip label="Option 1" size="small" color="primary" variant={fieldMode === "schema" ? "filled" : "outlined"} sx={{ width: "fit-content" }} />
+                  <Typography variant="subtitle1" fontWeight={700}>Upload CSV / JSON Schema</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Automatically generate fields from column headers or JSON keys.
-                    Best for structured documents.
+                    Automatically generate fields from column headers or JSON keys. Best for structured documents.
                   </Typography>
                 </Stack>
               </Paper>
 
-              {/* Option 2: Manual */}
               <Paper
                 onClick={() => setFieldMode("manual")}
                 variant="outlined"
@@ -554,25 +554,14 @@ export function PDFExtractionTool() {
                   borderColor: fieldMode === "manual" ? "primary.main" : "divider",
                   bgcolor: fieldMode === "manual" ? "primary.50" : "background.paper",
                   transition: "all .2s ease",
-                  "&:hover": {
-                    borderColor: "primary.main",
-                  },
+                  "&:hover": { borderColor: "primary.main" },
                 }}
               >
                 <Stack spacing={1}>
-                  <Chip
-                    label="Option 2"
-                    size="small"
-                    color="primary"
-                    variant={fieldMode === "manual" ? "filled" : "outlined"}
-                    sx={{ width: "fit-content" }}
-                  />
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    Manual Fields (with presets)
-                  </Typography>
+                  <Chip label="Option 2" size="small" color="primary" variant={fieldMode === "manual" ? "filled" : "outlined"} sx={{ width: "fit-content" }} />
+                  <Typography variant="subtitle1" fontWeight={700}>Manual Fields (with presets)</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Define custom questions or apply common presets like Research Papers,
-                    Business Docs, or Invoices.
+                    Define custom questions or apply common presets like Research Papers, Business Docs, or Invoices.
                   </Typography>
                 </Stack>
               </Paper>
@@ -583,16 +572,10 @@ export function PDFExtractionTool() {
                 <Typography variant="body2" sx={{ mt: 0.5, color: "text.secondary", mb: 1 }}>
                   CSV uses column headers; JSON uses object keys. New fields merge automatically.
                 </Typography>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  size="small"
-                  sx={{ textTransform: "none" }}
-                >
+                <Button variant="outlined" component="label" size="small" sx={{ textTransform: "none" }}>
                   Upload CSV / JSON
                   <input hidden type="file" accept=".csv,.json" onChange={handleSchemaUpload} />
                 </Button>
-
                 {schemaStatus && (
                   <Alert severity={schemaStatus.type} sx={{ mt: 1 }}>
                     <AlertTitle sx={{ fontWeight: 600 }}>
@@ -604,19 +587,9 @@ export function PDFExtractionTool() {
               </Box>
             )}
 
-            {/* Option 2: Manual Fields + Presets */}
             {fieldMode === "manual" && (
               <Box sx={{ mb: 1 }}>
-                {/* Manual input row */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1,
-                    alignItems: "center",
-                    mb: 1,
-                    flexWrap: "wrap",
-                  }}
-                >
+                <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1, flexWrap: "wrap" }}>
                   <TextField
                     size="small"
                     fullWidth
@@ -625,139 +598,63 @@ export function PDFExtractionTool() {
                     onChange={(e) => setNewField(e.target.value)}
                   />
 
-                {/* Quick presets under the input */}
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1, flexBasis: "100%" }}>
-
-                  <Button
-                    variant="text"
-                    size="small"
-                    onClick={() => {
-                      const preset = [
-                        "Paper Title",
-                        "Authors",
-                        "Publication Year",
-                        "Abstract",
-                        "Methodology",
-                        "Results",
-                        "Conclusion",
-                      ];
-                      const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
-                      const toAdd = preset.filter(
-                        (p) => !seen.has(p.toLowerCase().trim())
-                      );
-                      setFields((prev) => [...prev, ...toAdd]);
-                      setPresetStatus({
-                        type: "success",
-                        msg: `Research Paper preset added: ${preset.length} fields (${toAdd.length} new).`,
-                      });
-                    }}
-                    sx={{ textTransform: "none", px: 1 }}
-                  >
+                  <Button variant="text" size="small" onClick={() => {
+                    const preset = ["Paper Title","Authors","Publication Year","Abstract","Methodology","Results","Conclusion"];
+                    const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
+                    const toAdd = preset.filter((p) => !seen.has(p.toLowerCase().trim()));
+                    setFields((prev) => [...prev, ...toAdd]);
+                    setPresetStatus({ type: "success", msg: `Research Paper preset added: ${preset.length} fields (${toAdd.length} new).` });
+                  }} sx={{ textTransform: "none", px: 1 }}>
                     + Research Paper
                   </Button>
-
-                  <Button
-                    variant="text"
-                    size="small"
-                    onClick={() => {
-                      const preset = [
-                        "Document Title",
-                        "Company Name",
-                        "Date",
-                        "Executive Summary",
-                        "Key Findings",
-                        "Recommendations",
-                      ];
-                      const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
-                      const toAdd = preset.filter(
-                        (p) => !seen.has(p.toLowerCase().trim())
-                      );
-                      setFields((prev) => [...prev, ...toAdd]);
-                      setPresetStatus({
-                        type: "success",
-                        msg: `Business Document preset added: ${preset.length} fields (${toAdd.length} new).`,
-                      });
-                    }}
-                    sx={{ textTransform: "none", px: 1 }}
-                  >
+                  <Button variant="text" size="small" onClick={() => {
+                    const preset = ["Document Title","Company Name","Date","Executive Summary","Key Findings","Recommendations"];
+                    const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
+                    const toAdd = preset.filter((p) => !seen.has(p.toLowerCase().trim()));
+                    setFields((prev) => [...prev, ...toAdd]);
+                    setPresetStatus({ type: "success", msg: `Business Document preset added: ${preset.length} fields (${toAdd.length} new).` });
+                  }} sx={{ textTransform: "none", px: 1 }}>
                     + Business Document
                   </Button>
-
-                  <Button
-                    variant="text"
-                    size="small"
-                    onClick={() => {
-                      const preset = [
-                        "Invoice Number",
-                        "Invoice Date",
-                        "Subtotal",
-                        "Taxes",
-                        "Total Amount Due",
-                        "Currency",
-                        "Payment Terms",
-                      ];
-                      const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
-                      const toAdd = preset.filter(
-                        (p) => !seen.has(p.toLowerCase().trim())
-                      );
-                      setFields((prev) => [...prev, ...toAdd]);
-                      setPresetStatus({
-                        type: "success",
-                        msg: `Invoice preset added: ${preset.length} fields (${toAdd.length} new).`,
-                      });
-                    }}
-                    sx={{ textTransform: "none", px: 1 }}
-                  >
+                  <Button variant="text" size="small" onClick={() => {
+                    const preset = ["Invoice Number","Invoice Date","Subtotal","Taxes","Total Amount Due","Currency","Payment Terms"];
+                    const seen = new Set(fields.map((x) => x.toLowerCase().trim()));
+                    const toAdd = preset.filter((p) => !seen.has(p.toLowerCase().trim()));
+                    setFields((prev) => [...prev, ...toAdd]);
+                    setPresetStatus({ type: "success", msg: `Invoice preset added: ${preset.length} fields (${toAdd.length} new).` });
+                  }} sx={{ textTransform: "none", px: 1 }}>
                     + Invoice
                   </Button>
                 </Box>
-                <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={addField}
-                    sx={{ textTransform: "none" }}
-                  >
-                    Add
-                  </Button>
+                <Button variant="outlined" size="small" onClick={addField} sx={{ textTransform: "none" }}>
+                  Add
+                </Button>
                 </Box>
 
-                {/* Alerts: manual + preset */}
                 {manualStatus && (
                   <Alert severity={manualStatus.type} sx={{ mt: 1 }}>
                     <AlertTitle sx={{ fontWeight: 600 }}>
-                      {manualStatus.type === "success"
-                        ? "✓ Field updated"
-                        : manualStatus.type === "error"
-                        ? "Field error"
-                        : "Working…"}
+                      {manualStatus.type === "success" ? "✓ Field updated" : manualStatus.type === "error" ? "Field error" : "Working…"}
                     </AlertTitle>
                     {manualStatus.msg}
                   </Alert>
                 )}
-
                 {presetStatus && (
                   <Alert severity={presetStatus.type} sx={{ mt: 1 }}>
                     <AlertTitle sx={{ fontWeight: 600 }}>
-                      {presetStatus.type === "success"
-                        ? "✓ Preset applied"
-                        : presetStatus.type === "error"
-                        ? "Preset error"
-                        : "Working…"}
+                      {presetStatus.type === "success" ? "✓ Preset applied" : presetStatus.type === "error" ? "Preset error" : "Working…"}
                     </AlertTitle>
                     {presetStatus.msg}
                   </Alert>
                 )}
               </Box>
             )}
-            {/* Divider */}
-            <Divider sx={{ my: 4 }}>
-            </Divider>
 
-            {/* Extracted Fields list */}
+            <Divider sx={{ my: 4 }} />
+
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-              <Typography variant="subtitle1" fontWeight={700}>
-                Fields to be extracted
-              </Typography>
+              <Typography variant="subtitle1" fontWeight={700}>Fields to be extracted</Typography>
             </Box>
 
             {fields.length > 0 ? (
@@ -787,11 +684,7 @@ export function PDFExtractionTool() {
                 startIcon={extracting || indexing ? <CircularProgress sx={{ color: 'common.white' }} size={16} /> : null}
                 sx={{
                   textTransform: "none",
-                  "&.Mui-disabled": {
-                    opacity: 1,
-                    color: "grey.600",
-                    WebkitTextFillColor: "unset",
-                  },
+                  "&.Mui-disabled": { opacity: 1, color: "grey.600", WebkitTextFillColor: "unset" },
                 }}
               >
                 {extracting || indexing ? "Extracting…" : "Extract Information"}
@@ -810,7 +703,6 @@ export function PDFExtractionTool() {
         </Collapse>
       </Box>
 
-      {/* Extraction Alert Status (Success, info or faiilure) */}
       {extractionStatus && (
         <Alert severity={extractionStatus.type} sx={{ mt: 2, mx: "auto", maxWidth: 800 }}>
           <AlertTitle sx={{ fontWeight: 600 }}>
@@ -823,9 +715,7 @@ export function PDFExtractionTool() {
       {/* Results Section */}
       <Box sx={{ maxWidth: 800, mx: "auto", mt: 3 }}>
         <Box
-          onClick={() => {
-            if (activeStep >= 2) toggleSection("results");
-          }}
+          onClick={() => { if (activeStep >= 2) toggleSection("results"); }}
           sx={{
             cursor: activeStep >= 2 ? "pointer" : "not-allowed",
             opacity:  activeStep >= 2 ? 1 : 0.6,
@@ -836,14 +726,10 @@ export function PDFExtractionTool() {
             p: 1.2,
             borderRadius: 1,
             bgcolor: (theme) =>
-              theme.palette.mode === "dark"
-                ? theme.palette.grey[700]
-                : theme.palette.grey[100],
+              theme.palette.mode === "dark" ? theme.palette.grey[700] : theme.palette.grey[100],
             "&:hover": {
               bgcolor: (theme) =>
-                theme.palette.mode === "dark"
-                  ? theme.palette.grey[600]
-                  : theme.palette.grey[200],
+                theme.palette.mode === "dark" ? theme.palette.grey[600] : theme.palette.grey[200],
             },
           }}
         >
@@ -853,44 +739,31 @@ export function PDFExtractionTool() {
 
         <Collapse in={resultsOpen} timeout="auto" unmountOnExit>
           <Box sx={{ mt: 2 }}>
-            {/* action row */}
             <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1, flexWrap: "wrap" }}>
               <Button
-                variant="outlined"
-                size="small"
-                startIcon={<DownloadIcon />}
+                variant="outlined" size="small" startIcon={<DownloadIcon />}
                 disabled={!visibleRows.length}
-                onClick={() =>
-                  download(
-                    `extracted_${(selectedDocName || "document").replace(/[^a-z0-9._-]/gi, "_")}.csv`,
-                    toCsv(visibleRows),
-                    "text/csv"
-                  )
-                }
+                onClick={() => download(
+                  `extracted_${(selectedDocName || "document").replace(/[^a-z0-9._-]/gi, "_")}.csv`,
+                  toCsv(visibleRows), "text/csv"
+                )}
                 sx={{ textTransform: "none" }}
               >
                 Download CSV
               </Button>
-
               <Button
-                variant="outlined"
-                size="small"
-                startIcon={<DownloadIcon />}
+                variant="outlined" size="small" startIcon={<DownloadIcon />}
                 disabled={!visibleRows.length}
-                onClick={() =>
-                  download(
-                    `extracted_${(selectedDocName || "document").replace(/[^a-z0-9._-]/gi, "_")}.json`,
-                    JSON.stringify(visibleRows, null, 2),
-                    "application/json"
-                  )
-                }
+                onClick={() => download(
+                  `extracted_${(selectedDocName || "document").replace(/[^a-z0-9._-]/gi, "_")}.json`,
+                  JSON.stringify(visibleRows, null, 2), "application/json"
+                )}
                 sx={{ textTransform: "none" }}
               >
                 Download JSON
               </Button>
             </Box>
 
-            {/* document switcher for results */}
             {docNames.length > 1 && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, flexWrap: "wrap" }}>
                 <Typography variant="body2">Showing results for:</Typography>
@@ -906,18 +779,10 @@ export function PDFExtractionTool() {
               </Box>
             )}
 
-            {/* table */}
             <Paper variant="outlined" sx={{ width: "100%", overflowX: "auto" }}>
               <TableContainer
                 component={Paper}
-                sx={{
-                  width: "100%",
-                  maxHeight: 420,
-                  overflowY: "auto",
-                  border: "1px solid",
-                  borderColor: "divider",
-                  borderRadius: 1,
-                }}
+                sx={{ width: "100%", maxHeight: 420, overflowY: "auto", border: "1px solid", borderColor: "divider", borderRadius: 1 }}
               >
                 <Table size="small">
                   <TableHead>
@@ -941,43 +806,30 @@ export function PDFExtractionTool() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={4} sx={{ color: "text.secondary" }}>
-                          {selectedDocName
-                            ? "No results for this document yet."
-                            : "Run “Extract Information” to see results here."}
+                          {selectedDocName ? "No results for this document yet." : 'Run "Extract Information" to see results here.'}
                         </TableCell>
                       </TableRow>
                     )}
                   </TableBody>
                 </Table>
               </TableContainer>
-
             </Paper>
           </Box>
         </Collapse>
       </Box>
 
-        
-      {/* Tiny right-edge arrow tab */}
+      {/* Right-edge help tab */}
       <Button
         onClick={() => setDrawerOpen(true)}
         variant="contained"
         sx={{
-          position: "fixed",
-          right: 0,
-          top: "50%",
-          transform: "translateY(-50%)",
-          minWidth: 0,
-          width: 36,
-          height: 48,
-          borderTopLeftRadius: 12,
-          borderBottomLeftRadius: 12,
-          borderTopRightRadius: 0,
-          borderBottomRightRadius: 0,
-          p: 0,
-          fontWeight: 800,
+          position: "fixed", right: 0, top: "50%", transform: "translateY(-50%)",
+          minWidth: 0, width: 36, height: 48,
+          borderTopLeftRadius: 12, borderBottomLeftRadius: 12,
+          borderTopRightRadius: 0, borderBottomRightRadius: 0,
+          p: 0, fontWeight: 800,
         }}
         aria-label="Open instructions"
-        title="Open instructions"
       >
         <HelpCircle size={18} />
       </Button>
@@ -991,168 +843,86 @@ export function PDFExtractionTool() {
           sx: {
             width: 380,
             bgcolor: (theme) =>
-              theme.palette.mode === "dark"
-                ? theme.palette.background.default
-                : theme.palette.grey[50],
+              theme.palette.mode === "dark" ? theme.palette.background.default : theme.palette.grey[50],
           },
         }}
       >
         <Box sx={{ p: 2.5 }}>
-          {/* Header */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              mb: 1,
-            }}
-          >
-            <Typography variant="h4" fontWeight={700}>
-              How to use this tool
-            </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+            <Typography variant="h4" fontWeight={700}>How to use this tool</Typography>
           </Box>
-
           <Divider sx={{ my: 3 }} />
 
-          {/* 1. Upload PDFs */}
-          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-            1. Upload PDF(s)
-          </Typography>
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>1. Upload PDF(s)</Typography>
           <Stack spacing={1.1} sx={{ mb: 2 }}>
-            <Typography
-              variant="body2"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
+            <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Upload size={22} />
-              <span>
-                Click <b>Select PDF(s)</b> in the{" "}
-                <b>“Upload PDF(s)”</b> section to add one or more files.
-              </span>
+              <span>Click <b>Select PDF(s)</b> in the <b>"Upload PDF(s)"</b> section to add one or more files.</span>
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
+            <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <FileText size={24} />
+              <span>Use the built-in <b>preview viewer</b> to scroll through the selected PDF and verify it loaded correctly.</span>
+            </Typography>
+          </Stack>
+          <Divider sx={{ my: 3 }} />
+
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>2. Choose a Model (left panel)</Typography>
+          <Stack spacing={1.1} sx={{ mb: 2 }}>
+            <Typography variant="body2" sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+              <ListChecks size={24} style={{ marginTop: 2 }} />
               <span>
-                Use the built-in <b>preview viewer</b> to scroll through the
-                selected PDF and verify it loaded correctly.
+                <b>GPT-4o mini</b> is the default and requires no key — it uses the shared SDPA/OCDS Azure account.
+                All other models require you to paste <b>your own API key</b> in the left panel before extracting.
               </span>
             </Typography>
           </Stack>
-
           <Divider sx={{ my: 3 }} />
 
-          {/* 2. Define fields */}
-          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-            2. Define Fields
-          </Typography>
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>3. Define Fields</Typography>
           <Stack spacing={1.1} sx={{ mb: 2 }}>
-            <Typography
-              variant="body2"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
+            <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <FileText size={24} />
-              <span>
-                Option 1: <b>Upload a CSV/JSON schema</b> to auto-populate
-                fields (column headers / JSON keys).
-              </span>
+              <span>Option 1: <b>Upload a CSV/JSON schema</b> to auto-populate fields.</span>
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
+            <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <ListChecks size={40} />
-              <span>
-                Option 2: <b>Add fields manually</b> (e.g. “Authors”, “Total
-                Amount Due”) and use the <b>presets</b> for common layouts like
-                Research Papers, Business Docs, or Invoices.
-              </span>
+              <span>Option 2: <b>Add fields manually</b> and use <b>presets</b> for Research Papers, Business Docs, or Invoices.</span>
             </Typography>
           </Stack>
-
           <Divider sx={{ my: 3 }} />
 
-          {/* 3. Extract & download */}
-          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-            3. Extract and review results
-          </Typography>
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>4. Extract and review results</Typography>
           <Stack spacing={1.1} sx={{ mb: 2 }}>
-            <Typography
-              variant="body2"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
+            <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Download size={24} />
-              <span>
-                Click <b>Extract Information</b> to run field-by-field
-                extraction across all uploaded PDFs.
-              </span>
+              <span>Click <b>Extract Information</b> to run field-by-field extraction across all uploaded PDFs.</span>
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
+            <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <TableIcon size={24} />
-              <span>
-                Use the <b>View Results</b> section to inspect answers, source
-                snippets, and reasoning in the results table.
-              </span>
+              <span>Use the <b>View Results</b> section to inspect answers, source snippets, and reasoning.</span>
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
+            <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Download size={24} />
-              <span>
-                Download the output as <b>CSV</b> or <b>JSON</b> for further
-                analysis or integration into your own workflows.
-              </span>
+              <span>Download output as <b>CSV</b> or <b>JSON</b>.</span>
             </Typography>
           </Stack>
-
           <Divider sx={{ my: 3 }} />
 
-          {/* Be aware / limitations */}
-          <Typography
-            variant="subtitle1"
-            fontWeight={700}
-            sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
-          >
-            <AlertTriangle size={18} />
-            Be aware
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}>
+            <AlertTriangle size={18} /> Be aware
           </Typography>
-
           <Stack spacing={1.1} sx={{ mb: 1.5 }}>
-            <Typography
-              variant="body2"
-              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
-            >
+            <Typography variant="body2" sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
               <AlertTriangle size={24} style={{ marginTop: 2 }} />
-              <span>
-                Only upload <b>public, non-sensitive PDFs</b>. Avoid protected,
-                confidential, or classified documents.
-              </span>
+              <span>Only upload <b>public, non-sensitive PDFs</b>.</span>
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
-            >
+            <Typography variant="body2" sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
               <TableIcon size={24} style={{ marginTop: 2 }} />
-              <span>
-                Extraction quality depends on <b>PDF structure</b>. Clean,
-                text-based PDFs will perform better than scanned, low-quality
-                ones.
-              </span>
+              <span>Extraction quality depends on <b>PDF structure</b>. Clean, text-based PDFs will perform better than scanned ones.</span>
             </Typography>
           </Stack>
-
-          <Typography
-            variant="body2"
-            sx={{ mt: 1, fontSize: 12, lineHeight: 1.6 }}
-          >
-            This tool is meant for <b>experimentation and demos</b>. Double-check
-            important values (totals, dates, names) before using them in any
-            official report or workflow.
+          <Typography variant="body2" sx={{ mt: 1, fontSize: 12, lineHeight: 1.6 }}>
+            This tool is meant for <b>experimentation and demos</b>. Double-check important values before using them in any official report or workflow.
           </Typography>
         </Box>
       </Drawer>

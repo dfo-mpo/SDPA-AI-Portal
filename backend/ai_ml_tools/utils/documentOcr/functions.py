@@ -32,81 +32,183 @@ for _name in ("pypdf", "PyPDF2"):
 # Suppress PyPDF warnings about malformed PDFs
 warnings.filterwarnings("ignore", message="Ignoring wrong pointing object")
 
+
+# ─── Multi-provider model configuration ────────────────────────────────────
+
+# The only model backed by the shared SDPA/OCDS Azure key (no user key needed)
+FREE_MODEL = "gpt4omini"
+
+# Azure OpenAI deployment names (resolved from env at startup)
+AZURE_DEPLOYMENT_MAP: dict[str, str] = {
+    "gpt4omini":  os.getenv("AZURE_OPENAI_GPT4_o_mini", ""),
+    "gpt4o":      os.getenv("AZURE_OPENAI_GPT4_o", ""),
+    "gpt41mini":  os.getenv("AZURE_OPENAI_GPT4_1_MINI", ""),
+}
+
+# Native (non-Azure) model strings passed directly to each provider's SDK
+NATIVE_MODEL_STRINGS: dict[str, str] = {
+    "claude-3-5-sonnet": "claude-3-5-sonnet-20241022",
+    "claude-3-haiku":    "claude-3-haiku-20240307",
+    "gemini-1.5-flash":  "gemini-1.5-flash",
+    "gemini-1.5-pro":    "gemini-1.5-pro",
+    "grok-2":            "grok-3",
+}
+
+
+def build_llm(model_type: str | None, api_key: str | None = None):
+    """
+    Factory – returns (llm, provider_tag) for the requested model.
+
+    provider_tag is one of: "azure_openai" | "anthropic" | "google" | "xai"
+    It is used downstream to select compatible `with_structured_output` kwargs.
+
+    Rules:
+    - gpt4omini  → AzureChatOpenAI, key from Azure Key Vault (shared SDPA/OCDS)
+    - gpt4o / gpt41mini → AzureChatOpenAI, key supplied by the user
+    - claude-*   → ChatAnthropic, key supplied by the user
+    - gemini-*   → ChatGoogleGenerativeAI, key supplied by the user
+    - grok-*     → ChatOpenAI pointed at xAI endpoint, key supplied by the user
+
+    Raises ValueError for unknown model types or missing keys.
+    """
+    model_type = model_type or FREE_MODEL
+
+    # ── Azure OpenAI models ─────────────────────────────────────────────────
+    if model_type in AZURE_DEPLOYMENT_MAP:
+        deployment = AZURE_DEPLOYMENT_MAP[model_type]
+        if not deployment:
+            raise ValueError(
+                f"Azure deployment name for '{model_type}' is not configured. "
+                "Check the relevant env variable (AZURE_OPENAI_GPT4_o / _o_mini / _4_1_MINI)."
+            )
+
+        # Only the shared default model uses the AKV key; all others need a user key
+        if model_type == FREE_MODEL:
+            resolved_key = get_OPENAI_API_KEY()
+        else:
+            if not api_key:
+                raise ValueError(
+                    f"A user-supplied API key is required for model '{model_type}'."
+                )
+            resolved_key = api_key
+
+        llm = AzureChatOpenAI(
+            azure_endpoint=os.getenv("OPENAI_API_ENDPOINT"),
+            api_key=resolved_key,
+            api_version=os.getenv("OPENAI_API_EMBEDDING_VERSION"),
+            model=deployment,
+            temperature=0,
+            max_tokens=4000,
+        )
+        return llm, "azure_openai"
+
+    # All non-Azure models require a user-supplied key
+    if not api_key:
+        raise ValueError(
+            f"An API key is required for model '{model_type}'. "
+            "Please enter it in the left-panel settings."
+        )
+
+    # ── Anthropic / Claude ──────────────────────────────────────────────────
+    if model_type.startswith("claude"):
+        try:
+            from langchain_anthropic import ChatAnthropic
+        except ImportError:
+            raise ImportError(
+                "langchain-anthropic is not installed. "
+                "Run: pip install langchain-anthropic"
+            )
+        model_str = NATIVE_MODEL_STRINGS.get(model_type, model_type)
+        llm = ChatAnthropic(
+            model=model_str,
+            api_key=api_key,
+            temperature=0,
+            max_tokens=4000,
+        )
+        return llm, "anthropic"
+
+    # ── Google / Gemini ─────────────────────────────────────────────────────
+    if model_type.startswith("gemini"):
+        try:
+            from langchain_google_genai import ChatGoogleGenerativeAI
+        except ImportError:
+            raise ImportError(
+                "langchain-google-genai is not installed. "
+                "Run: pip install langchain-google-genai"
+            )
+        model_str = NATIVE_MODEL_STRINGS.get(model_type, model_type)
+        llm = ChatGoogleGenerativeAI(
+            model=model_str,
+            google_api_key=api_key,
+            temperature=0,
+            max_output_tokens=4000,
+        )
+        return llm, "google"
+
+    # ── xAI / Grok (OpenAI-compatible endpoint) ─────────────────────────────
+    if model_type.startswith("grok"):
+        from langchain_openai import ChatOpenAI
+        model_str = NATIVE_MODEL_STRINGS.get(model_type, model_type)
+        llm = ChatOpenAI(
+            model=model_str,
+            api_key=api_key,
+            base_url="https://api.x.ai/v1",
+            temperature=0,
+            max_tokens=4000,
+        )
+        return llm, "xai"
+
+    raise ValueError(f"Unknown model type: '{model_type}'.")
+
+
+# ─── Unchanged helpers ──────────────────────────────────────────────────────
+
 def clean_filename(filename):
     """
     Remove "(number)" pattern from a filename 
     (because this could cause error when used as collection name when creating Chroma database).
-
-    Parameters:
-        filename (str): The filename to clean
-
-    Returns:
-        str: The cleaned filename
     """
-    # Regular expression to find "(number)" pattern
     new_filename = re.sub(r'\s\(\d+\)', '', filename)
     return new_filename
 
 def process_document_with_ocr(uploaded_file, doc_intelligence_endpoint, doc_intelligence_key):
     """
     Process a PDF document using Azure Document Intelligence OCR API.
-    
-    Parameters:
-        uploaded_file (file-like object): The uploaded PDF file
-        doc_intelligence_endpoint (str): Azure Document Intelligence endpoint URL
-        doc_intelligence_key (str): Azure Document Intelligence API key
-        
-    Returns:
-        list: A list of Document objects with OCR-extracted text
     """
     try:
-        # Initialize Document Intelligence client
         credential = AzureKeyCredential(doc_intelligence_key)
         doc_analysis_client = DocumentAnalysisClient(
             endpoint=doc_intelligence_endpoint, 
             credential=credential
         )
         
-        # Read the uploaded file
         file_content = uploaded_file.read()
-        
-        # Reset file pointer for potential future use
         uploaded_file.seek(0)
-        
-        # Create a file-like object from bytes
         file_stream = io.BytesIO(file_content)
         
-        # Analyze document with OCR
         poller = doc_analysis_client.begin_analyze_document(
-            "prebuilt-layout",  # Use layout model for comprehensive text extraction
+            "prebuilt-layout",
             document=file_stream
         )
-        
-        # Get the analysis result
         result = poller.result()
         
-        # Extract text content from all pages
         documents = []
         
         if result.pages:
             for page_num, page in enumerate(result.pages):
                 page_text = ""
                 
-                # Extract text from paragraphs (better structure preservation)
                 if result.paragraphs:
                     page_paragraphs = [p for p in result.paragraphs 
                                      if any(span.page_number == page_num + 1 
                                            for span in p.spans)]
-                    
                     for paragraph in page_paragraphs:
                         page_text += paragraph.content + "\n\n"
                 
-                # Fallback: extract from lines if no paragraphs
                 if not page_text.strip() and page.lines:
                     for line in page.lines:
                         page_text += line.content + "\n"
                 
-                # Create Document object for each page
                 if page_text.strip():
                     doc = Document(
                         page_content=page_text.strip(),
@@ -121,7 +223,6 @@ def process_document_with_ocr(uploaded_file, doc_intelligence_endpoint, doc_inte
                     )
                     documents.append(doc)
         
-        # If no pages found, try to extract all text as single document
         if not documents and result.content:
             doc = Document(
                 page_content=result.content,
@@ -136,23 +237,13 @@ def process_document_with_ocr(uploaded_file, doc_intelligence_endpoint, doc_inte
         return documents
         
     except Exception as e:
-        # If OCR fails, provide detailed error
         raise Exception(f"Document Intelligence OCR failed: {str(e)}. Please check your endpoint and API key.")
 
 
 def get_pdf_text_with_fallback(uploaded_file, doc_intelligence_endpoint=None, doc_intelligence_key=None):
     """
     Process PDF with Document Intelligence OCR first, fallback to PyPDF if needed.
-    
-    Parameters:
-        uploaded_file (file-like object): The uploaded PDF file
-        doc_intelligence_endpoint (str): Azure Document Intelligence endpoint URL (optional)
-        doc_intelligence_key (str): Azure Document Intelligence API key (optional)
-        
-    Returns:
-        list: A list of Document objects
     """
-    # Try Document Intelligence OCR first if credentials provided
     if doc_intelligence_endpoint and doc_intelligence_key:
         try:
             return process_document_with_ocr(uploaded_file, doc_intelligence_endpoint, doc_intelligence_key)
@@ -160,45 +251,30 @@ def get_pdf_text_with_fallback(uploaded_file, doc_intelligence_endpoint=None, do
             print(f"OCR processing failed: {ocr_error}")
             print("Falling back to traditional PDF parsing...")
     
-    # Fallback to traditional PDF parsing
     return get_pdf_text_traditional(uploaded_file)
 
 
 def get_pdf_text_traditional(uploaded_file): 
     """
     Load a PDF document using traditional PyPDF method (fallback).
-    
-    Parameters:
-        uploaded_file (file-like object): The uploaded PDF file to load
-
-    Returns:
-        list: A list of documents created from the uploaded PDF file
     """
     try:
-        # Read file content
         input_file = uploaded_file.read()
-
-        # Create a temporary file
         temp_file = tempfile.NamedTemporaryFile(delete=False)
         temp_file.write(input_file)
         temp_file.close()
 
-        # Suppress PDF parsing warnings
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="Ignoring wrong pointing object")
-            
-            # load PDF document
             loader = PyPDFLoader(temp_file.name)
             documents = loader.load()
 
         return documents
     
     except Exception as e:
-        # If PDF parsing fails completely, raise a more informative error
         raise Exception(f"Failed to parse PDF: {str(e)}. The PDF might be corrupted or password-protected.")
     
     finally:
-        # Ensure the temporary file is deleted when we're done with it
         if 'temp_file' in locals():
             os.unlink(temp_file.name)
 
@@ -206,62 +282,42 @@ def get_pdf_text_traditional(uploaded_file):
 def process_multiple_documents(uploaded_files, doc_intelligence_endpoint=None, doc_intelligence_key=None):
     """
     Process multiple PDF documents with OCR fallback.
-    
-    Parameters:
-        uploaded_files (list): List of uploaded PDF files
-        doc_intelligence_endpoint (str): Azure Document Intelligence endpoint URL (optional)
-        doc_intelligence_key (str): Azure Document Intelligence API key (optional)
-        
-    Returns:
-        list: A list of Document objects from all files
     """
     all_documents = []
     
     for uploaded_file in uploaded_files:
         try:
-            # Process each file
             documents = get_pdf_text_with_fallback(
                 uploaded_file, 
                 doc_intelligence_endpoint, 
                 doc_intelligence_key
             )
-            
-            # Add to the combined list
             all_documents.extend(documents)
             
         except Exception as e:
             print(f"Error processing {uploaded_file.name}: {str(e)}")
-            # Continue processing other files even if one fails
             continue
     
     return all_documents
 
 def split_document(documents, chunk_size, chunk_overlap):    
     """
-    Function to split generic text into smaller chunks with improved settings.
+    Split generic text into smaller chunks with improved settings.
     """
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         length_function=len,
-        separators=["\n\n", "\n", ". ", " ", ""],  # Added more separators
-        keep_separator=True  # Keep separators to maintain context
+        separators=["\n\n", "\n", ". ", " ", ""],
+        keep_separator=True
     )
-    
     return text_splitter.split_documents(documents)
 
 
 def get_embedding_function(api_key=None):
     """
-    Return an OpenAIEmbeddings object, which is used to create vector embeddings from text.
-    The embeddings model used is "text-embedding-ada-002" and the OpenAI API key is provided
-    as an argument to the function.
-
-    Parameters:
-        api_key (str): The OpenAI API key to use when calling the OpenAI Embeddings API.
-
-    Returns:
-        OpenAIEmbeddings: An OpenAIEmbeddings object, which can be used to create vector embeddings from text.
+    Return an AzureOpenAIEmbeddings object using the shared SDPA/OCDS key.
+    Embeddings always use the Azure endpoint regardless of which LLM the user selected.
     """
     api_key = get_OPENAI_API_KEY()
     endpoint = os.getenv("OPENAI_API_ENDPOINT")
@@ -272,68 +328,41 @@ def get_embedding_function(api_key=None):
         azure_endpoint=endpoint,
         api_key=api_key,
         api_version=api_version,
-        model=embed_deployment,  # deployment name
+        model=embed_deployment,
     )
 
 
 def create_vectorstore(chunks, embedding_function, collection_name, vector_store_path="db"):
     """
-    Create a vector store from a list of text chunks.
-
-    :param chunks: A list of generic text chunks
-    :param embedding_function: A function that takes a string and returns a vector
-    :param collection_name: The name for the vector store collection
-    :param vector_store_path: The directory to store the vector store
-
-    :return: A Chroma vector store object
+    Create a Chroma vector store from a list of text chunks.
     """
-
-    # Create a list of unique ids for each document based on the content
     ids = [str(uuid.uuid5(uuid.NAMESPACE_DNS, doc.page_content)) for doc in chunks]
     
-    # Ensure that only unique docs with unique ids are kept
     unique_ids = set()
     unique_chunks = []
     
-    unique_chunks = [] 
     for chunk, id in zip(chunks, ids):     
         if id not in unique_ids:       
             unique_ids.add(id)
             unique_chunks.append(chunk)        
 
-    # Create a new Chroma database from the documents
-    vectorstore = Chroma.from_documents(documents=unique_chunks, 
-                                        collection_name=clean_filename(collection_name),
-                                        embedding=embedding_function, 
-                                        ids=list(unique_ids), 
-                                        persist_directory = vector_store_path)
-
-    # Note: Chroma 0.4.x+ automatically persists data, no manual persist() needed
-    
+    vectorstore = Chroma.from_documents(
+        documents=unique_chunks, 
+        collection_name=clean_filename(collection_name),
+        embedding=embedding_function, 
+        ids=list(unique_ids), 
+        persist_directory=vector_store_path,
+    )
     return vectorstore
 
 
 def create_vectorstore_from_multiple_documents(documents, api_key, collection_name="multi_doc_collection"):
     """
-    Create a vector store from multiple documents.
-    
-    Parameters:
-        documents (list): List of Document objects from multiple files
-        api_key (str): OpenAI API key
-        collection_name (str): Name for the collection
-        
-    Returns:
-        Chroma vectorstore object
+    Create a Chroma vector store from multiple documents.
     """
-    # Improved chunking settings for better context preservation
     docs = split_document(documents, chunk_size=1500, chunk_overlap=300)
-    
-    # Define embedding function
     embedding_function = get_embedding_function(api_key)
-
-    # Create a vector store  
     vectorstore = create_vectorstore(docs, embedding_function, collection_name)
-    
     return vectorstore
 
 
@@ -341,42 +370,27 @@ def create_vectorstore_from_texts(documents, api_key, file_name, doc_intelligenc
     """
     Create a vector store from a list of texts with OCR processing.
     """
-    # Process documents with OCR first
-    if doc_intelligence_endpoint and doc_intelligence_key:
-        print("Processing document with Azure Document Intelligence OCR...")
-        processed_docs = documents  # Documents already processed by OCR in the calling function
-    else:
-        print("Using traditional PDF parsing...")
-        processed_docs = documents
-    
-    # Improved chunking settings for better context preservation
-    docs = split_document(processed_docs, chunk_size=1500, chunk_overlap=300)
-    
-    # Define embedding function
+    docs = split_document(documents, chunk_size=1500, chunk_overlap=300)
     embedding_function = get_embedding_function(api_key)
-
-    # Create a vector store  
     vectorstore = create_vectorstore(docs, embedding_function, file_name)
-    
     return vectorstore
 
 
 def load_vectorstore(file_name, api_key, vectorstore_path="db"):
     """
     Load a previously saved Chroma vector store from disk.
-
-    :param file_name: The name of the file to load (without the path)
-    :param api_key: The OpenAI API key used to create the vector store
-    :param vectorstore_path: The path to the directory where the vector store was saved (default: "db")
-    
-    :return: A Chroma vector store object
+    Embeddings always use the shared Azure key regardless of the user's LLM choice.
     """
     embedding_function = get_embedding_function(api_key)
-    return Chroma(persist_directory=vectorstore_path, 
-                  embedding_function=embedding_function, 
-                  collection_name=clean_filename(file_name))
+    return Chroma(
+        persist_directory=vectorstore_path, 
+        embedding_function=embedding_function, 
+        collection_name=clean_filename(file_name),
+    )
 
-# Enhanced prompt template with better instructions
+
+# ─── Prompt ─────────────────────────────────────────────────────────────────
+
 PROMPT_TEMPLATE = """
 You are an expert document analysis assistant. Your task is to extract specific information from the provided context.
 
@@ -400,7 +414,6 @@ IMPORTANT: Base your answers ONLY on the provided context. Do not make assumptio
 """
 
 
-
 class AnswerWithSources(BaseModel):
     """An answer to the question, with sources and reasoning."""
     answer: str = Field(description="Concise paraphrase (1–2 sentences) in your own words; do NOT copy the source")
@@ -411,23 +424,13 @@ class AnswerWithSources(BaseModel):
 def create_dynamic_model(fields_list):
     """
     Create a dynamic Pydantic model based on user-specified fields.
-    
-    Parameters:
-        fields_list (list): List of field names that the user wants to extract
-        
-    Returns:
-        BaseModel: A dynamically created Pydantic model
     """
-    # Create a dictionary to hold the field definitions
     field_definitions = {}
     
-    # Add each user-specified field as an AnswerWithSources type
     for field in fields_list:
-        # Clean field name to be a valid Python identifier
         clean_field = field.lower().replace(" ", "_").replace("-", "_")
         field_definitions[clean_field] = (AnswerWithSources, Field(description=f"Information about {field}"))
     
-    # Create the dynamic model
     DynamicExtractedInfo = type(
         "DynamicExtractedInfo",
         (BaseModel,),
@@ -436,57 +439,60 @@ def create_dynamic_model(fields_list):
             **{name: field_obj for name, (_, field_obj) in field_definitions.items()}
         }
     )
-    
     return DynamicExtractedInfo
 
 
 def format_docs(docs):
-    """
-    Format a list of Document objects into a single string.
-
-    :param docs: A list of Document objects
-
-    :return: A string containing the text of all the documents joined by two newlines
-    """
+    """Format a list of Document objects into a single string."""
     return "\n\n".join(doc.page_content for doc in docs)
 
 
-def query_document_per_file(vectorstore, fields_list, document_names, api_key=None, model_name=None,):
+def _apply_structured_output(llm, dynamic_model, provider: str):
     """
-    Query a vector store with dynamic fields and return structured responses for each document.
+    Wrap `llm` with structured output using kwargs appropriate for each provider.
+
+    - Azure OpenAI supports method="function_calling" + strict=False.
+    - Anthropic, Google, and xAI use the default (tool_use / JSON mode).
     """
-    api_key = api_key or get_OPENAI_API_KEY()
-    endpoint = os.getenv("OPENAI_API_ENDPOINT")
-    api_version = os.getenv("OPENAI_API_EMBEDDING_VERSION")
-    chat_deployment = os.getenv("AZURE_OPENAI_GPT4_o")
+    if provider == "azure_openai":
+        return llm.with_structured_output(dynamic_model, method="function_calling", strict=False)
+    return llm.with_structured_output(dynamic_model)
 
-    llm = AzureChatOpenAI(
-        azure_endpoint=endpoint,
-        api_key=api_key,
-        api_version=api_version,
-        model=chat_deployment,     # deployment name
-        temperature=0,
-        max_tokens=4000,
-    )
 
-    # Enhanced retriever with more results
+# ─── Main extraction functions ───────────────────────────────────────────────
+
+def query_document_per_file(
+    vectorstore,
+    fields_list,
+    document_names,
+    api_key=None,
+    model_type=None,
+):
+    """
+    Query a vector store with dynamic fields and return structured responses
+    for each document.
+
+    Parameters:
+        vectorstore   – Chroma vectorstore object
+        fields_list   – list of field names to extract
+        document_names – list of PDF filenames to iterate over
+        api_key       – user-supplied API key (None → AKV for gpt4omini)
+        model_type    – frontend model key (e.g. "gpt4omini", "claude-3-5-sonnet")
+    """
+    llm, provider = build_llm(model_type, api_key)
+
     retriever = vectorstore.as_retriever(
         search_type="similarity",
-        search_kwargs={
-            "k": 30  # Get more chunks for better context when dealing with multiple documents
-        }
+        search_kwargs={"k": 30},
     )
     
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-    
-    # Create dynamic model based on user fields
-    DynamicModel = create_dynamic_model(fields_list)
-    
+    DynamicModel    = create_dynamic_model(fields_list)
+    structured_llm  = _apply_structured_output(llm, DynamicModel, provider)
+
     results_per_document = {}
-    
-    # Query each document separately
+
     for doc_name in document_names:
-        # Create a specific query for this document
         query = f"""Please extract the following specific information ONLY from the document named "{doc_name}":
         
         Fields to extract: {', '.join(fields_list)}
@@ -503,88 +509,64 @@ def query_document_per_file(vectorstore, fields_list, document_names, api_key=No
         rag_chain = (
             {"context": retriever | format_docs, "question": RunnablePassthrough()}
             | prompt_template
-            | llm.with_structured_output(DynamicModel, method="function_calling", strict=False)
+            | structured_llm
         )
 
         try:
             structured_response = rag_chain.invoke(query)
+            response_dict       = structured_response.model_dump()
             
-            # Convert to dictionary using model_dump instead of dict()
-            response_dict = structured_response.model_dump()
-            
-            # Create a list to store rows for this document
             document_rows = []
-            
-            # For each field, create a row with Document name, Field, Answer, Source, Reasoning
             for field_name, field_data in response_dict.items():
-                # Convert field name back to readable format
                 readable_field = field_name.replace("_", " ").title()
-                
-                row = {
-                    'Document': doc_name,
-                    'Field': readable_field,
-                    'Answer': field_data['answer'],
-                    'Source': field_data['sources'],
-                    'Reasoning': field_data['reasoning']
-                }
-                document_rows.append(row)
+                document_rows.append({
+                    'Document':  doc_name,
+                    'Field':     readable_field,
+                    'Answer':    field_data['answer'],
+                    'Source':    field_data['sources'],
+                    'Reasoning': field_data['reasoning'],
+                })
             
-            # Create DataFrame for this document
-            doc_df = pd.DataFrame(document_rows)
-            results_per_document[doc_name] = doc_df
+            results_per_document[doc_name] = pd.DataFrame(document_rows)
             
         except Exception as e:
-            # If extraction fails for this document, create error DataFrame
-            error_rows = []
-            for field in fields_list:
-                row = {
-                    'Document': doc_name,
-                    'Field': field,
-                    'Answer': f"Extraction failed: {str(e)}",
-                    'Source': "Error occurred during processing",
-                    'Reasoning': "Please try with a different model or check if the document contains the requested information"
+            error_rows = [
+                {
+                    'Document':  doc_name,
+                    'Field':     field,
+                    'Answer':    f"Extraction failed: {str(e)}",
+                    'Source':    "Error occurred during processing",
+                    'Reasoning': "Please try with a different model or check if the document contains the requested information",
                 }
-                error_rows.append(row)
-            
-            error_df = pd.DataFrame(error_rows)
-            results_per_document[doc_name] = error_df
+                for field in fields_list
+            ]
+            results_per_document[doc_name] = pd.DataFrame(error_rows)
     
     return results_per_document
 
 
-def query_document(vectorstore, fields_list, api_key=None, model_name=None):
+def query_document(vectorstore, fields_list, api_key=None, model_type=None):
     """
     Query a vector store with dynamic fields and return a structured response.
-    (Keeping this for backward compatibility with single document processing)
+    (Kept for backward compatibility with single-document processing.)
+
+    Parameters:
+        vectorstore – Chroma vectorstore object
+        fields_list – list of field names to extract
+        api_key     – user-supplied API key (None → AKV for gpt4omini)
+        model_type  – frontend model key
     """
-    api_key = api_key or get_OPENAI_API_KEY()
-    endpoint = os.getenv("OPENAI_API_ENDPOINT")
-    api_version = os.getenv("OPENAI_API_EMBEDDING_VERSION")
-    chat_deployment = model_name or os.getenv("AZURE_OPENAI_GPT4_o")
+    llm, provider = build_llm(model_type, api_key)
 
-    llm = AzureChatOpenAI(
-        azure_endpoint=endpoint,
-        api_key=api_key,
-        api_version=api_version,
-        model=chat_deployment,
-        temperature=0,
-        max_tokens=4000,
-    )
-
-    # Enhanced retriever with more results
     retriever = vectorstore.as_retriever(
         search_type="similarity",
-        search_kwargs={
-            "k": 30  # Get more chunks for better context when dealing with multiple documents
-        }
+        search_kwargs={"k": 30},
     )
     
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-    
-    # Create dynamic model based on user fields
-    DynamicModel = create_dynamic_model(fields_list)
-    
-    # Create a more specific query string
+    DynamicModel    = create_dynamic_model(fields_list)
+    structured_llm  = _apply_structured_output(llm, DynamicModel, provider)
+
     query = f"""Please extract the following specific information from the document(s):
     
     Fields to extract: {', '.join(fields_list)}
@@ -599,21 +581,17 @@ def query_document(vectorstore, fields_list, api_key=None, model_name=None):
     rag_chain = (
         {"context": retriever | format_docs, "question": RunnablePassthrough()}
         | prompt_template
-        | llm.with_structured_output(DynamicModel, method="function_calling", strict=False)  # Less strict for better results
+        | structured_llm
     )
 
     try:
         structured_response = rag_chain.invoke(query)
+        response_dict       = structured_response.model_dump()
         
-        # Convert to dictionary using model_dump instead of dict()
-        response_dict = structured_response.model_dump()
-        
-        # Create DataFrame from the response
         df = pd.DataFrame([response_dict])
 
-        # Transform into a table with three rows: 'answer', 'source', and 'reasoning'
-        answer_row = []
-        source_row = []
+        answer_row   = []
+        source_row   = []
         reasoning_row = []
 
         for col in df.columns:
@@ -621,19 +599,20 @@ def query_document(vectorstore, fields_list, api_key=None, model_name=None):
             source_row.append(df[col][0]['sources'])
             reasoning_row.append(df[col][0]['reasoning'])
 
-        # Create new dataframe with three rows
         structured_response_df = pd.DataFrame(
             [answer_row, source_row, reasoning_row], 
             columns=df.columns, 
-            index=['answer', 'source', 'reasoning']
+            index=['answer', 'source', 'reasoning'],
         )
-      
         return structured_response_df.T
         
     except Exception as e:
-        # If structured output fails, provide error information
         error_df = pd.DataFrame({
-            'Error': [f"Extraction failed: {str(e)}", "Please try with a different model or simpler fields", "Check if the document contains the requested information"]
+            'Error': [
+                f"Extraction failed: {str(e)}",
+                "Please try with a different model or simpler fields",
+                "Check if the document contains the requested information",
+            ]
         }, index=['answer', 'source', 'reasoning'])
         return error_df
 
@@ -643,35 +622,28 @@ def parse_fields_from_upload(uploaded_file):
     Returns field names from a JSON or CSV file.
     Tries JSON first, then falls back to CSV.
     '''
-
-    # Return an empty list if no file is provided
     if uploaded_file is None:
         return []
 
-    # Read the raw bytes from the uploaded file
     raw = uploaded_file.read()
 
-    # Detect encoding based on byte-order marks (BOM)
     def detect_encoding(b: bytes) -> str:
         if b.startswith(b'\xff\xfe\x00\x00'): return 'utf-32le'
         if b.startswith(b'\x00\x00\xfe\xff'): return 'utf-32be'
-        if b.startswith(b'\xef\xbb\xbf'): return 'utf-8-sig'
-        if b.startswith(b'\xff\xfe'): return 'utf-16le'
-        if b.startswith(b'\xfe\xff'): return 'utf-16be'
+        if b.startswith(b'\xef\xbb\xbf'):     return 'utf-8-sig'
+        if b.startswith(b'\xff\xfe'):          return 'utf-16le'
+        if b.startswith(b'\xfe\xff'):          return 'utf-16be'
         return 'utf-8'
 
     enc = detect_encoding(raw)
     
-    # Attempt to parse the file as JSON
     try:
         text = raw.decode(enc)
-        obj = json.loads(text)
+        obj  = json.loads(text)
 
-        # If it's a dictionary, return its keys
         if isinstance(obj, dict):
             return [str(k) for k in obj.keys()]
         
-        # If it's a list, collect all unique keys from dictionary items
         if isinstance(obj, list):
             keys = set()
             for item in obj:
@@ -682,11 +654,8 @@ def parse_fields_from_upload(uploaded_file):
     except Exception:
         pass
 
-    # Try parsing as JSON Lines (each line is a JSON object)
     try:
-        text = raw.decode(enc)
-
-        # Find the first non-empty line
+        text  = raw.decode(enc)
         first = next((ln for ln in text.splitlines() if ln.strip()), "")
         maybe = json.loads(first)
         if isinstance(maybe, dict):
@@ -694,13 +663,10 @@ def parse_fields_from_upload(uploaded_file):
     except Exception:
         pass
 
-    # Fallback: try reading the file as CSV and return column headers
     try:
         text = raw.decode(enc)
-        df = pd.read_csv(io.StringIO(text), nrows=0, engine='python', sep=None)
+        df   = pd.read_csv(io.StringIO(text), nrows=0, engine='python', sep=None)
         cols = [str(c) for c in df.columns]
-        
-        # Guard against bracket-artifact headers
         if cols in (['['], [']']):
             return []
         return cols

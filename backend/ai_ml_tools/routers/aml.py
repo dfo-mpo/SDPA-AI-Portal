@@ -19,14 +19,14 @@ SUB_ID = os.getenv("AZURE_SUBSCRIPTION_ID")
 RG = os.getenv("AZURE_RESOURCE_GROUP")
 WS = os.getenv("AZURE_ML_WORKSPACE")
 
-if not all([SUB_ID, RG, WS]):
-    raise RuntimeError("Missing AZURE_SUBSCRIPTION_ID / AZURE_RESOURCE_GROUP / AZURE_ML_WORKSPACE")
-
-# ---------- Auth / Clients ----------
-cred = DefaultAzureCredential()
-
-# AML control-plane (for discovering tracking URI)
-ml = MLClient(cred, SUB_ID, RG, WS)
+# Clients are initialized lazily so missing credentials don't crash the
+# entire backend on startup — the Model Repo routes will return a 503
+# if the workspace is not configured.
+cred = None
+ml = None
+if all([SUB_ID, RG, WS]):
+    cred = DefaultAzureCredential()
+    ml = MLClient(cred, SUB_ID, RG, WS)
 
 # ---------- Simple in-memory caches ----------
 _MODELS_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
@@ -37,6 +37,15 @@ README_CACHE_TTL = 300  # seconds, per (name, version)
 
 
 # ---------- Helpers ----------
+def _require_ml():
+    """Raise a clean 503 if the Azure ML workspace is not configured."""
+    if ml is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Azure ML workspace is not configured. "
+                   "Set AZURE_SUBSCRIPTION_ID, AZURE_RESOURCE_GROUP, and AZURE_ML_WORKSPACE.",
+        )
+
 def metaData(v):
     # Created time is already an ISO string on AML models
     ctx = getattr(v, "creation_context", None)
@@ -70,6 +79,7 @@ router = APIRouter(prefix="/api", tags=["aml"])
 # GET all models (latest)
 @router.get("/models")
 def list_models(force: bool = False):
+    _require_ml()
     now = time.time()
 
     # 0) Serve from cache if fresh and not forced
@@ -111,6 +121,7 @@ def list_models(force: bool = False):
 # GET all versions of a Model
 @router.get("/models/{name}/versions")
 def list_model_versions(name: str):
+    _require_ml()
     try:
         versions = list(ml.models.list(name=name))
     except Exception as e:
@@ -132,6 +143,7 @@ def list_model_versions(name: str):
 # GET the files/folders and download as ZIP
 @router.get("/models/{name}/versions/{version}/download.zip")
 def api_model_download_zip(name: str, version: str):
+    _require_ml()
     # 1) Download the model to a temp dir via AML
     tmpdir = tempfile.mkdtemp(prefix=f"{name}_v{version}_")
     try:
@@ -170,6 +182,7 @@ def api_model_readme(name: str, version: str, force: bool = False):
       "content": "### My model\\n..."
     }
     """
+    _require_ml()
     key = (name, str(version))
     now = time.time()
 
