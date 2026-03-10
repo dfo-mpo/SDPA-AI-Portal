@@ -11,26 +11,20 @@ load_dotenv()
 
 MODEL_CONFIG = None
 
-CUSTOM_VISION_PREDICTION_KEY = keys.get_CUSTOM_VISTION_PREDICTION_KEY() # Prod work (key vault)
-# CUSTOM_VISION_PREDICTION_KEY = os.getenv("CUSTOM_VISION_PREDICTION_KEY") # Dev work
-
 def set_MODEL_CONFIG():
     global MODEL_CONFIG
     MODEL_CONFIG = {
         "dog-cat": {
             "url": os.getenv("CUSTOM_VISION_DOG_VS_CAT_PREDICTION_URL"),
-            "key": keys.get_CUSTOM_VISION_DOG_VS_CAT_PREDICTION_KEY(), # Prod work (key vault)
-            # "key": CUSTOM_VISION_PREDICTION_KEY, # Dev work
+            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
         },
         "car-bike": {
             "url": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_URL"),
-            "key": keys.get_CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY(), # Prod work (key vault)
-            # "key": CUSTOM_VISION_PREDICTION_KEY, # Dev work
+            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prodk
         },
         "fresh-vs-infected-salmon": {
             "url": os.getenv("CUSTOM_VISION_FRESH_VS_INFECTED_SALMON_SPECIES_CLASSIFIER_URL"),
-            "key": keys.get_CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY(), # Prod work (key vault)
-            # "key": CUSTOM_VISION_PREDICTION_KEY, # Dev work
+            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
         }
     }
 
