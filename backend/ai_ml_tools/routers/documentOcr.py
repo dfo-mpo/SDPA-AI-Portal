@@ -32,6 +32,9 @@ class ExtractPerDocRequest(BaseModel):
     fields: List[str]
     document_names: List[str]
     model_type: str | None = None
+    # User-supplied API key for all models except gpt4omini.
+    # Never stored or logged – used only within this request.
+    api_key: str | None = None
 
 class RowPerDoc(BaseModel):
     document: str
@@ -43,11 +46,6 @@ class RowPerDoc(BaseModel):
 class ExtractPerDocResponse(BaseModel):
     results: List[RowPerDoc]
 
-MODEL_MAP = {
-    "gpt4o": os.getenv("AZURE_OPENAI_GPT4_o"),
-    "gpt4omini": os.getenv("AZURE_OPENAI_GPT4_o_mini"),
-    "gpt41mini": os.getenv("AZURE_OPENAI_GPT4_1_MINI"),
-}
 
 # ------ Routes ------
 # Index PDFs
@@ -79,6 +77,7 @@ async def index_pdfs(files: List[UploadFile] = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Indexing failed: {e}")
 
+
 # Extract per document
 @router.post("/extract_per_file", response_model=ExtractPerDocResponse)
 async def extract_per_file(req: ExtractPerDocRequest):
@@ -87,24 +86,34 @@ async def extract_per_file(req: ExtractPerDocRequest):
     if not req.document_names:
         raise HTTPException(status_code=400, detail="document_names required.")
 
+    # Validate: non-default models must supply an API key
+    FREE_MODEL = "gpt4omini"
+    if req.model_type and req.model_type != FREE_MODEL and not req.api_key:
+        raise HTTPException(
+            status_code=400,
+            detail=f"An API key is required for model '{req.model_type}'. "
+                   "Please enter your key in the left-panel settings.",
+        )
+
     try:
         vectorstore = load_vectorstore(file_name=req.vectorstore_id, api_key=None)
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Vector store not found: {e}")
 
     try:
+        model_type = req.model_type or FREE_MODEL
+        print(f"[PDF Extraction] Using model: {model_type}")
+
         per_doc = query_document_per_file(
             vectorstore=vectorstore,
             fields_list=req.fields,
             document_names=req.document_names,
-            api_key=None,
-            model_name = MODEL_MAP.get(
-                req.model_type,
-                os.getenv("AZURE_OPENAI_GPT4_o_mini")  # safe default
-            )
+            # For gpt4omini api_key is None → functions.py falls back to AKV.
+            # For all other models the user-supplied key is forwarded.
+            api_key=req.api_key or None,
+            model_type=model_type,
         )
 
-        print(f"[PDF Extraction] Using model: {req.model_type}")
         rows: List[RowPerDoc] = []
         for doc_name, df in per_doc.items():
             if getattr(df, "iterrows", None):
@@ -120,5 +129,7 @@ async def extract_per_file(req: ExtractPerDocRequest):
                     )
         return ExtractPerDocResponse(results=rows)
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Per-file extraction failed: {e}")

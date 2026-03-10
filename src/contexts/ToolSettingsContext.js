@@ -77,9 +77,11 @@ const [fenceCountingSettings, setFenceCountingSettings] = useState({
     modelType: 'gpt4omini',
   });
 
-  // Web Scraper settings (simple for now)
+  // PDF Extraction Tool settings
   const [PDFExtractionToolSettings, setPDFExtractionToolSettings] = useState({
     modelType: 'gpt4omini',
+    apiKey: '',   // user-supplied key; empty = use shared SDPA/OCDS Azure key
+    showKey: false,
   });
 
 // PII Redactor settings with improved Canadian-specific information detection
