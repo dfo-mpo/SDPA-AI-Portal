@@ -48,7 +48,7 @@ def _build_embeddings():
     )
 
 # get or create the vector database store
-def _get_or_create_vs(emb):
+""" def _get_or_create_vs(emb):
     '''Returns a Chroma vector store (persisted on disk) that uses the provided embedding function.'''
     return Chroma(
         collection_name=COLLECTION,
@@ -56,15 +56,20 @@ def _get_or_create_vs(emb):
         embedding_function=emb,
         client_settings=Settings(anonymized_telemetry=False),
     )
+"""
 # Using local server to make several scrapes at once, useful if we want to host the chromadb as a seperate server
-"""def _get_or_create_vs(emb):
-    '''Returns a Chroma vector store (persisted on disk) that uses the provided embedding function.'''
-    client = chromadb.HttpClient(host="localhost", port=8002)  # chroma server port
+def _get_or_create_vs(emb):
+    '''Returns a Chroma vector store that uses the provided embedding function.'''
+    chroma_host = os.getenv("CHROMA_HOST", "localhost")
+    chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
+
+    client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
+
     return Chroma(
         client=client,
         collection_name=COLLECTION,
         embedding_function=emb,
-    ) """
+    )
 
 def _embed_with_retry(emb, texts: list[str], max_retries: int = 3, base_delay: int = 20):
     """

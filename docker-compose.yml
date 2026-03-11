@@ -13,14 +13,17 @@ services:
       - backend
       - server  
   
-  backend:  
-    build:  
+  backend:
+    build:
       context: ./backend
-      dockerfile: Dockerfile  
-    volumes:
-      - "chroma_store:/home/chroma_store"
-    ports:  
+      dockerfile: Dockerfile
+    depends_on:
+      - chroma
+    ports:
       - "8080:8000"
+    environment:
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
 
   server:
     build:
@@ -29,5 +32,11 @@ services:
     ports:
       - "4080:4000"
 
-volumes:
-  chroma_store:
+  chroma:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.chroma
+    volumes:
+      - "./backend/chroma_store:/data"
+    ports:
+      - "8002:8000"
