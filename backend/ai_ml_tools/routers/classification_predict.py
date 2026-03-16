@@ -11,33 +11,42 @@ load_dotenv()
 
 MODEL_CONFIG = None
 
-CUSTOM_VISION_PREDICTION_KEY = keys.get_CUSTOM_VISION_PREDICTION_KEY() # Prod work (key vault)
-#CUSTOM_VISION_PREDICTION_KEY = os.getenv("CUSTOM_VISION_PREDICTION_KEY") # Dev work
-
 def set_MODEL_CONFIG():
     global MODEL_CONFIG
     MODEL_CONFIG = {
         "dog-cat": {
             "url": os.getenv("CUSTOM_VISION_DOG_VS_CAT_PREDICTION_URL"),
-            "key": keys.get_CUSTOM_VISION_DOG_VS_CAT_PREDICTION_KEY(), # Prod work (key vault)
-            # "key": CUSTOM_VISION_PREDICTION_KEY, # Dev work
+            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
         },
         "car-bike": {
             "url": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_URL"),
-            "key": keys.get_CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY(), # Prod work (key vault)
-            # "key": CUSTOM_VISION_PREDICTION_KEY, # Dev work
+            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
         },
         "fresh-vs-infected-salmon": {
             "url": os.getenv("CUSTOM_VISION_FRESH_VS_INFECTED_SALMON_SPECIES_CLASSIFIER_URL"),
-            "key": keys.get_CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_KEY(), # Prod work (key vault)
-            # "key": CUSTOM_VISION_PREDICTION_KEY, # Dev work
-        }
+            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
+        },
+        "eel-vs-catfish": {
+            "url": os.getenv("CUSTOM_VISION_EEL_VS_CATFISH_PREDICTION_URL"),
+            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
+        },
+        "healthy-vs-bleached-coral": {
+            "url": os.getenv("CUSTOM_VISION_HEALTHY_VS_BLEACHED_CORAL_PREDICTION_URL"),
+            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
+        },
+        "trout-vs-mosquito-fish": {
+            "url": os.getenv("CUSTOM_VISION_TROUT_VS_MOSQUITO_FISH_PREDICTION_URL"),
+            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
+        },
     }
 
 MODEL_META = {
     "dog-cat": {"name": "Cat vs Dog", "description": "Binary classifier"},
     "car-bike": {"name": "Car vs Bike", "description": "Binary classifier"},
-    "fresh-vs-infected-salmon" : {"name": "Fresh vs Infected Salmon", "description": "Binary Classifier"}
+    "fresh-vs-infected-salmon": {"name": "Fresh vs Infected Salmon", "description": "Binary Classifier"},
+    "eel-vs-catfish": {"name": "Freshwater Eel vs Catfish", "description": "Binary Classifier"},
+    "healthy-vs-bleached-coral": {"name": "Healthy vs Bleached Coral Reefs", "description": "Binary Classifier"},
+    "trout-vs-mosquito-fish": {"name": "Trout vs Mosquito Fish", "description": "Binary Classifier"},
 }
 
 # define global vars

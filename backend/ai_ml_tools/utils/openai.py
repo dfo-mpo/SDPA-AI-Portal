@@ -16,29 +16,30 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 # Configure OpenAI settings
 US_models = ['o1', 'o3-mini']
 _openai_client_us = None  
-def get_openai_client_us(): # Client created lazily (in function) so import that connects to managed identity is always ready
+def get_openai_client_us():
     global _openai_client_us
     if _openai_client_us is None:
-        _openai_client_us = AzureOpenAI( # Current deployments: o1, o3-mini
+        _openai_client_us = AzureOpenAI(
             azure_endpoint = os.getenv('OPENAI_API_ENDPOINT_US'), 
             api_key = get_OPENAI_API_KEY_US(),  
             api_version = os.getenv('OPENAI_API_VERSION')
         )
     return _openai_client_us
+
 CAD_models = ['gpt-4o', 'gpt-4o-mini']
 _openai_client_cad = None
-def get_openai_client_cad(): # Client created lazily (in function) so import that connects to managed identity is always ready
+def get_openai_client_cad():
     global _openai_client_cad
     if _openai_client_cad is None:
-        _openai_client_cad = AzureOpenAI( # Current deployments: gpt-4o, gpt-4o-mini
+        _openai_client_cad = AzureOpenAI(
             azure_endpoint = os.getenv('OPENAI_API_ENDPOINT'), 
             api_key = get_OPENAI_API_KEY(),  
             api_version = os.getenv('OPENAI_API_VERSION')
         )
     return _openai_client_cad
-# Configure embeddings for RAG
+
 _openai_client_embeddings = None
-def get_openai_client_embeddings(): # Client created lazily (in function) so import that connects to managed identity is always ready
+def get_openai_client_embeddings():
     global _openai_client_embeddings
     if _openai_client_embeddings is None:
         _openai_client_embeddings = AzureOpenAIEmbeddings(
@@ -49,6 +50,20 @@ def get_openai_client_embeddings(): # Client created lazily (in function) so imp
         )
     return _openai_client_embeddings
 
+# External (non-Azure) provider model lists — require user-supplied api_key
+ANTHROPIC_models = ['claude-35-sonnet', 'claude-3-haiku']
+GOOGLE_models    = ['gemini-15-flash', 'gemini-15-pro']
+XAI_models       = ['grok-3']
+
+# Maps frontend model keys to the provider's actual model string
+EXTERNAL_MODEL_MAP = {
+    'claude-35-sonnet': 'claude-3-5-sonnet-20241022',
+    'claude-3-haiku':   'claude-3-haiku-20240307',
+    'gemini-15-flash':  'gemini-1.5-flash',
+    'gemini-15-pro':    'gemini-1.5-pro',
+    'grok-3':           'grok-3',
+}
+
 '''
 Determines the amount of tokens for OpenAI's newer models a given string will consume.
 '''
@@ -58,15 +73,51 @@ def num_tokens_from_string(string) -> int:
     return num_tokens
 
 """
-Streams responses from OpenAI for the chat view. 
-
-- Formats the chat history and document content for the OpenAI API.
-- Sends the formatted data to OpenAI and yields responses as they are received.
-- Handles exceptions and yields error messages if necessary.
+Streams responses from external (non-Azure) LLM providers via LangChain.
+Yields SSE-formatted chunks matching the format used by the Azure streaming path.
 """
-async def request_openai_chat(chat_history: list, document_content: str, type="chat", model="gpt-4o", temperature=0.3, reasoning_effort="high", token_remaining=100000, isAuth=False):
+async def _stream_external(messages, model, api_key, tokens_used):
+    from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+
+    model_name = EXTERNAL_MODEL_MAP.get(model, model)
+
+    lc_messages = []
+    for msg in messages:
+        if msg['role'] == 'system':
+            lc_messages.append(SystemMessage(content=msg['content'] or ''))
+        elif msg['role'] == 'user':
+            lc_messages.append(HumanMessage(content=msg['content'] or ''))
+        elif msg['role'] == 'assistant':
+            lc_messages.append(AIMessage(content=msg['content'] or ''))
+
+    if model in ANTHROPIC_models:
+        from langchain_anthropic import ChatAnthropic
+        llm = ChatAnthropic(model=model_name, api_key=api_key)
+    elif model in GOOGLE_models:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        llm = ChatGoogleGenerativeAI(model=model_name, google_api_key=api_key)
+    elif model in XAI_models:
+        from langchain_openai import ChatOpenAI
+        llm = ChatOpenAI(model=model_name, api_key=api_key, base_url="https://api.x.ai/v1")
+    else:
+        raise ValueError(f"{model} is not a supported external model.")
+
+    try:
+        async for chunk in llm.astream(lc_messages):
+            content = chunk.content if hasattr(chunk, 'content') else ''
+            data = json.dumps({'content': content, 'finish_reason': None, 'tokens_used': tokens_used})
+            yield f"data: {data}\n\n"
+        data = json.dumps({'content': None, 'finish_reason': 'stop', 'tokens_used': tokens_used})
+        yield f"data: {data}\n\n"
+    except Exception as e:
+        print(e)
+        yield f"data: {{\"error\": \"Error fetching data from external provider: {str(e)}\"}}\n\n"
+
+"""
+Streams responses from OpenAI for the chat view. 
+"""
+async def request_openai_chat(chat_history: list, document_content: str, type="chat", model="gpt-4o", temperature=0.3, reasoning_effort="high", token_remaining=100000, isAuth=False, api_key: str = None):
     if type == "chat":
-        # Only generate system message if it does not already exist
         if chat_history[0] == '' or chat_history[0]['role'] != "system":
             messages = [{
                 "role": "system","content": "You are a helpful assistant that ALWAYS responds in consistent and pleasing HTML formatted text. Also, make sure to use borders ONLY IF you use a table in your response. Only answer the LAST QUESTION based on the document provided. Do not answer any questions not related to the document or PDF. Also, at the end of the entire total response tell me what documents and pages you found the information on separated by commas ONLY. For example, at the end include: Source_page: <document-name1.pdf, 1, 4, etc, document-name2.pdf, 2, 5, etc,>." + document_content
@@ -109,8 +160,13 @@ async def request_openai_chat(chat_history: list, document_content: str, type="c
                     stop=None,
                     stream=True
                 )
+            elif model in ANTHROPIC_models or model in GOOGLE_models or model in XAI_models:
+                async for chunk_data in _stream_external(messages, model, api_key, tokens_used):
+                    yield chunk_data
+                return
             else:
                 raise ValueError(f"{model} is not a supported model name.")
+
             for response in stream:
                 content = response.choices[0].delta.content if len(response.choices) > 0 else []
                 finish_reason = response.choices[0].finish_reason if len(response.choices) > 0 else None
@@ -125,24 +181,18 @@ async def request_openai_chat(chat_history: list, document_content: str, type="c
 Obtain relevent document chunks for a given LLM chatbot question
 """
 def get_relevent_chunks(chat_history: list[dict], document_chunks: list[str], document_metadata: list[dict]):
-    # To fix caching issue resulting in not connecting to default tenant, https://github.com/langchain-ai/langchain/issues/26884
     chromadb.api.client.SharedSystemClient.clear_system_cache()
 
     document_content = ''
     try:
-        # Convert the list of dictionaries back to Document objects  
-        # document_objects = [Document(id=index,page_content=chunk,metadata={"document_name": document_metadata[index]['document_name']}) for index, chunk in enumerate(document_chunks)]
         document_objects = [Document(id=index,page_content=chunk,metadata={"document_name": document_metadata[index]['document_name'], "page_numbers": document_metadata[index]["page_numbers"]},) for index, chunk in enumerate(document_chunks)]
-        # print("Number of document objects sent: " + str(len(document_objects)))
         
-        # Create vector store
         embeddings = get_openai_client_embeddings()
         vector_store = Chroma("example_collection", embedding_function=embeddings)
         uuids = [str(uuid4()) for _ in range(len(document_objects))]
 
         vector_store.add_documents(documents=document_objects, ids=uuids)
         results = vector_store.similarity_search(chat_history[-1]['content'])
-        # print("Chunks in the database "+ str(vector_store._collection.count()))
         vector_store.reset_collection()
         print("Number of chunks used: "+str(len(results)))
 
@@ -155,15 +205,7 @@ def get_relevent_chunks(chat_history: list[dict], document_chunks: list[str], do
 
 '''
 Using OpenAI API, generate a response on the given document-based conversation.
-Parameters:
-    - question (str): The user's question or input.
-    - conversation_input (list): List of dictionaries representing the conversation history, each containing 'role' 
-    (user or model) and 'content' (message) keys.
-Return Value:
-    - List containing two elements:
-        - conversation_input (list): Updated conversation history including the user's question and the model's response
-        - total_tokens (int): Total tokens consumed during the conversation.
-''' # TODO: when models options are added, some models must be handled by combining prompts to reduce cost and time
+''' 
 def request_openai_response(question, conversation_input, model="gpt-4o-mini", tempurature=0.3, reasoning_effort='high'):  
     conversation_input.append({"role": "user", "content": question})
     print(conversation_input)
@@ -194,7 +236,6 @@ def request_openai_response(question, conversation_input, model="gpt-4o-mini", t
         }
     )
     
-    # print(f'Responce: {response.choices[0].message.content.strip()}')
     api_usage = response.usage
     print('(Tokens consumed: {0})\n'.format(api_usage.total_tokens))
     return [conversation_input, response.choices[0].message.content, api_usage.total_tokens]

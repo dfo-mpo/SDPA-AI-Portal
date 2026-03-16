@@ -1,6 +1,6 @@
 /**
  * PDF Chatbot Settings Component
- * 
+ *
  * Settings panel for the PDF Chatbot tool. Allows users to configure the AI model,
  * context window size, temperature, and follow-up question suggestions for the PDF Chatbot.
  */
@@ -13,9 +13,12 @@ import {
   Slider,
   Typography,
   Tooltip,
-  IconButton
+  IconButton,
+  TextField,
+  InputAdornment,
+  ListSubheader,
 } from '@mui/material';
-import { HelpCircle, Thermometer } from 'lucide-react';
+import { HelpCircle, Thermometer, Eye, EyeOff } from 'lucide-react';
 import { useLanguage, useToolSettings } from '../../../contexts';
 import { getToolTranslations } from '../../../utils';
 import { CustomSwitch } from '../../common';
@@ -24,87 +27,105 @@ import {
   SettingRow, 
   SettingHelperText, 
   SettingFormControl,
-  SettingDivider,
   SettingAlignedRow
 } from '../../../layouts';
 import { useComponentStyles } from '../../../styles/hooks/useComponentStyles';
+
+const FREE_MODEL = 'gpt4omini';
 
 export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
   const { language } = useLanguage();
   const translations = getToolTranslations("pdfChatbot", language)?.settings || {};
 
-  // Get settings from context
   const { pdfChatbotSettings, updatePdfChatbotSettings } = useToolSettings();
   
-  // Get styles from our styling system
   const commonStyles = useComponentStyles('toolSettingsCommon');
   const styles = useComponentStyles('pdfChatbotSettings');
 
-  /**
-   * Handle settings change
-   * 
-   * @param {string} field - The field name to update
-   * @returns {Function} Event handler function
-   */
   const handleChange = (field) => (event) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-    
-    // Update settings in context
-    updatePdfChatbotSettings({
-      ...pdfChatbotSettings,
-      [field]: value
-    });
-    
-    // Call parent's onChange handler if provided
-    if (onSettingsChange) {
-      onSettingsChange({
-        ...pdfChatbotSettings,
-        [field]: value
-      });
+    const updated = { ...pdfChatbotSettings, [field]: value };
+    //Clears the API key when switching back to the free default model
+    if (field === 'modelType' && value === FREE_MODEL) {
+      updated.apiKey = '';
+      updated.showKey = false;
     }
+    updatePdfChatbotSettings(updated);
+    if (onSettingsChange) onSettingsChange(updated);
   };
 
-  /**
-   * Handle slider value change
-   * 
-   * @param {string} field - The field to update
-   * @returns {Function} Event handler function
-   */
   const handleSliderChange = (field) => (_, value) => {
-    // Update settings in context
-    updatePdfChatbotSettings({
-      ...pdfChatbotSettings,
-      [field]: value
-    });
-    
-    // Call parent's onChange handler if provided
-    if (onSettingsChange) {
-      onSettingsChange({
-        ...pdfChatbotSettings,
-        [field]: value
-      });
-    }
+    const updated = { ...pdfChatbotSettings, [field]: value };
+    updatePdfChatbotSettings(updated);
+    if (onSettingsChange) onSettingsChange(updated);
   };
+
+  const requiresKey = pdfChatbotSettings.modelType !== FREE_MODEL;
 
   return (
     <SettingsContainer>
       {/* Model Selection */}
-      <SettingFormControl label={translations.modelType || "AI Model"} disabled>
+      <SettingFormControl label={translations.modelType || "AI Model"}>
         <Select
           value={pdfChatbotSettings.modelType}
           onChange={handleChange('modelType')}
         >
-          <MenuItem value="gpt4omini">{translations.gpt4omini || "GPT-4o mini (default)"}</MenuItem>
-          <MenuItem value="gpt4o">{translations.gpt4o || "GPT-4o"}</MenuItem>
-          <MenuItem value="gpt35">{translations.gpt35 || "GPT-3.5"}</MenuItem>
+          <ListSubheader>GPT-SDPA (Free)</ListSubheader>
+          <MenuItem value="gpt4omini">GPT-4o mini (default)</MenuItem>
+
+          <ListSubheader>GPT-Azure (API Key Required)</ListSubheader>
+          <MenuItem value="gpt4o">GPT-4o</MenuItem>
+          <MenuItem value="gpt35">GPT-3.5</MenuItem>
+          <MenuItem value="o3mini">o3-mini</MenuItem>
+
+          <ListSubheader>Anthropic (API Key Required)</ListSubheader>
+          <MenuItem value="claude-35-sonnet">Claude 3.5 Sonnet</MenuItem>
+          <MenuItem value="claude-3-haiku">Claude 3 Haiku</MenuItem>
+
+          <ListSubheader>Google (API Key Required)</ListSubheader>
+          <MenuItem value="gemini-15-flash">Gemini 1.5 Flash</MenuItem>
+          <MenuItem value="gemini-15-pro">Gemini 1.5 Pro</MenuItem>
+
+          <ListSubheader>xAI (API Key Required)</ListSubheader>
+          <MenuItem value="grok-3">Grok 3</MenuItem>
         </Select>
       </SettingFormControl>
-      
-      {/* <SettingDivider /> */}
-      
+
+      {/* API Key input — only shown for non native models (whatever isnt gpt 4o mini)*/}
+      {requiresKey && (
+        <SettingFormControl label="API Key">
+          <TextField
+            type={pdfChatbotSettings.showKey ? 'text' : 'password'}
+            value={pdfChatbotSettings.apiKey || ''}
+            onChange={handleChange('apiKey')}
+            placeholder={
+              pdfChatbotSettings.modelType.startsWith('claude') ? 'sk-ant-...' :
+              pdfChatbotSettings.modelType.startsWith('gemini') ? 'AIza...' :
+              pdfChatbotSettings.modelType === 'grok-3' ? 'xai-...' : 'Your API key'
+            }
+            size="small"
+            fullWidth
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={() => updatePdfChatbotSettings({
+                      ...pdfChatbotSettings,
+                      showKey: !pdfChatbotSettings.showKey
+                    })}
+                  >
+                    {pdfChatbotSettings.showKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+          />
+        </SettingFormControl>
+      )}
+
       {/* Context Window Slider */}
       <Box>
-        {/* Header with tooltip */}
         <SettingAlignedRow
           left={
             <Typography variant="body2" sx={commonStyles.sectionHeader}>
@@ -120,7 +141,6 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
           }
           sx={{ mb: 0.75 }}
         />
-        
         <Box sx={commonStyles.sliderContainer}>
           <Slider
             value={pdfChatbotSettings.contextWindow}
@@ -128,10 +148,7 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
             aria-labelledby="context-window-slider"
             valueLabelDisplay="auto"
             step={1}
-            marks={[
-              { value: 1, label: '1' },
-              { value: 5, label: '5' }
-            ]}
+            marks={[{ value: 1, label: '1' }, { value: 5, label: '5' }]}
             min={1}
             max={5}
             size="small"
@@ -140,9 +157,7 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
           />
         </Box>
       </Box>
-      
-      {/* <SettingDivider /> */}
-      
+
       {/* Temperature Slider */}
       <Box>
         <SettingAlignedRow
@@ -163,7 +178,6 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
           }
           sx={{ mb: 0.75 }}
         />
-        
         <Box sx={commonStyles.sliderContainer}>
           <Slider
             value={pdfChatbotSettings.temperature}
@@ -184,10 +198,8 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
           />
         </Box>
       </Box>
-      
-      {/* <SettingDivider /> */}
-      
-      {/* Follow-up Questions Option */}
+
+      {/* Follow-up Questions */}
       <SettingRow
         label={translations.followupQuestions || "Suggest Follow-up Questions"}
         tooltipTitle={translations.followupTooltip || "AI will suggest relevant follow-up questions after each response"}
@@ -201,7 +213,7 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
         }
         sx={commonStyles.formRow}
       />
-      
+
       <SettingHelperText>
         {translations.chatHistoryNote || "Chat history is not saved after you close the session."}
       </SettingHelperText>

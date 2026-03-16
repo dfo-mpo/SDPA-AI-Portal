@@ -66,6 +66,8 @@ const [fenceCountingSettings, setFenceCountingSettings] = useState({
     contextWindow: 3,
     temperature: 0.7, // Default temperature - balanced
     followupQuestions: true,
+    apiKey: '',    // user-supplied key; empty = use shared SDPA/OCDS Azure key
+    showKey: false,
     tokenUsage: {
       used: 0, // Always start with 0 tokens used
       total: 100000
@@ -75,6 +77,8 @@ const [fenceCountingSettings, setFenceCountingSettings] = useState({
   // Web Scraper settings (simple for now)
   const [webScraperSettings, setWebScraperSettings] = useState({
     modelType: 'gpt4omini',
+    apiKey: '',    // user-supplied key; empty = use shared SDPA/OCDS Azure key
+    showKey: false,
   });
 
   // PDF Extraction Tool settings

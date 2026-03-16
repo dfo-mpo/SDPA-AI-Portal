@@ -13,9 +13,24 @@ import {
   Search, RefreshCw, Send, Bot, Download, AlertTriangle, 
   HelpCircle, Clock, GaugeCircle, Globe2 } from "lucide-react";
 import { flushSync } from "react-dom";
+import { useToolSettings } from "../../contexts";
 
 // const API_BASE = "http://localhost:8080"; // for dev
 const API_BASE = "/api"; // for prod
+
+const FREE_MODEL = "gpt4omini";
+
+// Maps frontend modelType keys to the string sent to the backend
+function modelTypeToApi(modelType) {
+  const map = {
+    "gpt4omini":  "gpt-4o-mini",
+    "gpt4o":      "gpt-4o",
+    "gpt41mini":  "gpt-4.1-mini",
+  };
+  // External models (claude-*, gemini-*, grok-3) pass through as-is —
+  // openai.py resolves them via ANTHROPIC_models / GOOGLE_models / XAI_models
+  return map[modelType] || modelType;
+}
 
 /* ---------- helper functions ---------- */
 function dateFormat(iso) {
@@ -469,6 +484,9 @@ export function WebScraper() {
   const [adding, setAdding] = useState(false);
   const [addErr, setAddErr] = useState("");
 
+  // Read model + api key from settings context
+  const { webScraperSettings } = useToolSettings();
+
   // confirm scrape/rescrape
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmUrl, setConfirmUrl] = useState("");
@@ -638,7 +656,7 @@ export function WebScraper() {
         }
 
         if (r.status === 502 && j?.reason === "unreachable") {
-          setAddErr("We couldn’t reach that website. It may be down or blocked.");
+          setAddErr("We couldn't reach that website. It may be down or blocked.");
           return;
         }
 
@@ -679,7 +697,7 @@ export function WebScraper() {
     const key = urlKeyStrict(url);
     const existing = chatByUrlRef.current[key];
 
-    // if we’ve already chatted with this URL, restore its history
+    // if we've already chatted with this URL, restore its history
     if (existing && existing.length) {
       setMessages(existing);
       return;
@@ -697,22 +715,29 @@ export function WebScraper() {
   const handleSendMessage = () => {
     if (!currentMessage.trim() || !wsReadyRef.current || isResponding) return;
 
+    // Pre-flight check: non-default model requires an API key
+    const requiresKey = webScraperSettings.modelType !== FREE_MODEL;
+    if (requiresKey && !webScraperSettings.apiKey) {
+      alert("Please enter your API key in the left-panel settings before chatting with this model.");
+      return;
+    }
+
     const userMsg = currentMessage;
     setMessages(prev => [...prev, { role: "user", content: userMsg, timestamp: new Date() }]);
     setCurrentMessage("");
     setIsResponding(true);
 
-    // provisional assistant bubble to stream into
     lastUserMessageRef.current = userMsg;
 
     wsRef.current?.send(JSON.stringify({
       url: selectedUrl,
       message: userMsg,
-      model: "gpt-4o-mini",
+      model: modelTypeToApi(webScraperSettings.modelType),
       temperature: 0.3,
       reasoning_effort: "high",
       token_limit: 100000,
-      isAuth: false
+      isAuth: false,
+      api_key: webScraperSettings.apiKey || null,
     }));
   };
   
@@ -1185,8 +1210,8 @@ export function WebScraper() {
 
           <Typography variant="body2" sx={{ lineHeight: 1.7, mb: 2 }}>
             Configure the <b>model type</b> and behavior from the Web Scraper settings
-            panel on the left-hand side. GPT models currently used include{" "}
-            <b>GPT-4o mini</b>, <b>GPT-4o</b>, and <b>GPT-3.5</b>.
+            panel on the left-hand side. GPT-4o mini is the default free model for SDPA/OCDS users.
+            All other models require your own API key.
           </Typography>
 
           <Divider sx={{ my: 3 }} />
