@@ -17,6 +17,7 @@ def set_MODEL_CONFIG():
         "dog-cat": {
             "url": os.getenv("CUSTOM_VISION_DOG_VS_CAT_PREDICTION_URL"),
             "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
+            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
         },
         "car-bike": {
             "url": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_URL"),
