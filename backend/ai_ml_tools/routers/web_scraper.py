@@ -17,6 +17,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from datetime import datetime, timezone, timedelta
 from openai import RateLimitError
 from ai_ml_tools.utils.azure_key_vault import get_OPENAI_API_KEY
+from functools import lru_cache
 
 router = APIRouter(prefix="/api", tags=["web-scraper"])
 
@@ -32,12 +33,38 @@ COLLECTION  = "web_chunks_v6"
 os.environ.setdefault("CHROMA_TELEMETRY_ENABLED", "false")
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "false")
 
+# Caches
+_preset_cache = {"expires_at": 0.0, "value": None}
+_base_preset_cache = {"expires_at": 0.0, "value": None}
+_cache_lock = threading.Lock()
+CACHE_TTL = 120  # seconds
+
+def _cache_get(bucket: dict):
+    now = time.time()
+    with _cache_lock:
+        if bucket["value"] is not None and bucket["expires_at"] > now:
+            return bucket["value"]
+    return None
+
+def _cache_set(bucket: dict, value, ttl: int = CACHE_TTL):
+    with _cache_lock:
+        bucket["value"] = value
+        bucket["expires_at"] = time.time() + ttl
+
+def _invalidate_caches():
+    with _cache_lock:
+        _preset_cache["value"] = None
+        _preset_cache["expires_at"] = 0.0
+        _base_preset_cache["value"] = None
+        _base_preset_cache["expires_at"] = 0.0
+
 # Classes
 class ScrapeReq(BaseModel):
     url: str
     force: bool = False
 
 # Functions
+@lru_cache(maxsize=1)
 def _build_embeddings():
     '''Creates and returns an AzureOpenAIEmbeddings client configured from environment variables.'''
     return AzureOpenAIEmbeddings(
@@ -58,18 +85,24 @@ def _build_embeddings():
     )
 """
 # Using local server to make several scrapes at once, useful if we want to host the chromadb as a seperate server
-def _get_or_create_vs(emb):
-    '''Returns a Chroma vector store that uses the provided embedding function.'''
+@lru_cache(maxsize=1)
+def _get_chroma_client():
     chroma_host = os.getenv("CHROMA_HOST", "localhost")
     chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
+    return chromadb.HttpClient(host=chroma_host, port=chroma_port)
 
-    client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
-
+def _get_or_create_vs(emb):
+    client = _get_chroma_client()
     return Chroma(
         client=client,
         collection_name=COLLECTION,
         embedding_function=emb,
     )
+
+@lru_cache(maxsize=1)
+def _get_collection():
+    client = _get_chroma_client()
+    return client.get_or_create_collection(name=COLLECTION)
 
 def _embed_with_retry(emb, texts: list[str], max_retries: int = 3, base_delay: int = 20):
     """
@@ -89,10 +122,22 @@ def _embed_with_retry(emb, texts: list[str], max_retries: int = 3, base_delay: i
             logging.error(f"[EMBED] Unexpected embedding error: {e}")
             raise
 
+    # If we get here, all retries failed because of rate limits
     logging.error("[EMBED] Giving up on this batch after repeated rate limits.")
     return None
 
+# insert chunks into the vector store 
 def upsert_chunks_into_vector_db(chunks: list[str], source_url: str, site_meta: dict | None = None) -> int:
+    """
+    Embeds the given text chunks, attaches metadata, and upserts them into
+    the Chroma vector database.
+
+    IMPORTANT:
+    - Batches chunks to avoid slamming rate limits.
+    - Retries on RateLimitError with exponential-ish backoff.
+    - If rate limit persists, stops embedding further batches but DOES NOT crash.
+    - Returns the number of chunks that were actually embedded.
+    """
     if not chunks:
         return 0
     emb = _build_embeddings()
@@ -114,6 +159,7 @@ def upsert_chunks_into_vector_db(chunks: list[str], source_url: str, site_meta: 
         "duration_seconds": site_meta.get("duration_seconds"),
     } for i in range(len(chunks))]
 
+    # batch + retry logic if rate limit is encountered
     batch_size = 32
     embedded = 0
 
@@ -125,12 +171,14 @@ def upsert_chunks_into_vector_db(chunks: list[str], source_url: str, site_meta: 
         vectors = _embed_with_retry(emb, batch_chunks)
 
         if vectors is None:
+            # Stop embedding more, but don't crash the whole request.
             logging.error(
                 f"[EMBED] Stopping further upserts for {source_url} "
                 f"after repeated rate limits. Embedded so far: {embedded} chunks."
             )
             break
 
+        # Normal upsert
         vs._collection.upsert(
             ids=batch_ids,
             documents=batch_chunks,
@@ -166,11 +214,13 @@ def _load_website_blob(url: str, cap: int = 200_000) -> str:
     return ("\n\n".join(docs))[:cap]
 
 def _retrieve_relevant(url: str, query: str, k: int = 6, char_cap: int = 20000) -> str:
+    """ Normalize URL, check for candidates and conduct similarity search between the query vector and chromadb vectors"""
     emb = _build_embeddings()
     vs  = _get_or_create_vs(emb)
 
+    # normalize incoming url
     url = (url or "").strip()
-    url = urldefrag(url)[0]
+    url = urldefrag(url)[0]  # remove #fragment
 
     candidates = [url]
     if url.endswith("/"):
@@ -186,17 +236,43 @@ def _retrieve_relevant(url: str, query: str, k: int = 6, char_cap: int = 20000) 
     logging.warning("[WS] No docs for url=%r. Tried: %r", url, candidates)
     return ""
 
+def _iter_all_metas(page_size: int = 500):
+    """
+    Yield metadata rows from Chroma in small pages to avoid
+    'too many SQL variables' and huge in-memory reads.
+    """
+    col = _get_collection()
+    offset = 0
+
+    while True:
+        res = col.get(
+            include=["metadatas"],
+            limit=page_size,
+            offset=offset,
+        ) or {}
+
+        metas = res.get("metadatas") or []
+        if not metas:
+            break
+
+        for m in metas:
+            if m:
+                yield m
+
+        if len(metas) < page_size:
+            break
+
+        offset += page_size
+
 def _list_presets() -> list[dict]:
     '''Builds a list of cached URLs with chunk counts and last-scraped timestamps, sorted newest first.'''
-    emb = _build_embeddings()
-    vs  = _get_or_create_vs(emb)
-    metas = (vs._collection.get(include=["metadatas"]) or {}).get("metadatas") or []
-
     by_source = {}
-    for m in metas:
+
+    for m in _iter_all_metas(page_size=500):
         src = m.get("source")
         if not src:
             continue
+
         info = by_source.setdefault(src, {
             "url": src,
             "chunk_count": 0,
@@ -207,20 +283,24 @@ def _list_presets() -> list[dict]:
             "description": "",
             "favicon": _host_favicon(src),
         })
+
         info["chunk_count"] += 1
         t = m.get("scraped_at")
         dur = m.get("duration_seconds")
+
         if t and (info["last_scraped_at"] is None or t > info["last_scraped_at"]):
             info["last_scraped_at"] = t
             if dur is not None:
-               info["last_scrape_duration"] = dur
+                info["last_scrape_duration"] = dur
         elif info["last_scrape_duration"] is None and dur is not None:
             info["last_scrape_duration"] = dur
 
         if not info["title"] and m.get("site_title"):
             info["title"] = m["site_title"]
+
         if not info["description"] and m.get("site_description"):
             info["description"] = m["site_description"]
+
         if (not info["favicon"]) and m.get("favicon"):
             info["favicon"] = m["favicon"]
 
@@ -231,6 +311,7 @@ def _list_presets() -> list[dict]:
     )
 
 def _url_cached(source_url: str) -> dict | None:
+    '''Checks if the vector store already contains data for the URL and returns minimal cache info if found.'''
     emb = _build_embeddings()
     vs  = _get_or_create_vs(emb)
 
@@ -305,6 +386,7 @@ def _get_url_lock(url: str) -> threading.Lock:
         return lock
 
 def _get_existing_site_description(url: str) -> str:
+    """If this URL already has a stored description in Chroma, return it."""
     try:
         emb = _build_embeddings()
         vs  = _get_or_create_vs(emb)
@@ -324,15 +406,18 @@ def _get_existing_site_description(url: str) -> str:
 def _ensure_site_description(site_meta: dict, url: str, text: str) -> dict:
     site_meta = site_meta or {}
 
+    # 1) If scrape_website already gave one, keep it
     existing_desc = (site_meta.get("site_description") or "").strip()
     if existing_desc:
         return site_meta
 
+    # 2) If Chroma already has one, reuse it
     existing = _get_existing_site_description(url)
     if existing:
         site_meta["site_description"] = existing
         return site_meta
 
+    # 3) Otherwise generate once
     desc = ""
     try:
         sample = (text or "")[:12000]
@@ -344,6 +429,7 @@ def _ensure_site_description(site_meta: dict, url: str, text: str) -> dict:
     except Exception as e:
         logging.warning(f"[DESC] Could not generate description for {url}: {e}")
 
+    # 4) Fallback so it's never empty
     if not desc:
         try:
             host = urlparse(url).netloc or "unknown host"
@@ -356,8 +442,12 @@ def _ensure_site_description(site_meta: dict, url: str, text: str) -> dict:
 
 # ----- POST Requests -----
 
+# Scrape POST request
 @router.post("/scrape")
 def api_scrape(req: ScrapeReq):
+    '''Scrapes a URL (or uses cached data), stores chunks in memory, upserts them to Chroma, and returns a session_id.'''
+
+    # Reject bad URLs
     if not _valid_http_url(req.url):
         return JSONResponse(
             status_code=400,
@@ -368,11 +458,13 @@ def api_scrape(req: ScrapeReq):
             }
         )
 
+    # Ensure only ONE scrape for this URL runs at a time
     lock = _get_url_lock(req.url)
     with lock:
         start_time = datetime.now(timezone.utc)
         cached = _url_cached(req.url)
 
+        # Monhtly cool-down (block rescrape if < 30days since last scrape)
         if req.force:
             last = _last_scraped_at(req.url)
             if last:
@@ -392,6 +484,7 @@ def api_scrape(req: ScrapeReq):
                         headers={"Retry-After": str(retry_after)},
                     )
 
+        # If already cached and not forcing, just hand back a new session over cached data
         if cached and not req.force:
             session_id = str(uuid.uuid4())
             _session_url[session_id] = req.url
@@ -411,11 +504,12 @@ def api_scrape(req: ScrapeReq):
                 "last_scrape_duration": last_dur,
             }
 
+        # Otherwise, actually scrape
         try:
             data = scrape_website(req.url)
         except Exception as e:
             return JSONResponse(
-                status_code=502,
+                status_code=502,  # bad gateway: upstream site or network failed
                 content={
                     "status": "error",
                     "reason": "unreachable",
@@ -440,6 +534,7 @@ def api_scrape(req: ScrapeReq):
         duration_sec = (end_time - start_time).total_seconds()
         site_meta["duration_seconds"] = duration_sec
         added = upsert_chunks_into_vector_db(chunks, req.url, site_meta=site_meta)
+        _invalidate_caches()
 
         return {
             "status": "ok",
@@ -457,6 +552,7 @@ def api_scrape(req: ScrapeReq):
 # ----- GET Requests -----
 @router.get("/scrape/{session_id}/combined.txt")
 def download_combined_text(session_id: str):
+    '''Returns the raw combined scraped text for a fresh scrape as a downloadable .txt file.'''
     txt = _combined_text.get(session_id)
     if not txt:
         return PlainTextResponse("No combined text for this session.", status_code=404)
@@ -471,7 +567,14 @@ def download_combined_text(session_id: str):
 
 @router.get("/presets")
 def api_list_presets():
-    return {"status": "ok", "presets": _list_presets()}
+    '''Returns a list of cached URLs (presets) discovered in the vector store.'''
+    cached = _cache_get(_preset_cache)
+    if cached is not None:
+        return {"status": "ok", "presets": cached}
+
+    presets = _list_presets()
+    _cache_set(_preset_cache, presets)
+    return {"status": "ok", "presets": presets}
 
 @router.get("/combined-by-url")
 def download_combined_text_by_url(url: str = Query(...)):
@@ -486,20 +589,21 @@ def download_combined_text_by_url(url: str = Query(...)):
 @router.get("/base-presets")
 def api_base_presets():
     """Return list of unique base domains from vector DB."""
-    emb = _build_embeddings()
-    vs = _get_or_create_vs(emb)
-
-    metas = vs._collection.get(include=["metadatas"]).get("metadatas") or []
+    cached = _cache_get(_base_preset_cache)
+    if cached is not None:
+        return {"presets": cached}
 
     presets = {}
 
-    for m in metas:
+    for m in _iter_all_metas(page_size=500):
         src = m.get("source")
         if not src:
             continue
 
         try:
             u = urlparse(src)
+            if not u.scheme or not u.hostname:
+                continue
             base = f"{u.scheme}://{u.hostname.lower()}"
         except Exception:
             continue
@@ -531,21 +635,18 @@ def api_base_presets():
         if m.get("favicon"):
             entry["favicon"] = m["favicon"]
 
-    return {"presets": list(presets.values())}
+    result = list(presets.values())
+    _cache_set(_base_preset_cache, result)
+    return {"presets": result}
 
 @router.get("/pages")
 def api_pages(base: str = Query(...)):
     """Return all pages (full URLs) belonging to a given base domain."""
-    emb = _build_embeddings()
-    vs = _get_or_create_vs(emb)
-
     base = base.rstrip("/")
-    metas = vs._collection.get(include=["metadatas", "documents"]).get("metadatas") or []
-
     pages = []
     seen = set()
 
-    for m in metas:
+    for m in _iter_all_metas(page_size=500):
         src = m.get("source")
         if not src:
             continue
@@ -570,6 +671,7 @@ async def website_chat_min(ws: WebSocket):
     await ws.accept()
     try:
         while True:
+            # Expect exactly one JSON frame with {url, message, model?, temperature?, ...}
             payload = await ws.receive_json()
             url = (payload.get("url") or "").strip()
             user_msg = (payload.get("message") or "").strip()
@@ -585,8 +687,10 @@ async def website_chat_min(ws: WebSocket):
                 await ws.close()
                 return
 
+            # Build “website blob” from Chroma
             logging.warning("[WS] payload url=%r", url)
             context = _retrieve_relevant(url, user_msg, k=6, char_cap=20000)
+            # Show context in terminal
             logging.warning(
                 "\n===== WS CONTEXT START =====\n%s\n===== WS CONTEXT END =====\n",
                 context
@@ -606,6 +710,7 @@ async def website_chat_min(ws: WebSocket):
                 {"role": "user", "content": user_msg},
             ]
 
+            # Stream from your existing helper
             stream = request_openai_chat(
                 chat,
                 document_content="",
@@ -617,6 +722,7 @@ async def website_chat_min(ws: WebSocket):
                 api_key=api_key,
             )
 
+            # Forward deltas as they arrive
             async for chunk in stream:
                 if isinstance(chunk, (bytes, bytearray)):
                     chunk = chunk.decode("utf-8", "ignore")
