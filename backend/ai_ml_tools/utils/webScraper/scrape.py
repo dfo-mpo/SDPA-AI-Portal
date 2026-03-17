@@ -28,6 +28,16 @@ DEFAULT_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
               "Chrome/120.0.0.0 Safari/537.36 (AIWebScraper)")
 MAX_DEPTH = 4 # set to 4 for proudction and 1 or 2 for development 
 MAX_PAGES = 6000
+PACIFIC_EXACT_URL = "https://www.pac.dfo-mpo.gc.ca/"
+PACIFIC_MAX_DEPTH = 25
+
+PACIFIC_IGNORED_URLS = {
+    "https://www.canada.ca/en/services/jobs/opportunities.html",
+    "https://www.canada.ca/en/employment-social-development/services/funding/programs.html",
+    "https://www.canada.ca/en/services/jobs/training.html",
+    "https://www.pac.dfo-mpo.gc.ca/publications/index-eng.html",
+    "https://www.pac.dfo-mpo.gc.ca/contact-eng.html",
+}
 
 
 # ---------- URL + Link Helpers ----------
@@ -40,6 +50,9 @@ def normalizeUrl(u: str) -> str:
     # normalize scheme/host, keep path/query/fragment as-is
     p = p._replace(scheme=p.scheme.lower(), netloc=p.netloc.lower())
     return urlunparse(p)
+
+def normalize_compare_url(u: str) -> str:
+    return urldefrag(normalizeUrl(u))[0].rstrip("/")
 
 def same_domain(u: str, base_netloc: str) -> bool:
     """Keep crawl constrained to a site (unless set same_domain_only=False)."""
@@ -273,6 +286,13 @@ def scrape_website(
     start_url = normalizeUrl(start_url)
     base_netloc = urlparse(start_url).netloc
 
+    ignored_urls = set()
+    if normalize_compare_url(start_url) == normalize_compare_url(PACIFIC_EXACT_URL):
+        max_depth = PACIFIC_MAX_DEPTH
+        ignored_urls = {normalize_compare_url(u) for u in PACIFIC_IGNORED_URLS}
+
+    print(f"[SCRAPER] Using max_depth={max_depth} for start_url={start_url}")
+    
     visited: Set[str] = set()
     urls_seen_ordered: List[str] = []
     results: List[Dict] = []
@@ -293,6 +313,10 @@ def scrape_website(
             while queue and len(results) < max_pages:
                 url, depth = queue.pop(0)
                 if url in visited:
+                    continue
+
+                if normalize_compare_url(url) in ignored_urls:
+                    print(f"⛔ Skipping ignored URL: {url}")
                     continue
 
                 # skip recursive/looping paths
@@ -421,6 +445,8 @@ def scrape_website(
 
                 for link in links:
                     if link in visited or link in enqueued:
+                        continue
+                    if normalize_compare_url(link) in ignored_urls:
                         continue
                     if same_domain_only and not same_domain(link, base_netloc):
                         continue
