@@ -26,8 +26,6 @@ import {
 } from '../../../layouts';
 
 // ─── Model catalogue ───────────────────────────────────────────────────────
-// Each entry: { value: <key sent to backend>, label: <display name> }
-// Groups are rendered as disabled header MenuItems for visual separation.
 const MODEL_GROUPS = [
   {
     group: 'GPT – SDPA/OCDS (no key required)',
@@ -36,9 +34,9 @@ const MODEL_GROUPS = [
     ],
   },
   {
-    group: 'GPT – Azure (bring your own key)',
+    group: 'GPT – Azure',
     items: [
-      { value: 'gpt4o',    label: 'GPT-4o' },
+      { value: 'gpt4o',     label: 'GPT-4o' },
       { value: 'gpt41mini', label: 'GPT-4.1 mini' },
     ],
   },
@@ -64,7 +62,6 @@ const MODEL_GROUPS = [
   },
 ];
 
-// The only model that uses the shared SDPA/OCDS Azure key (no user input needed)
 const FREE_MODEL = 'gpt4omini';
 
 // ─── Component ─────────────────────────────────────────────────────────────
@@ -81,12 +78,10 @@ export default function PDFExtractionToolSettings({ onSettingsChange = () => {} 
   const showKey       = PDFExtractionToolSettings?.showKey   || false;
   const needsKey      = selectedModel !== FREE_MODEL;
 
-  // Generic field updater
   const handleChange = (field) => (event) => {
     const value = event.target.value;
     const next  = { ...PDFExtractionToolSettings, [field]: value };
 
-    // Clear the stored key whenever the user switches back to the free model
     if (field === 'modelType' && value === FREE_MODEL) {
       next.apiKey  = '';
       next.showKey = false;
@@ -96,13 +91,11 @@ export default function PDFExtractionToolSettings({ onSettingsChange = () => {} 
     onSettingsChange(next);
   };
 
-  // Toggle key visibility
   const toggleShowKey = () => {
     const next = { ...PDFExtractionToolSettings, showKey: !showKey };
     updatePDFExtractionToolSettings(next);
   };
 
-  // ── Helper: which provider hint to show ──────────────────────────────────
   const providerHint = () => {
     if (!needsKey) return null;
     if (selectedModel.startsWith('claude'))  return 'Anthropic API key  (sk-ant-…)';
@@ -122,7 +115,6 @@ export default function PDFExtractionToolSettings({ onSettingsChange = () => {} 
           size="small"
         >
           {MODEL_GROUPS.map(({ group, items }) => [
-            /* Group header – not selectable */
             <MenuItem
               key={group}
               disabled
@@ -137,8 +129,6 @@ export default function PDFExtractionToolSettings({ onSettingsChange = () => {} 
             >
               {group}
             </MenuItem>,
-
-            /* Selectable models inside this group */
             ...items.map(({ value, label }) => (
               <MenuItem key={value} value={value} sx={{ pl: 3 }}>
                 {label}
@@ -148,7 +138,7 @@ export default function PDFExtractionToolSettings({ onSettingsChange = () => {} 
         </Select>
       </SettingFormControl>
 
-      {/* ── API key input – only shown for non-free models ───────────────── */}
+      {/* ── API key input ────────────────────────────────────────────────── */}
       {needsKey && (
         <SettingFormControl
           label={translations.apiKey || `API Key – ${providerHint()}`}

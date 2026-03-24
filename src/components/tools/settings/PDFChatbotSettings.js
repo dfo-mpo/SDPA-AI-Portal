@@ -45,7 +45,6 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
   const handleChange = (field) => (event) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     const updated = { ...pdfChatbotSettings, [field]: value };
-    //Clears the API key when switching back to the free default model
     if (field === 'modelType' && value === FREE_MODEL) {
       updated.apiKey = '';
       updated.showKey = false;
@@ -73,25 +72,25 @@ export default function PDFChatbotSettings({ onSettingsChange = () => {} }) {
           <ListSubheader>GPT-SDPA (Free)</ListSubheader>
           <MenuItem value="gpt4omini">GPT-4o mini (default)</MenuItem>
 
-          <ListSubheader>GPT-Azure (API Key Required)</ListSubheader>
+          <ListSubheader>GPT-Azure</ListSubheader>
           <MenuItem value="gpt4o">GPT-4o</MenuItem>
           <MenuItem value="gpt35">GPT-3.5</MenuItem>
           <MenuItem value="o3mini">o3-mini</MenuItem>
 
-          <ListSubheader>Anthropic (API Key Required)</ListSubheader>
+          <ListSubheader>Anthropic</ListSubheader>
           <MenuItem value="claude-35-sonnet">Claude 3.5 Sonnet</MenuItem>
           <MenuItem value="claude-3-haiku">Claude 3 Haiku</MenuItem>
 
-          <ListSubheader>Google (API Key Required)</ListSubheader>
+          <ListSubheader>Google</ListSubheader>
           <MenuItem value="gemini-15-flash">Gemini 1.5 Flash</MenuItem>
           <MenuItem value="gemini-15-pro">Gemini 1.5 Pro</MenuItem>
 
-          <ListSubheader>xAI (API Key Required)</ListSubheader>
+          <ListSubheader>xAI</ListSubheader>
           <MenuItem value="grok-3">Grok 3</MenuItem>
         </Select>
       </SettingFormControl>
 
-      {/* API Key input — only shown for non native models (whatever isnt gpt 4o mini)*/}
+      {/* API Key input — only shown for non native models */}
       {requiresKey && (
         <SettingFormControl label="API Key">
           <TextField
