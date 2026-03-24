@@ -14,15 +14,6 @@ MODEL_CONFIG = None
 def set_MODEL_CONFIG():
     global MODEL_CONFIG
     MODEL_CONFIG = {
-        "dog-cat": {
-            "url": os.getenv("CUSTOM_VISION_DOG_VS_CAT_PREDICTION_URL"),
-            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
-            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
-        },
-        "car-bike": {
-            "url": os.getenv("CUSTOM_VISION_BIKE_VS_CAR_PREDICTION_URL"),
-            "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
-        },
         "fresh-vs-infected-salmon": {
             "url": os.getenv("CUSTOM_VISION_FRESH_VS_INFECTED_SALMON_SPECIES_CLASSIFIER_URL"),
             "key": keys.get_CUSTOM_VISION_PREDICTION_KEY(), # Reads .env in dev and key vault in prod
@@ -42,8 +33,6 @@ def set_MODEL_CONFIG():
     }
 
 MODEL_META = {
-    "dog-cat": {"name": "Cat vs Dog", "description": "Binary classifier"},
-    "car-bike": {"name": "Car vs Bike", "description": "Binary classifier"},
     "fresh-vs-infected-salmon": {"name": "Fresh vs Infected Salmon", "description": "Binary Classifier"},
     "eel-vs-catfish": {"name": "Freshwater Eel vs Catfish", "description": "Binary Classifier"},
     "healthy-vs-bleached-coral": {"name": "Healthy vs Bleached Coral Reefs", "description": "Binary Classifier"},
