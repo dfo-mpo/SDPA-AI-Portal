@@ -264,6 +264,7 @@ export default function NewLeftPanel({
               <AIToolsDropdown 
                 onToolSelect={onSelectTool} 
                 selectedTool={selectedTool} 
+                isMdUp={isMdUp}
               />
             </Box>
 

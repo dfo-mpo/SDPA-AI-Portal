@@ -24,7 +24,7 @@ import { getToolTranslations } from '../../utils';
 import { TOOL_CATEGORIES } from '../../utils';
 import { useComponentStyles } from '../../styles/hooks/useComponentStyles';
 
-export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
+export default function AIToolsDropdown({ onToolSelect, selectedTool, isMdUp }) {
   const { language } = useLanguage();
   const theme = useTheme();
   const translations = getToolTranslations("aiToolsDropdown", language);
@@ -74,12 +74,14 @@ export default function AIToolsDropdown({ onToolSelect, selectedTool }) {
         }}
         sx={{
           ...aiToolsDropdownStyles.select,
-          width: { md: 'calc(100% - 40px)' },
+          width: { md: 'calc(100% - 80px)' },
+          ml: '40px',
         }}
         MenuProps={{
           PaperProps: {
             sx: {
               p: 2,
+              ...(!isMdUp && { ml: '-20px' })
             },
           },
           MenuListProps: {

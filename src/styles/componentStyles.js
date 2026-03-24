@@ -302,6 +302,28 @@ export const dashboardStyles = {
     bgcolor: "background.paper",
   }),
 
+  LeftPanelIconButton: (theme) => ({
+    border: '1px solid',
+    borderColor: theme.palette.divider,
+    borderRadius: '8px',
+    padding: '8px',
+    color: theme.palette.text.primary,
+    backgroundColor:
+      theme.palette.mode === 'light'
+        ? 'rgba(255, 255, 255, 0.8)'
+        : 'rgba(0, 0, 0, 0.3)',
+    '&:hover': {
+      backgroundColor:
+        theme.palette.mode === 'light'
+          ? 'rgba(255, 255, 255, 0.9)'
+          : 'rgba(0, 0, 0, 0.5)',
+      borderColor: theme.palette.text.primary,
+      transform: 'translateY(-1px)',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+      transition: 'all 0.2s ease',
+    },
+  }),
+
   headerContainer: (theme) => ({
     m: 0,
     p: 0,
@@ -1059,8 +1081,18 @@ export const colorModeIconDropdownStyles = {
 // ===== AI TOOLS DROPDOWN STYLES =====
 export const aiToolsDropdownStyles = {
   select: (theme) => ({
-    py: 3,
-    mt: { md: -1 },
+    py: 2.5,
+    mt: { md: '-4px' },
+    '&:hover': {
+      backgroundColor:
+        theme.palette.mode === 'light'
+          ? 'rgba(255, 255, 255, 0.9)'
+          : 'rgba(0, 0, 0, 0.5)',
+      borderColor: theme.palette.text.primary,
+      transform: 'translateY(-1px)',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+      transition: 'all 0.2s ease',
+    },
   }),
   menuItem: {
     py: 1,

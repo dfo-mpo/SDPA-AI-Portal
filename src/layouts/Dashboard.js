@@ -12,6 +12,7 @@ import { useTheme, useMediaQuery, Box, Paper, CircularProgress, Alert, IconButto
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
+import HomeIcon from '@mui/icons-material/Home';
 import { GovHeader, LeftPanel } from '.';
 import { getToolByName, getParam, getAllParams, updateURLParams } from '../utils';
 import { HomePage, DocxEditor, SurveyForm } from '../pages';
@@ -211,6 +212,25 @@ export default function Dashboard({ onLogout, onLogin }) {
     );
   };
 
+  const renderHomeButton = () => {
+    return (
+      <IconButton
+        onClick={() => handleToolSelect('')}
+        size="string"
+        sx={{
+          ...styles.LeftPanelIconButton,
+          position: 'absolute',
+          top: isMdUp ? 20 : 24,
+          left: 12,
+          zIndex: 100,
+        }}
+      >
+        <HomeIcon/>
+      </IconButton>
+    );
+    return null;
+  };
+
   const renderToggleButton = () => {
     if (isMdUp) {
       return (
@@ -218,12 +238,11 @@ export default function Dashboard({ onLogout, onLogin }) {
           onClick={toggleLeftPanel}
           size="string"
           sx={{
+            ...styles.LeftPanelIconButton,
             position: 'absolute',
             top: 20,
             right: 12,
             zIndex: 100,
-            transition: 'all 1s ease',
-            border: 'none',
           }}
         >
           {showLeftPanel ? <MenuOpenIcon /> : <MenuIcon />}
@@ -259,6 +278,7 @@ export default function Dashboard({ onLogout, onLogin }) {
         }}
       >
         {/* {isHomePage && renderToggleButton()} */}
+        {!isHomePage && renderHomeButton()}
         {renderToggleButton()}
         <LeftPanel 
           selectedTool={selectedTool} 
