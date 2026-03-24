@@ -37,6 +37,7 @@ os.environ.setdefault("ANONYMIZED_TELEMETRY", "false")
 _preset_cache = {"expires_at": 0.0, "value": None}
 _base_preset_cache = {"expires_at": 0.0, "value": None}
 _cache_lock = threading.Lock()
+_index_build_lock = threading.Lock()
 CACHE_TTL = 120  # seconds
 
 def _cache_get(bucket: dict):
@@ -440,6 +441,87 @@ def _ensure_site_description(site_meta: dict, url: str, text: str) -> dict:
     site_meta["site_description"] = desc
     return site_meta
 
+def _build_preset_indexes():
+    by_source = {}
+    by_base = {}
+
+    for m in _iter_all_metas(page_size=500):
+        src = m.get("source")
+        if not src:
+            continue
+
+        # presets
+        info = by_source.setdefault(src, {
+            "url": src,
+            "chunk_count": 0,
+            "last_scraped_at": None,
+            "last_scrape_duration": None,
+            "doc_id": m.get("doc_id", ""),
+            "title": "",
+            "description": "",
+            "favicon": _host_favicon(src),
+        })
+
+        info["chunk_count"] += 1
+        t = m.get("scraped_at")
+        dur = m.get("duration_seconds")
+
+        if t and (info["last_scraped_at"] is None or t > info["last_scraped_at"]):
+            info["last_scraped_at"] = t
+            if dur is not None:
+                info["last_scrape_duration"] = dur
+        elif info["last_scrape_duration"] is None and dur is not None:
+            info["last_scrape_duration"] = dur
+
+        if not info["title"] and m.get("site_title"):
+            info["title"] = m["site_title"]
+
+        if not info["description"] and m.get("site_description"):
+            info["description"] = m["site_description"]
+
+        if (not info["favicon"]) and m.get("favicon"):
+            info["favicon"] = m["favicon"]
+
+        # base-presets
+        try:
+            u = urlparse(src)
+            if u.scheme and u.hostname:
+                base = f"{u.scheme}://{u.hostname.lower()}"
+            else:
+                continue
+        except Exception:
+            continue
+
+        entry = by_base.setdefault(base, {
+            "base": base,
+            "url": src,
+            "title": "",
+            "description": "",
+            "favicon": f"{base}/favicon.ico",
+            "last_scraped_at": None,
+            "last_scrape_duration": None,
+        })
+
+        if t and (entry["last_scraped_at"] is None or t > entry["last_scraped_at"]):
+            entry["last_scraped_at"] = t
+            entry["last_scrape_duration"] = dur
+            entry["url"] = src
+
+        if not entry["title"] and m.get("site_title"):
+            entry["title"] = m["site_title"]
+
+        if not entry["description"] and m.get("site_description"):
+            entry["description"] = m["site_description"]
+
+        if m.get("favicon"):
+            entry["favicon"] = m["favicon"]
+
+    _cache_set(
+        _preset_cache,
+        sorted(by_source.values(), key=lambda x: x["last_scraped_at"] or "", reverse=True)
+    )
+    _cache_set(_base_preset_cache, list(by_base.values()))
+
 # ----- POST Requests -----
 
 # Scrape POST request
@@ -567,14 +649,15 @@ def download_combined_text(session_id: str):
 
 @router.get("/presets")
 def api_list_presets():
-    '''Returns a list of cached URLs (presets) discovered in the vector store.'''
     cached = _cache_get(_preset_cache)
-    if cached is not None:
-        return {"status": "ok", "presets": cached}
+    if cached is None:
+        with _index_build_lock:
+            cached = _cache_get(_preset_cache)
+            if cached is None:
+                _build_preset_indexes()
+                cached = _cache_get(_preset_cache)
 
-    presets = _list_presets()
-    _cache_set(_preset_cache, presets)
-    return {"status": "ok", "presets": presets}
+    return {"status": "ok", "presets": cached}
 
 @router.get("/combined-by-url")
 def download_combined_text_by_url(url: str = Query(...)):
@@ -588,56 +671,15 @@ def download_combined_text_by_url(url: str = Query(...)):
 
 @router.get("/base-presets")
 def api_base_presets():
-    """Return list of unique base domains from vector DB."""
     cached = _cache_get(_base_preset_cache)
-    if cached is not None:
-        return {"presets": cached}
+    if cached is None:
+        with _index_build_lock:
+            cached = _cache_get(_base_preset_cache)
+            if cached is None:
+                _build_preset_indexes()
+                cached = _cache_get(_base_preset_cache)
 
-    presets = {}
-
-    for m in _iter_all_metas(page_size=500):
-        src = m.get("source")
-        if not src:
-            continue
-
-        try:
-            u = urlparse(src)
-            if not u.scheme or not u.hostname:
-                continue
-            base = f"{u.scheme}://{u.hostname.lower()}"
-        except Exception:
-            continue
-
-        entry = presets.setdefault(base, {
-            "base": base,
-            "url": src,
-            "title": "",
-            "description": "",
-            "favicon": f"{base}/favicon.ico",
-            "last_scraped_at": None,
-            "last_scrape_duration": None,
-        })
-
-        t = m.get("scraped_at")
-        dur = m.get("duration_seconds")
-
-        if t and (entry["last_scraped_at"] is None or t > entry["last_scraped_at"]):
-            entry["last_scraped_at"] = t
-            entry["last_scrape_duration"] = dur
-            entry["url"] = src
-
-        if not entry["title"] and m.get("site_title"):
-            entry["title"] = m["site_title"]
-
-        if not entry["description"] and m.get("site_description"):
-            entry["description"] = m["site_description"]
-
-        if m.get("favicon"):
-            entry["favicon"] = m["favicon"]
-
-    result = list(presets.values())
-    _cache_set(_base_preset_cache, result)
-    return {"presets": result}
+    return {"presets": cached}
 
 @router.get("/pages")
 def api_pages(base: str = Query(...)):
