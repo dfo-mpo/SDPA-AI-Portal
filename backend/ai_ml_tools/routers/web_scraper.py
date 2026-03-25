@@ -435,11 +435,40 @@ def _ensure_site_description(site_meta: dict, url: str, text: str) -> dict:
     site_meta["site_description"] = desc
     return site_meta
 
+def _iter_seed_metas(page_size: int = 500):
+    """
+    Yield one metadata row per URL by only reading chunk_index == 0.
+    Much faster for cold-start preset bootstrap.
+    """
+    col = _get_collection()
+    offset = 0
+
+    while True:
+        res = col.get(
+            where={"chunk_index": {"$eq": 0}},
+            include=["metadatas"],
+            limit=page_size,
+            offset=offset,
+        ) or {}
+
+        metas = res.get("metadatas") or []
+        if not metas:
+            break
+
+        for m in metas:
+            if m:
+                yield m
+
+        if len(metas) < page_size:
+            break
+
+        offset += page_size
+
 def _build_preset_indexes():
     by_source = {}
     by_base = {}
 
-    for m in _iter_all_metas(page_size=500):
+    for m in _iter_seed_metas(page_size=500):
         src = m.get("source")
         if not src:
             continue
@@ -447,7 +476,7 @@ def _build_preset_indexes():
         # presets
         info = by_source.setdefault(src, {
             "url": src,
-            "chunk_count": 0,
+            "chunk_count": 1,
             "last_scraped_at": None,
             "last_scrape_duration": None,
             "doc_id": m.get("doc_id", ""),
@@ -456,7 +485,6 @@ def _build_preset_indexes():
             "favicon": _host_favicon(src),
         })
 
-        info["chunk_count"] += 1
         t = m.get("scraped_at")
         dur = m.get("duration_seconds")
 
