@@ -871,7 +871,7 @@ export function PDFExtractionTool() {
             <Typography variant="body2" sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
               <ListChecks size={24} style={{ marginTop: 2 }} />
               <span>
-                <b>GPT-4o mini</b> is the default and requires no key — it uses the shared SDPA/OCDS Azure account.
+                <b>GPT-4o mini</b> is the default and requires no key - it uses the shared SDPA/OCDS Azure account and is completely free to use.
                 All other models require you to paste <b>your own API key</b> in the left panel before extracting.
               </span>
             </Typography>

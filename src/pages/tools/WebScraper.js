@@ -1221,8 +1221,9 @@ export function WebScraper() {
 
           <Typography variant="body2" sx={{ lineHeight: 1.7, mb: 2 }}>
             Configure the <b>model type</b> and behavior from the Web Scraper settings
-            panel on the left-hand side. GPT-4o mini is the default free model for SDPA/OCDS users.
-            All other models require your own API key.
+            panel on the left-hand side. <b>GPT-4o mini</b> is the default and requires 
+            no key - it uses the shared SDPA/OCDS Azure account and is completely free 
+            to use. All other models require you to paste <b>your own API key</b> in the left panel before extracting.
           </Typography>
 
           <Divider sx={{ my: 3 }} />
