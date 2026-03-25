@@ -483,6 +483,7 @@ export function WebScraper() {
   const [refreshing, setRefreshing] = useState(() => new Set());
   const [adding, setAdding] = useState(false);
   const [addErr, setAddErr] = useState("");
+  const [allPresetsLoading, setAllPresetsLoading] = useState(false);
 
   // Read model + api key from settings context
   const { webScraperSettings } = useToolSettings();
@@ -535,23 +536,6 @@ export function WebScraper() {
     }));
   }, [messages]);
 
-  useEffect(() => {
-    // load once on mount
-    (async () => {
-      try {
-        const r = await fetch(`${API_BASE}/api/presets`);
-        const j = await r.json();
-        setAllPresets(j?.presets || []);
-      } catch (e) {
-        console.error("Failed to load ALL presets:", e);
-        // fall back to basePresets only
-        setAllPresets([]);
-      } finally {
-        setAllPresetsLoaded(true);
-      }
-    })();
-  }, []);
-
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
 
@@ -573,6 +557,33 @@ export function WebScraper() {
       );
     });
   }, [q, basePresets, allPresets]);
+
+  const loadAllPresets = React.useCallback(async () => {
+    if (allPresetsLoaded || allPresetsLoading) return;
+
+    setAllPresetsLoading(true);
+    try {
+      const r = await fetch(`${API_BASE}/presets`);
+      const j = await r.json();
+      setAllPresets(j?.presets || []);
+      setAllPresetsLoaded(true);
+    } catch (e) {
+      console.error("Failed to load ALL presets:", e);
+      setAllPresets([]);
+    } finally {
+      setAllPresetsLoading(false);
+    }
+  }, [allPresetsLoaded, allPresetsLoading]);
+
+  useEffect(() => {
+    if (!q.trim()) return;
+
+    const t = setTimeout(() => {
+      loadAllPresets();
+    }, 250);
+
+    return () => clearTimeout(t);
+  }, [q, loadAllPresets]);
 
   const handleRefresh = (url) => {
     setConfirmMode("rescrape");
