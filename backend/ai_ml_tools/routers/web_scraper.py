@@ -26,6 +26,9 @@ _combined_text: Dict[str, str] = {}
 _session_url: Dict[str, str] = {}
 _url_locks: Dict[str, threading.Lock] = {}
 _url_locks_guard = threading.Lock()
+_preset_index = {}
+_base_preset_index = {}
+_index_lock = threading.Lock()
 
 PERSIST_DIR = "/home/chroma_store"
 COLLECTION  = "web_chunks_v6"
@@ -265,51 +268,42 @@ def _iter_all_metas(page_size: int = 500):
 
         offset += page_size
 
-def _list_presets() -> list[dict]:
-    '''Builds a list of cached URLs with chunk counts and last-scraped timestamps, sorted newest first.'''
-    by_source = {}
+def _update_preset_indexes_for_url(url: str, site_meta: dict, duration_sec: float, chunk_count: int):
+    now = datetime.now(timezone.utc).isoformat()
+    favicon = site_meta.get("favicon") or _host_favicon(url)
 
-    for m in _iter_all_metas(page_size=500):
-        src = m.get("source")
-        if not src:
-            continue
+    entry = {
+        "url": url,
+        "chunk_count": chunk_count,
+        "last_scraped_at": now,
+        "last_scrape_duration": duration_sec,
+        "doc_id": hashlib.sha1(url.encode("utf-8")).hexdigest()[:12],
+        "title": site_meta.get("site_title") or "",
+        "description": site_meta.get("site_description") or "",
+        "favicon": favicon,
+    }
 
-        info = by_source.setdefault(src, {
-            "url": src,
-            "chunk_count": 0,
-            "last_scraped_at": None,
-            "last_scrape_duration": None,
-            "doc_id": m.get("doc_id", ""),
-            "title": "",
-            "description": "",
-            "favicon": _host_favicon(src),
-        })
+    try:
+        u = urlparse(url)
+        base = f"{u.scheme}://{u.hostname.lower()}"
+    except Exception:
+        base = None
 
-        info["chunk_count"] += 1
-        t = m.get("scraped_at")
-        dur = m.get("duration_seconds")
+    with _index_lock:
+        _preset_index[url] = entry
 
-        if t and (info["last_scraped_at"] is None or t > info["last_scraped_at"]):
-            info["last_scraped_at"] = t
-            if dur is not None:
-                info["last_scrape_duration"] = dur
-        elif info["last_scrape_duration"] is None and dur is not None:
-            info["last_scrape_duration"] = dur
-
-        if not info["title"] and m.get("site_title"):
-            info["title"] = m["site_title"]
-
-        if not info["description"] and m.get("site_description"):
-            info["description"] = m["site_description"]
-
-        if (not info["favicon"]) and m.get("favicon"):
-            info["favicon"] = m["favicon"]
-
-    return sorted(
-        by_source.values(),
-        key=lambda x: x["last_scraped_at"] or "",
-        reverse=True,
-    )
+        if base:
+            prev = _base_preset_index.get(base)
+            if not prev or entry["last_scraped_at"] >= (prev.get("last_scraped_at") or ""):
+                _base_preset_index[base] = {
+                    "base": base,
+                    "url": url,
+                    "title": entry["title"],
+                    "description": entry["description"],
+                    "favicon": entry["favicon"] or f"{base}/favicon.ico",
+                    "last_scraped_at": entry["last_scraped_at"],
+                    "last_scrape_duration": entry["last_scrape_duration"],
+                }
 
 def _url_cached(source_url: str) -> dict | None:
     '''Checks if the vector store already contains data for the URL and returns minimal cache info if found.'''
@@ -516,11 +510,12 @@ def _build_preset_indexes():
         if m.get("favicon"):
             entry["favicon"] = m["favicon"]
 
-    _cache_set(
-        _preset_cache,
-        sorted(by_source.values(), key=lambda x: x["last_scraped_at"] or "", reverse=True)
-    )
-    _cache_set(_base_preset_cache, list(by_base.values()))
+    with _index_lock:
+        _preset_index.clear()
+        _preset_index.update(by_source)
+
+        _base_preset_index.clear()
+        _base_preset_index.update(by_base)
 
 # ----- POST Requests -----
 
@@ -616,6 +611,7 @@ def api_scrape(req: ScrapeReq):
         duration_sec = (end_time - start_time).total_seconds()
         site_meta["duration_seconds"] = duration_sec
         added = upsert_chunks_into_vector_db(chunks, req.url, site_meta=site_meta)
+        _update_preset_indexes_for_url(req.url, site_meta, duration_sec, added)
         _invalidate_caches()
 
         return {
@@ -650,12 +646,20 @@ def download_combined_text(session_id: str):
 @router.get("/presets")
 def api_list_presets():
     cached = _cache_get(_preset_cache)
-    if cached is None:
-        with _index_build_lock:
-            cached = _cache_get(_preset_cache)
-            if cached is None:
+    if cached is not None:
+        return {"status": "ok", "presets": cached}
+
+    with _index_build_lock:
+        cached = _cache_get(_preset_cache)
+        if cached is None:
+            if not _preset_index:
                 _build_preset_indexes()
-                cached = _cache_get(_preset_cache)
+            cached = sorted(
+                _preset_index.values(),
+                key=lambda x: x["last_scraped_at"] or "",
+                reverse=True,
+            )
+            _cache_set(_preset_cache, cached)
 
     return {"status": "ok", "presets": cached}
 
@@ -671,13 +675,18 @@ def download_combined_text_by_url(url: str = Query(...)):
 
 @router.get("/base-presets")
 def api_base_presets():
+    '''Returns a list of cached URLs (presets) discovered in the vector store.'''
     cached = _cache_get(_base_preset_cache)
-    if cached is None:
-        with _index_build_lock:
-            cached = _cache_get(_base_preset_cache)
-            if cached is None:
+    if cached is not None:
+        return {"presets": cached}
+
+    with _index_build_lock:
+        cached = _cache_get(_base_preset_cache)
+        if cached is None:
+            if not _base_preset_index:
                 _build_preset_indexes()
-                cached = _cache_get(_base_preset_cache)
+            cached = list(_base_preset_index.values())
+            _cache_set(_base_preset_cache, cached)
 
     return {"presets": cached}
 
@@ -710,6 +719,7 @@ def api_pages(base: str = Query(...)):
 # ----- Web Socket Routes -----
 @router.websocket("/ws/website_chat")
 async def website_chat_min(ws: WebSocket):
+    """Return list of unique base domains from vector DB."""
     await ws.accept()
     try:
         while True:
