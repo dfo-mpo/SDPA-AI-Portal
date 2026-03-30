@@ -14,7 +14,8 @@ import {
   FileSearch,
   ClipboardList,
   Store,
-  BrainCircuit 
+  BrainCircuit,
+  Repeat2,
 } from 'lucide-react';
   
 
@@ -30,6 +31,7 @@ import {
    * @property {string} [externalUrl] - (Optional) External URL to open instead of internal routing.
    * @property {boolean} [showInDropdown=false] - (Optional) Controls whether the tool appears in dropdown menu and tool settings.
    * @property {boolean} [showInDemo=false] - (Optional) Controls whether the tool appears on side menu in the demo version.
+   * @property {boolean} [requiresAuth=true] - (Optional) Whether the tool requires authentication. Defaults to true.
    */
   export const TOOLS = {
     // Computer Vision Tools
@@ -204,6 +206,18 @@ import {
       actionText: 'Coming Soon',
       disabled: true
     },
+
+    // Replicate Me
+    REPLICATE_ME: {
+      id: 'replicate-me',
+      name: 'Replicate Me',
+      category: 'Replicate Me',
+      icon: Repeat2,
+      backgroundImage: '/assets/robot.png',
+      actionText: 'Explore',
+      requiresAuth: false,
+      showInDemo: true,
+    },
   };
   
   /**
@@ -243,6 +257,9 @@ import {
     ],
     'AI Resources': [
       TOOLS.AI_RESOURCES,
+    ],
+    'Replicate Me': [
+      TOOLS.REPLICATE_ME,
     ],
   };
   

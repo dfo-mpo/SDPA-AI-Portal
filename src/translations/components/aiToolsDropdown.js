@@ -9,10 +9,12 @@ export const en = {
     categories: {
       "Computer Vision": "Computer Vision",
       "Large Language Models": "Large Language Models",
+      "Optical Character Recognition": "Optical Character Recognition",
       "AI Inventory Form": "AI Inventory Form",
       "Statistical and ML Algorithms Guide": "Statistical and ML Algorithms Guide",
       "Model Repo": "Model Repo",
-      "AI Store": "AI Store"
+      "AI Store": "AI Store",
+      "Replicate Me": "Replicate Me",
     },
     tools: {
       "Electronic Monitoring": "Electronic Monitoring",
@@ -33,7 +35,8 @@ export const en = {
       "Form": "Form",
       "Document": "Document",
       "Models" : "Models",
-      "Models, APIs, Tools and Services": "Models, APIs, Tools and Services"
+      "Models, APIs, Tools and Services": "Models, APIs, Tools and Services",
+      "Replicate Me": "Replicate Me",
     }
   };
   
@@ -48,7 +51,8 @@ export const en = {
       "AI Inventory Form": "Formulaire d'inventaire de l'IA",
       "Statistical and ML Algorithms Guide": "Guide des algorithmes statistiques et d'apprentissage automatique",
       "Model Repo": "Modèles d'apprentissage automatique",
-      "AI Store": "Magasin d'IA"
+      "AI Store": "Magasin d'IA",
+      "Replicate Me": "Répliquez-moi",
     },
     tools: {
       "Electronic Monitoring": "Surveillance électronique",
@@ -69,6 +73,7 @@ export const en = {
       "Form": "Formulaire",
       "Document": "Document",
       "Models" : "Modèles",
-      "Models, APIs, Tools and Services": "Modèles, API, outils et services"
+      "Models, APIs, Tools and Services": "Modèles, API, outils et services",
+      "Replicate Me": "Répliquez-moi",
     }
   };

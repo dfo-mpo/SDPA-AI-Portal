@@ -13,6 +13,7 @@ import * as piiRedactor from './piiRedactor';
 import * as sensitivityScore from './sensitivityScore';
 import * as frenchTranslation from './frenchTranslation';
 import * as mlModelsRepo from './mlModelsRepo'
+import * as replicateMe from './replicateMe';
 
 // Export individual tool translations
 export {
@@ -23,7 +24,8 @@ export {
   piiRedactor,
   sensitivityScore,
   frenchTranslation,
-  mlModelsRepo
+  mlModelsRepo,
+  replicateMe,
 };
 
 /**
@@ -43,7 +45,8 @@ export function getToolTranslations(toolName, language = 'en') {
     'piiRedactor': piiRedactor,
     'sensitivityScore': sensitivityScore,
     'frenchTranslation': frenchTranslation,
-    'mlModelsRepo' : mlModelsRepo
+    'mlModelsRepo' : mlModelsRepo,
+    'replicateMe': replicateMe,
   };
   
   // Get the tool translations
