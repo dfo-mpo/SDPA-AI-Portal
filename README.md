@@ -66,3 +66,7 @@ docker-compose up --build
 docker compose up --build
 ```
 You can now use the web app locally from, http://localhost:3080
+
+It's been a journey working with you fellas 
+I hope this repo continues and gets put into production
+Wishing you all the best :) --> Alex P
