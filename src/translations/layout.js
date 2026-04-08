@@ -38,7 +38,8 @@ export const en = {
         "PDF Chatbot": "PDF Chatbot",
         "PII Redactor": "PII Redactor",
         "Sensitivity Score Calculator": "Sensitivity Score Calculator",
-        "French Translation": "French Translation"
+        "French Translation": "French Translation",
+        "Replicate Me": "Replicate Me"
       }
     },
     dashboard: {
@@ -48,7 +49,7 @@ export const en = {
       title: "Dive into AI",
       description: "Harnessing AI to enhance research, decision-making, and operational efficiency in fisheries and oceans science.",
       heading: "Welcome to the DFO OCDS AI Hub",
-      body: "Welcome to the DFO Office of the Chief Data Steward's (OCDS) AI Hub, a platform designed to explore the potential of artificial intelligence in fisheries and oceans research. Our initiatives harness the power of advanced data and A.I. technologies like machine learning, computer vision, and natural language processing to revolutionize how to support marine conservation and rebuilding efforts in the modern data and digital era. \n\nUse the Tools menu on the left to explore AI-enabled solutions to revolutionize sustainability, conservation, and management of our oceans. Dive into a future where technology empowers us to preserve marine ecosystems more effectively than ever before!",
+      body: "Welcome to the DFO Office of the Chief Data Steward (OCDS) AI Hub, a platform designed to explore the potential of artificial intelligence in fisheries and oceans research. Our initiatives harness the power of advanced data and A.I. technologies like machine learning, computer vision, and natural language processing to revolutionize how to support marine conservation and rebuilding efforts in the modern data and digital era. \n\nUse the Tools menu on the left to explore AI-enabled solutions to revolutionize sustainability, conservation, and management of our oceans. Dive into a future where technology empowers us to preserve marine ecosystems more effectively than ever before!",
       alert: "Demonstration Use Only: These tools are prototypes designed to illustrate possible AI applications for DFO scientists, therefore, are strictly for educational purposes and are not to be used in any work processes. Please avoid uploading any sensitive or operational data."
     },
     app: {
@@ -100,7 +101,8 @@ export const en = {
         "PDF Chatbot": "Chatbot PDF",
         "PII Redactor": "Rédacteur de PII",
         "Sensitivity Score Calculator": "Calculateur de score de sensibilité",
-        "French Translation": "Traduction français"
+        "French Translation": "Traduction français",
+        "Replicate Me": "Répliquez-moi"
       }
     },
     dashboard: {
@@ -126,19 +128,10 @@ export const en = {
     }
   };
   
-  /**
-   * Get layout translations for specific component
-   * 
-   * @param {string} component - Component name ('header', 'leftPanel', 'toolDropdown', etc.)
-   * @param {string} language - Language code ('en' or 'fr')
-   * @returns {Object} - Translations object for the component
-   */
   export function getLayoutTranslations(component, language) {
     const translations = language === 'fr' ? fr : en;
-    
     if (component && translations[component]) {
       return translations[component];
     }
-    
     return translations;
-  } 
+  }

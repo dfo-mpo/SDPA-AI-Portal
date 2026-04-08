@@ -45,6 +45,7 @@ import {
   CSVAnalyzerSettings,
   WebScraperSettings,
   PDFExtractionToolSettings,
+  ReplicateMeSettings,
 } from '../components/tools/settings';
 
 import { getToolByName } from '../utils';
@@ -86,7 +87,8 @@ export default function NewLeftPanel({
     'French Translation': <FrenchTranslationSettings />,
     'CSV/PDF Analyzer': <CSVAnalyzerSettings />,
     'Web Scraper' : <WebScraperSettings />,
-    'Document OCR' : <PDFExtractionToolSettings />
+    'Document OCR' : <PDFExtractionToolSettings />,
+    'Replicate Me': <ReplicateMeSettings />,
   };
 
   // Component-specific styles

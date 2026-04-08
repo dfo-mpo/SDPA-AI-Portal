@@ -14,6 +14,7 @@ import * as ocrReviewTool from './ocrReviewTool';
 import * as sensitivityScore from './sensitivityScore';
 import * as frenchTranslation from './frenchTranslation';
 import * as mlModelsRepo from './mlModelsRepo'
+import * as replicateMe from './replicateMe';
 
 // Export individual tool translations
 export {
@@ -25,7 +26,8 @@ export {
   sensitivityScore,
   frenchTranslation,
   ocrReviewTool,
-  mlModelsRepo
+  mlModelsRepo,
+  replicateMe,
 };
 
 /**
@@ -46,7 +48,8 @@ export function getToolTranslations(toolName, language = 'en') {
     'sensitivityScore': sensitivityScore,
     'ocrReviewTool': ocrReviewTool,
     'frenchTranslation': frenchTranslation,
-    'mlModelsRepo' : mlModelsRepo
+    'mlModelsRepo' : mlModelsRepo,
+    'replicateMe': replicateMe,
   };
   
   // Get the tool translations

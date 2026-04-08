@@ -21,3 +21,4 @@ export { PDFExtractionTool } from "./PDFExtractionTool";
 export { WebScraper } from "./WebScraper";
 export { MLModelsRepo } from './MLModelsRepo/Dashboard';
 export { ClassificationModel } from './ClassificationModel';
+export { ReplicateMe } from './ReplicateMe';

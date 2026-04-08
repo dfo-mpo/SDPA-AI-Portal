@@ -36,7 +36,8 @@ import {
   WebScraper,
   OCRReviewTool,
   PDFExtractionTool,
-  ClassificationModel
+  ClassificationModel,
+  ReplicateMe,
 } from '../pages/tools';
 import { useComponentStyles } from '../styles/hooks/useComponentStyles';
 
@@ -160,6 +161,7 @@ export default function Dashboard({ onLogout, onLogin }) {
     'Models' : MLModelsRepo,
     'Web Scraper' : WebScraper,
     'Classification Model' : ClassificationModel,
+    'Replicate Me': ReplicateMe,
   };
 
   const getToolComponent = (toolName) => {
