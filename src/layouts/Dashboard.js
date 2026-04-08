@@ -34,6 +34,7 @@ import {
   FrenchTranslation,
   MLModelsRepo,
   WebScraper,
+  OCRReviewTool,
   PDFExtractionTool,
   ClassificationModel
 } from '../pages/tools';
@@ -152,6 +153,7 @@ export default function Dashboard({ onLogout, onLogin }) {
     'PII Redactor': PIIRedactor,
     'Sensitivity Score Calculator': SensitivityScore,
     'French Translation': FrenchTranslation,
+    'OCR Review Tool': OCRReviewTool,
     'Document OCR': PDFExtractionTool,
     'Form': SurveyForm,
     'Document': DocxEditor,

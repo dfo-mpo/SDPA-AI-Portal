@@ -10,6 +10,7 @@ import * as fenceCounting from './fenceCounting';
 import * as csvAnalyzer from './csvAnalyzer';
 import * as pdfChatbot from './pdfChatbot';
 import * as piiRedactor from './piiRedactor';
+import * as ocrReviewTool from './ocrReviewTool';
 import * as sensitivityScore from './sensitivityScore';
 import * as frenchTranslation from './frenchTranslation';
 import * as mlModelsRepo from './mlModelsRepo'
@@ -23,6 +24,7 @@ export {
   piiRedactor,
   sensitivityScore,
   frenchTranslation,
+  ocrReviewTool,
   mlModelsRepo
 };
 
@@ -42,6 +44,7 @@ export function getToolTranslations(toolName, language = 'en') {
     'pdfChatbot': pdfChatbot,
     'piiRedactor': piiRedactor,
     'sensitivityScore': sensitivityScore,
+    'ocrReviewTool': ocrReviewTool,
     'frenchTranslation': frenchTranslation,
     'mlModelsRepo' : mlModelsRepo
   };

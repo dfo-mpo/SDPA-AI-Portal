@@ -15,6 +15,7 @@ export { FrenchTranslation } from './FrenchTranslation';
 export { PDFChatbot } from './PDFChatbot';
 export { PIIRedactor } from './PIIRedactor';
 export { ScaleAgeing } from './ScaleAgeing';
+export { OCRReviewTool } from './OCRReviewTool';
 export { SensitivityScore } from './SensitivityScore';
 export { PDFExtractionTool } from "./PDFExtractionTool";
 export { WebScraper } from "./WebScraper";

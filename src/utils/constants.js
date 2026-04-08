@@ -159,6 +159,16 @@ import {
     },
 
     // Optical Character Recognition Tools
+    OCR_Review_Tool: {
+      id: 'ocr-review-tool',
+      name: 'OCR Review Tool',
+      category: 'Optical Character Recognition',
+      icon: FileSearch,
+      backgroundImage: '/assets/OCR.gif',
+      actionText: 'Correct OCR Errors',
+      showInDemo:false
+    },
+
     DOCUMENT_OCR: {
       id: 'document-ocr',
       name: 'Document OCR',
@@ -230,7 +240,8 @@ import {
       TOOLS.WEBSCRAPE,
     ],
     'Optical Character Recognition': [
-      TOOLS.DOCUMENT_OCR
+      TOOLS.DOCUMENT_OCR,
+      TOOLS.OCR_Review_Tool
     ],
     'Model Repo': [
       TOOLS.ML_MODELS,

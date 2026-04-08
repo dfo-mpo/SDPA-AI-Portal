@@ -24,6 +24,7 @@ export function getToolTranslations(toolName, language) {
     'piiRedactor': 'piiRedactor',
     'sensitivityScore': 'sensitivityScore',
     'frenchTranslator': 'frenchTranslation',
+    'ocrReviewTool': 'ocrReviewTool',
     'mlModelsRepo' : 'mlModelsRepo'
   };
   
