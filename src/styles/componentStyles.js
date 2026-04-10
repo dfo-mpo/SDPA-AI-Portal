@@ -1222,6 +1222,7 @@ export const homePageStyles = {
   }),
   alert: (theme) => ({
     borderRadius: 2,
+    fontSize: '1.1rem',
     '& .MuiAlert-icon': {
       color: theme.palette.warning.main,
       alignSelf: 'center'
