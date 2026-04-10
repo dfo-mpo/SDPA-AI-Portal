@@ -901,7 +901,7 @@ export function WebScraper() {
           }}
         >
           <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
-            Presets
+            Knowledge Base
           </Typography>
 
           {/* Search + Add */}

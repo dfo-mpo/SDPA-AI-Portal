@@ -1,10 +1,8 @@
 /**
  * Replicate Me Tool Component
  *
- * Split-panel tool that displays the AI Hub documentation as an inline PDF viewer
- * on the left and a document-scoped chatbot on the right. The documentation is
- * loaded automatically on mount — no file upload required.
- *
+ * Displays the AI Hub documentation as an inline PDF viewer with zoom and
+ * download controls, and a document-scoped chatbot below it.
  * Available to all users (authenticated and unauthenticated).
  */
 
@@ -19,9 +17,10 @@ import {
   IconButton,
   CircularProgress,
   Alert,
+  Tooltip,
   useTheme,
 } from '@mui/material';
-import { Send, Bot, RefreshCw } from 'lucide-react';
+import { Send, Bot, RefreshCw, Download, ZoomIn, ZoomOut } from 'lucide-react';
 import { ToolPage } from '../../components/tools';
 import { useLanguage, useToolSettings } from '../../contexts';
 import { getToolTranslations } from '../../utils';
@@ -31,6 +30,10 @@ import { useIsAuthenticated } from '@azure/msal-react';
 // Path to the static AI Hub documentation PDF in public/assets/
 const DOC_PATH = '/assets/AI_Hub_Documentation.pdf';
 const DOC_NAME  = 'AI_Hub_Documentation.pdf';
+
+const ZOOM_STEP = 0.15;
+const ZOOM_MIN  = 0.5;
+const ZOOM_MAX  = 2.0;
 
 export function ReplicateMe() {
   const { language } = useLanguage();
@@ -44,6 +47,9 @@ export function ReplicateMe() {
   const [fileContent,   setFileContent]   = useState(null);
   const [isDocLoading,  setIsDocLoading]  = useState(true);
   const [docError,      setDocError]      = useState(null);
+
+  // ── Zoom state ───────────────────────────────────────────────────────────
+  const [zoom, setZoom] = useState(1.0);
 
   // ── Chat state ───────────────────────────────────────────────────────────
   const [messages,        setMessages]        = useState([]);
@@ -65,17 +71,14 @@ export function ReplicateMe() {
         setIsDocLoading(true);
         setDocError(null);
 
-        // Fetch the static PDF from public/assets
         const res  = await fetch(DOC_PATH);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const blob = await res.blob();
         const file = new File([blob], DOC_NAME, { type: 'application/pdf' });
 
-        // Process through the existing Document Intelligence endpoint
         const result = await processPdfDocument([file]);
         setFileContent({ text_chunks: result.text_chunks, metadata: result.metadata });
 
-        // Initial greeting once the doc is ready
         setMessages([{
           role:      'bot',
           content:   toolData.bot.initialGreeting,
@@ -93,7 +96,19 @@ export function ReplicateMe() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Send a message ───────────────────────────────────────────────────────
+  // ─Zoom handlers
+  const handleZoomIn  = () => setZoom(prev => Math.min(ZOOM_MAX, parseFloat((prev + ZOOM_STEP).toFixed(2))));
+  const handleZoomOut = () => setZoom(prev => Math.max(ZOOM_MIN, parseFloat((prev - ZOOM_STEP).toFixed(2))));
+
+  //Download handler 
+  const handleDownload = () => {
+    const a    = document.createElement('a');
+    a.href     = DOC_PATH;
+    a.download = DOC_NAME;
+    a.click();
+  };
+
+  //
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || !fileContent || isResponding) return;
 
@@ -102,7 +117,6 @@ export function ReplicateMe() {
     setCurrentMessage('');
     setIsResponding(true);
 
-    // Optimistic empty assistant bubble — filled in as tokens stream
     const tempResponse = { role: 'assistant', content: '', timestamp: new Date() };
     setMessages(prev => [...prev, tempResponse]);
 
@@ -127,17 +141,16 @@ export function ReplicateMe() {
         if (chunk.finish_reason !== undefined && chunk.finish_reason !== null) break;
       }
 
-      // Append to LLM history so follow-up questions have context
       if (llmChatHistory[0] === '') {
         setLlmChatHistory([
-          { role: 'user',      content: currentMessage        },
-          { role: 'assistant', content: tempResponse.content  },
+          { role: 'user',      content: currentMessage       },
+          { role: 'assistant', content: tempResponse.content },
         ]);
       } else {
         setLlmChatHistory(prev => [
           ...prev,
-          { role: 'user',      content: currentMessage        },
-          { role: 'assistant', content: tempResponse.content  },
+          { role: 'user',      content: currentMessage       },
+          { role: 'assistant', content: tempResponse.content },
         ]);
       }
     } catch (err) {
@@ -163,7 +176,7 @@ export function ReplicateMe() {
     }
   };
 
-  // ── Reset chat (keep document loaded) ───────────────────────────────────
+  //
   const handleResetChat = () => {
     setMessages([{
       role:      'bot',
@@ -174,7 +187,7 @@ export function ReplicateMe() {
     setCurrentMessage('');
   };
 
-  // ── Render assistant message (HTML + source citation) ───────────────────
+  //
   const renderAssistantMessage = (message) => {
     let content = message.content;
     content = content.replace(/```/g, '').replace(/^\s*html\s*/i, '').trim();
@@ -212,7 +225,7 @@ export function ReplicateMe() {
     return <div dangerouslySetInnerHTML={{ __html: tableStyle + content }} />;
   };
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  //Render
   return (
     <ToolPage
       title={toolData.title}
@@ -235,43 +248,99 @@ export function ReplicateMe() {
           flexDirection:  'column',
           gap:             2,
           mt:              0.5,
+          width:          '100%',
+          minWidth:        0,
         }}
       >
-        {/* ── PDF Viewer ───────────────────────────────────────────────── */}
+        {/* PDF Viewer */}
         <Paper
           elevation={0}
           variant="outlined"
           sx={{
             width:          '100%',
-            height:         '70vh',
+            height:         '100vh',
+            minHeight:      '500px',
             overflow:       'hidden',
             borderRadius:   2,
             display:        'flex',
             flexDirection:  'column',
           }}
         >
+          {/* PDF toolbar */}
           <Box
             sx={{
-              px:           2,
-              py:           1,
-              borderBottom: '1px solid',
-              borderColor:  'divider',
-              bgcolor:      'action.hover',
-              flexShrink:   0,
+              px:             2,
+              py:             0.75,
+              borderBottom:   '1px solid',
+              borderColor:    'divider',
+              bgcolor:        'action.hover',
+              flexShrink:     0,
+              display:        'flex',
+              alignItems:     'center',
+              justifyContent: 'space-between',
             }}
           >
             <Typography variant="body2" fontWeight={600}>
               {toolData.ui.docViewerTitle}
             </Typography>
+
+            {/* Zoom + Download controls */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Tooltip title="Zoom out">
+                <span>
+                  <IconButton
+                    size="small"
+                    onClick={handleZoomOut}
+                    disabled={zoom <= ZOOM_MIN}
+                  >
+                    <ZoomOut size={16} />
+                  </IconButton>
+                </span>
+              </Tooltip>
+
+              <Typography variant="caption" sx={{ minWidth: 38, textAlign: 'center' }}>
+                {Math.round(zoom * 100)}%
+              </Typography>
+
+              <Tooltip title="Zoom in">
+                <span>
+                  <IconButton
+                    size="small"
+                    onClick={handleZoomIn}
+                    disabled={zoom >= ZOOM_MAX}
+                  >
+                    <ZoomIn size={16} />
+                  </IconButton>
+                </span>
+              </Tooltip>
+
+              <Tooltip title="Download documentation">
+                <IconButton size="small" onClick={handleDownload}>
+                  <Download size={16} />
+                </IconButton>
+              </Tooltip>
+            </Box>
           </Box>
 
-          <Box sx={{ flex: 1, overflow: 'hidden' }}>
+          {/* iframe container with zoom applied via CSS transform */}
+          <Box
+            sx={{
+              flex:     1,
+              overflow: 'auto',
+              position: 'relative',
+            }}
+          >
             <iframe
-              src={`${DOC_PATH}#toolbar=1&navpanes=0&scrollbar=1`}
+              src={`${DOC_PATH}#toolbar=0&navpanes=0&scrollbar=1`}
               title={toolData.ui.docViewerTitle}
-              width="100%"
-              height="100%"
-              style={{ border: 'none', display: 'block' }}
+              style={{
+                border:          'none',
+                display:         'block',
+                width:           `${100 / zoom}%`,
+                height:          `calc(80vh * ${1 / zoom})`,
+                transform:       `scale(${zoom})`,
+                transformOrigin: 'top left',
+              }}
             />
           </Box>
         </Paper>
@@ -282,6 +351,7 @@ export function ReplicateMe() {
           variant="outlined"
           sx={{
             width:          '100%',
+            minWidth:        0,
             display:        'flex',
             flexDirection:  'column',
             borderRadius:   2,
@@ -300,6 +370,7 @@ export function ReplicateMe() {
               alignItems:     'center',
               justifyContent: 'space-between',
               bgcolor:        'action.hover',
+              flexShrink:     0,
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -402,6 +473,7 @@ export function ReplicateMe() {
               borderColor:  'divider',
               display:      'flex',
               gap:           1,
+              flexShrink:   0,
             }}
           >
             <TextField
