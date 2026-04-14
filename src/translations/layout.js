@@ -48,12 +48,12 @@ export const en = {
     homePage: {
       title: "Dive into AI",
       description: "Harnessing AI to enhance research, decision-making, and operational efficiency in fisheries and oceans science.",
-      heading: "Welcome to the OCDS Educational AI Hub",
-      body: "Welcome to the OCDS Educational AI Hub, a platform designed to explore the potential of artificial intelligence in fisheries and oceans research. Our initiatives harness the power of advanced data and A.I. technologies like machine learning, computer vision, and natural language processing to revolutionize how to support marine conservation and rebuilding efforts in the modern data and digital era. \n\nUse the Tools menu on the left to explore AI-enabled solutions to revolutionize sustainability, conservation, and management of our oceans. Dive into a future where technology empowers us to preserve marine ecosystems more effectively than ever before!",
+      heading: "Welcome to the DFO Office of the Chief Data Steward (OCDS) Educational AI Hub (OCDS E-AI Hub)",
+      body: "Welcome to the DFO Office of the Chief Data Steward (OCDS) Educational AI Hub (OCDS E-AI Hub), a platform designed to explore the potential of artificial intelligence in fisheries and oceans research. Our initiatives harness the power of advanced data and A.I. technologies like machine learning, computer vision, and natural language processing to revolutionize how to support marine conservation and rebuilding efforts in the modern data and digital era. \n\nUse the Tools menu on the left to explore AI-enabled solutions to revolutionize sustainability, conservation, and management of our oceans. Dive into a future where technology empowers us to preserve marine ecosystems more effectively than ever before!",
       alert: "Demonstration Use Only: These tools are prototypes designed to illustrate possible AI applications for DFO scientists, therefore, are strictly for educational purposes and are not to be used in any work processes. Please avoid uploading any sensitive or operational data."
     },
     app: {
-      title: "OCDS Educational AI Hub"
+      title: "OCDS E-AI Hub"
     },
     userMenu: {
       profile: "Profile",
@@ -111,12 +111,12 @@ export const en = {
     homePage: {
       title: "Plongez dans l'IA",
       description: "Exploiter l'intelligence artificielle pour améliorer la recherche, la prise de décision et l'efficacité opérationnelle dans le domaine des sciences halieutiques et océaniques.",
-      heading: "Bienvenue sur le Hub IA Éducatif BIPD du MPO",
-      body: "Bienvenue sur le Hub IA Éducatif du Bureau de l'intendante principale des données (BIPD) du MPO, une plateforme conçue pour explorer le potentiel de l'intelligence artificielle dans la recherche sur les pêches et les océans. Nos initiatives exploitent la puissance des données avancées et des technologies d'IA telles que l'apprentissage automatique, la vision par ordinateur et le traitement du langage naturel afin de révolutionner la manière dont nous soutenons les efforts de conservation et de reconstitution des ressources marines à l'ère moderne des données et du numérique. \n\nUtilisez le menu Outils situé à gauche pour découvrir les solutions basées sur l'IA qui révolutionnent la durabilité, la conservation et la gestion de nos océans. Plongez dans un avenir où la technologie nous permet de préserver les écosystèmes marins plus efficacement que jamais !",
+      heading: "Bienvenue sur le Hub IA Éducatif du Bureau de l'intendante principale des données (BIPD) du MPO (BIPD Hub-IA-É)",
+      body: "Bienvenue sur le Hub IA Éducatif du Bureau de l'intendante principale des données (BIPD) du MPO (BIPD Hub-IA-É), une plateforme conçue pour explorer le potentiel de l'intelligence artificielle dans la recherche sur les pêches et les océans. Nos initiatives exploitent la puissance des données avancées et des technologies d'IA telles que l'apprentissage automatique, la vision par ordinateur et le traitement du langage naturel afin de révolutionner la manière dont nous soutenons les efforts de conservation et de reconstitution des ressources marines à l'ère moderne des données et du numérique. \n\nUtilisez le menu Outils situé à gauche pour découvrir les solutions basées sur l'IA qui révolutionnent la durabilité, la conservation et la gestion de nos océans. Plongez dans un avenir où la technologie nous permet de préserver les écosystèmes marins plus efficacement que jamais !",
       alert: "Utilisation à des fins de démonstration uniquement : Ces outils sont des prototypes conçus pour illustrer les applications possibles de l'IA pour les scientifiques du MPO. Ils sont donc strictement réservés à des fins éducatives et ne doivent pas être utilisés dans le cadre de processus de travail. Veuillez éviter de télécharger des données sensibles ou opérationnelles."
     },
     app: {
-      title: "Hub IA Éducatif BIPD du MPO"
+      title: "BIPD Hub-IA-É"
     },
     userMenu: {
       profile: "Profil",

@@ -3,7 +3,7 @@
  */
 
 export const en = {
-    title: "DFO AI Hub",
+    title: "OCDS E-AI Hub",
     home: "AI Tools Home",
     selectTool: "Select a tool",
     categories: {
@@ -31,7 +31,6 @@ export const en = {
       "French Translation": "French Translation",
       "Web Scraper": "Web Scraper",
       "Document OCR": "Document OCR",
-      "OCR Review Tool": "OCR Review Tool",
       "Data Analytics, AI and ML Intake Form": "Data Analytics, AI and ML Intake Form",
       "Form": "Form",
       "Document": "Document",
@@ -42,7 +41,7 @@ export const en = {
   };
   
   export const fr = {
-    title: "Hub IA du MPO",
+    title: "BIPD Hub-IA-É",
     home: "Accueil des outils IA",
     selectTool: "Sélectionnez un outil",
     categories: {
@@ -70,7 +69,6 @@ export const en = {
       "French Translation": "Traduction français",
       "Web Scraper": "Racloir Web",
       "Document OCR": "ROC de document",
-      "OCR Review Tool": "Outil de vérification ROC",
       "Data Analytics, AI and ML Intake Form": "Formulaire d'admission pour l'analyse de données, l'IA et le ML",
       "Form": "Formulaire",
       "Document": "Document",
