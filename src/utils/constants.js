@@ -196,7 +196,6 @@ import {
       icon: ClipboardList,
       backgroundImage: '/assets/clipboard.gif',
       actionText: 'Open Form',
-      externalUrl: 'https://forms.cloud.microsoft/pages/responsepage.aspx?id=rv2UFdmhBUSRXQEUZyNDOLQfbSSCW6hGliwG6pAiolZURVZPVk1JS1EySzg3T1RWWFpWTERFVDZKRyQlQCN0PWcu&route=shorturl',
       // showInDropdown: false
     },
     DOCX_EDITOR: {
