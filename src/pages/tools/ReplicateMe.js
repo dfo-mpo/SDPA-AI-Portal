@@ -1,7 +1,7 @@
 /**
  * Replicate Me Tool Component
  *
- * Displays the AI Hub documentation as an inline PDF viewer with zoom and
+ * Displays the AI Hub documentation as an inline PDF viewer with
  * download controls, and a document-scoped chatbot below it.
  * Available to all users (authenticated and unauthenticated).
  */
@@ -20,7 +20,7 @@ import {
   Tooltip,
   useTheme,
 } from '@mui/material';
-import { Send, Bot, RefreshCw, Download, ZoomIn, ZoomOut } from 'lucide-react';
+import { Send, Bot, RefreshCw, Download} from 'lucide-react';
 import { ToolPage } from '../../components/tools';
 import { useLanguage, useToolSettings } from '../../contexts';
 import { getToolTranslations } from '../../utils';
@@ -30,10 +30,6 @@ import { useIsAuthenticated } from '@azure/msal-react';
 // Path to the static AI Hub documentation PDF in public/assets/
 const DOC_PATH = '/assets/AI_Hub_Documentation.pdf';
 const DOC_NAME  = 'AI_Hub_Documentation.pdf';
-
-const ZOOM_STEP = 0.15;
-const ZOOM_MIN  = 0.5;
-const ZOOM_MAX  = 2.0;
 
 export function ReplicateMe() {
   const { language } = useLanguage();
@@ -47,9 +43,6 @@ export function ReplicateMe() {
   const [fileContent,   setFileContent]   = useState(null);
   const [isDocLoading,  setIsDocLoading]  = useState(true);
   const [docError,      setDocError]      = useState(null);
-
-  // ── Zoom state ───────────────────────────────────────────────────────────
-  const [zoom, setZoom] = useState(1.0);
 
   // ── Chat state ───────────────────────────────────────────────────────────
   const [messages,        setMessages]        = useState([]);
@@ -95,10 +88,6 @@ export function ReplicateMe() {
     loadDoc();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // ─Zoom handlers
-  const handleZoomIn  = () => setZoom(prev => Math.min(ZOOM_MAX, parseFloat((prev + ZOOM_STEP).toFixed(2))));
-  const handleZoomOut = () => setZoom(prev => Math.max(ZOOM_MIN, parseFloat((prev - ZOOM_STEP).toFixed(2))));
 
   //Download handler 
   const handleDownload = () => {
@@ -284,36 +273,8 @@ export function ReplicateMe() {
               {toolData.ui.docViewerTitle}
             </Typography>
 
-            {/* Zoom + Download controls */}
+            {/*Download controls */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Tooltip title="Zoom out">
-                <span>
-                  <IconButton
-                    size="small"
-                    onClick={handleZoomOut}
-                    disabled={zoom <= ZOOM_MIN}
-                  >
-                    <ZoomOut size={16} />
-                  </IconButton>
-                </span>
-              </Tooltip>
-
-              <Typography variant="caption" sx={{ minWidth: 38, textAlign: 'center' }}>
-                {Math.round(zoom * 100)}%
-              </Typography>
-
-              <Tooltip title="Zoom in">
-                <span>
-                  <IconButton
-                    size="small"
-                    onClick={handleZoomIn}
-                    disabled={zoom >= ZOOM_MAX}
-                  >
-                    <ZoomIn size={16} />
-                  </IconButton>
-                </span>
-              </Tooltip>
-
               <Tooltip title="Download documentation">
                 <IconButton size="small" onClick={handleDownload}>
                   <Download size={16} />
@@ -322,7 +283,7 @@ export function ReplicateMe() {
             </Box>
           </Box>
 
-          {/* iframe container with zoom applied via CSS transform */}
+          {/* iframe container*/}
           <Box
             sx={{
               flex:     1,
@@ -331,15 +292,13 @@ export function ReplicateMe() {
             }}
           >
             <iframe
-              src={`${DOC_PATH}#toolbar=0&navpanes=0&scrollbar=1`}
+              src={`${DOC_PATH}#toolbar=1&navpanes=1&scrollbar=1`}
               title={toolData.ui.docViewerTitle}
               style={{
                 border:          'none',
                 display:         'block',
-                width:           `${100 / zoom}%`,
-                height:          `calc(80vh * ${1 / zoom})`,
-                transform:       `scale(${zoom})`,
-                transformOrigin: 'top left',
+                width:           `100%`,
+                height:          `80vh`
               }}
             />
           </Box>
