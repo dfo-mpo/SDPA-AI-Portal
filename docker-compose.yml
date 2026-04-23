@@ -11,7 +11,6 @@ services:
       - "3080:80"  
     depends_on:  
       - backend
-      - server  
   
   backend:
     build:
@@ -24,13 +23,6 @@ services:
     environment:
       CHROMA_HOST: chroma
       CHROMA_PORT: 8000
-
-  server:
-    build:
-      context: .
-      dockerfile: Dockerfile.server
-    ports:
-      - "4080:4000"
 
   chroma:
     build:

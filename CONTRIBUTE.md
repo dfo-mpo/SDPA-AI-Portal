@@ -3,8 +3,6 @@ Before doing any work on the AI Hub make sure to read through the documentation 
 
 To understand how the interface, communication between docker images, and authentication are implemented see [FRONTEND](src/FRONTEND.md).
 
-To understand how Azure Blob Storage is used by the AI Hub, see [SERVER](server/SERVER.md).
-
 To understand how AI/ML models and tools are implemented, see [BACKEND](backend/BACKEND.md).
 
 **Recommened Branch Workflow for adding new feature:** Create a new branch for your feature based off the `local_dev` branch. Once the feature is working, merge the feature branch with `local_dev`, then pull `local_dev` into `main`. You can verify everything works with docker before updating any cloud deployment.<br>
@@ -40,7 +38,7 @@ If you are using the existing deployment in Azure, you can jump to [docker requi
 9. Create an Azure Key Vault resource using default configurations.
 10. Go to the resource once it is created and open the `Access Control (IAM)` page
 11. Create a new role granting at least `Get` and `List` for secrets for the Object ID for the Azure Web App **AND** the application ID from the service principle tied to the Azure Web App.
-12. Go to the `Secrets` page and create secrets for each key as identified in the [backend](backend/ai_ml_tools/utils/azure_key_vault.py) and [server](server/services/azureBlobClient.js). The name of the keys must match as they are shown in these files as Azure Key Vault uses different naming conventions than what is used in `.env` files.
+12. Go to the `Secrets` page and create secrets for each key as identified in the [backend](backend/ai_ml_tools/utils/azure_key_vault.py). The name of the keys must match as they are shown in these files as Azure Key Vault uses different naming conventions than what is used in `.env` files.
 13. Go back to the Azure Web App resource created earlier.
 14. Go to the `Environment variables` page. Click on *Add* to create a new environment variable: 
     * Set the *Name* to `KEY_VAULT_NAME`
@@ -88,10 +86,8 @@ Where acr_resource is the name of the resource you want to push your docker imag
 ### Create Deployment on Web App
 1. In the `./backend/ai_ml_tools` folder, copy and rename the '.env.sample' file to '.env'. 
     * (Optional, only for testing) Fill in the keys for OpenAI, Document Intelligence, and other APIs used.
-2. In the `./server/` folder, copy and rename the '.env.sample' file to 'env'. 
-    * Fill in the details for an Azure storage account to connect too (only include key for testing).
-3. In the `./src/components/auth/` folder, copy and rename the 'authConfig.example.js' into 'authConfig.js'. Make sure to add in the values for clientId, authority, redirectURI, and postLogoutRedirectUri.
-4. Build the local docker container using the command:
+2. In the `./src/components/auth/` folder, copy and rename the 'authConfig.example.js' into 'authConfig.js'. Make sure to add in the values for clientId, authority, redirectURI, and postLogoutRedirectUri.
+3. Build the local docker container using the command:
 ```bash
 # Use this command if your docker engine version is below 20.10
 docker-compose up --build
@@ -99,23 +95,21 @@ docker-compose up --build
 # Use this command if you have docker engine v20.10 or newer
 docker compose up --build
 ```
-5. Verify that everything is working as expected on http://localhost:3080.
-6. **IMPORTANT** If you included keys in steps `1` and `2`, **REMOVE THESE KEYS BEFORE PROCEEDING**.
+4. Verify that everything is working as expected on http://localhost:3080.
+5. **IMPORTANT** If you included keys in steps `1` and `2`, **REMOVE THESE KEYS BEFORE PROCEEDING**.
     * After **removing** keys from the `.env` files, **rerun** the docker compose command in step `4` to build the image without any keys.
-7. Once you have built your local docker container you need to tag the images that have modifications.<br>
+6. Once you have built your local docker container you need to tag the images that have modifications.<br>
 <b>Important:</b> If you tag and push a version (eg. v1, v2, ...) that already exists in the ACR resource, it will overwrite it.<br>
 ```bash
 docker tag <project-foldername-lowercase>-backend <acr_resource_name>.azurecr.io/ai-ml-tools-backend:v1
 docker tag <project-foldername-lowercase>-frontend <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1
-docker tag <project-foldername-lowercase>-server <acr_resource_name>.azurecr.io/ai-ml-tools-server:v1
 ```
-8. Push your local images with changes to the ACR:
+7. Push your local images with changes to the ACR:
 ```bash
 docker push <acr_resource_name>.azurecr.io/ai-ml-tools-backend:v1
 docker push <acr_resource_name>.azurecr.io/ai-ml-tools-frontend:v1
-docker push <acr_resource_name>.azurecr.io/ai-ml-tools-server:v1
 ```
-9. Go to your Azure Web App resource to the *Deployment Center* page then set up the container:
+8. Go to your Azure Web App resource to the *Deployment Center* page then set up the container:
     * Make sure 'Source' is set to Container Registry.
     * Make sure 'Container type' is set to Docker Compose.
     * 'Authentication' Needs to be set to Admin Credentials
@@ -129,15 +123,10 @@ docker push <acr_resource_name>.azurecr.io/ai-ml-tools-server:v1
         - "3080:80"  
         depends_on:  
         - backend  
-        - server
       backend:  
         image: <your_registry_name>.azurecr.io/backend:latest  
         ports:  
         - "8080:8000" 
-      server:  
-        image: <your_registry_name>.azurecr.io/server:latest  
-        ports:  
-        - "4080:4000"
     ```
     * (Optional) Set 'Continuous deployment' to 'On' if you want the website to update if push a new image versions.
     * Press Save, after your web app refreshes it will be running of the frontend and backend containers.

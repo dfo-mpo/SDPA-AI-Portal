@@ -204,8 +204,9 @@ import {
       category: 'Statistical and ML Algorithms Guide',
       icon: ClipboardList,
       backgroundImage: '/assets/clipboard.gif',
-      actionText: 'Open Document',
-      // showInDropdown: false
+      // actionText: 'Open Document',
+      actionText: 'Coming Soon',
+      disabled: true
     },
     AI_RESOURCES: {
       id: 'ai-resources',
