@@ -1,16 +1,22 @@
-// src/analytics.js
-import ReactGA from 'react-ga4';
+// src/utils/analytics.js
 
 export const initGA = () => {
-  ReactGA.initialize('G-4ZD2EZGKSQ');
-  console.log('GA4 initialized');
+  window.dataLayer = window.dataLayer || [];
+  console.log('dataLayer initialized');
 };
 
 export const trackPageview = (path) => {
-  ReactGA.send({ hitType: 'pageview', page: path });
+  window.dataLayer.push({
+    event: 'pageview',
+    page: path,
+  });
 };
 
 export const trackEvent = (category, action, label) => {
   console.log(`trackEvent called: ${category} - ${action} - ${label}`);
-  ReactGA.event({ category, action, label });
+  window.dataLayer.push({
+    event: action,
+    event_category: category,
+    event_label: label,
+  });
 };
