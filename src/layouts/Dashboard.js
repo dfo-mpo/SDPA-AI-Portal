@@ -15,6 +15,7 @@ import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import HomeIcon from '@mui/icons-material/Home';
 import { GovHeader, LeftPanel } from '.';
 import { getToolByName, getParam, getAllParams, updateURLParams } from '../utils';
+import { trackEvent } from '../utils/analytics';
 import { HomePage, DocxEditor, SurveyForm } from '../pages';
 import { useLanguage, useAuth } from '../contexts';
 import { Footer, TermsModalContainer } from '../components/common';
@@ -128,6 +129,9 @@ export default function Dashboard({ onLogout, onLogin }) {
       const tool = getToolByName(toolName);
       if (tool) {
         console.log(`Selected tool: ${tool.name} (${tool.category})`);
+
+        // Track tool selection event in GA4
+        trackEvent('Tool Navigation', 'tool_selected', tool.name);
         
         // Check if tool is disabled
         if (isToolDisabled(tool.name)) {
@@ -337,5 +341,5 @@ export default function Dashboard({ onLogout, onLogin }) {
 
 Dashboard.propTypes = {
   /** Callback function for logout action */
-  onLogout: PropTypes.func
+  onLogout: PropTypes.func,
 };

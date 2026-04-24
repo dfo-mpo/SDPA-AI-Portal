@@ -8,8 +8,10 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { LanguageProvider } from './contexts';
+import { initGA } from './utils/analytics';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+initGA();
 root.render(
   <LanguageProvider>
     <React.StrictMode>
